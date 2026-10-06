@@ -25,6 +25,11 @@ docs/salarii/
 # The COR occupation table is reference data with a recorded provenance, not
 # pipeline output. See data/ocupatii/README.md.
 !/data/ocupatii/
+# The consolidated institution list (ANAF + ROePAS + Registrul) is the project's main output.
+# Rebuild with `python3 scripts/consolidate.py`; the JSON and explorer copies stay out of the repo.
+!/data/consolidated/
+/data/consolidated/*
+!/data/consolidated/institutii.csv
 /data/cached-responses/*
 /testbench/
 */scraping.log
