@@ -36,6 +36,21 @@
     width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px;
     background: var(--surface); }
   .filters select:disabled { opacity: .5; }
+  .multi { position: relative; }
+  .multi > summary { height: 36px; padding: 0 28px 0 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--surface); display: flex; align-items: center; cursor: pointer; list-style: none; position: relative; }
+  .multi > summary::-webkit-details-marker { display: none; }
+  .multi > summary::after { content: "▾"; position: absolute; right: 10px; color: var(--muted); }
+  .multi > summary span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .multi.active > summary { border-color: var(--accent); }
+  .multi .panel { position: absolute; right: 0; top: calc(100% + 4px); z-index: 10; min-width: 250px; max-width: calc(100vw - 16px); padding: 10px 12px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, .18); }
+  .multi .opt { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; }
+  .multi .opt .count { margin-left: auto; }
+  .seg { display: flex; margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { flex: 1; padding: 6px 8px; border: 0; background: none; cursor: pointer; font-size: 13px; color: var(--muted); }
+  .seg button[aria-pressed=true] { background: var(--accent-soft); color: var(--text); font-weight: 600; }
+  .multi .hint { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
   .chk { display: flex; gap: 6px; align-items: center; white-space: nowrap; font-size: 14px; }
   #reset { height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px;
            background: var(--surface); cursor: pointer; }
@@ -135,7 +150,17 @@
       <select id="fam" aria-label="Tip instituție"></select>
       <select id="county" aria-label="Județ"></select>
       <select id="uat" aria-label="Localitate (UAT)"></select>
-      <select id="src" aria-label="Sursă"></select>
+      <details id="src" class="multi">
+        <summary aria-label="Sursă"><span id="src-label">Orice sursă</span></summary>
+        <div class="panel">
+          <div id="src-opts"></div>
+          <div class="seg" role="group" aria-label="Combinare surse">
+            <button type="button" data-mode="all" aria-pressed="true">Intersecție</button>
+            <button type="button" data-mode="any" aria-pressed="false">Cumulativ</button>
+          </div>
+          <p class="hint" id="src-hint"></p>
+        </div>
+      </details>
       <label class="chk"><input type="checkbox" id="web"> are site</label>
       <button id="reset" type="button">Resetează</button>
     </div>
@@ -209,25 +234,25 @@
     subordinates.get(c).push(r);
   }
 
-  const SOURCES = [['', 'Orice sursă'], ['anaf', 'în ANAF'], ['roepas', 'în ROePAS'], ['reg', 'în Registru'],
-                   ['nocif', 'fără corespondent ANAF']];
+  const SOURCES = [['anaf', 'ANAF'], ['roepas', 'ROePAS'], ['reg', 'Registru'], ['nocif', 'fără ANAF']];
   const srcTest = {
     anaf: r => r.s & 1, roepas: r => r.s & 2, reg: r => r.s & 4, nocif: r => !r.f,
   };
 
   /* ---------- filter state ---------- */
-  const S = { q: '', cat: '', fam: '', county: '', uat: '', src: '', web: false, view: 'list' };
-  let qTokens = [];
+  const S = { q: '', cat: '', fam: '', county: '', uat: '', srcs: new Set(), srcMode: 'all', web: false, view: 'list' };
+  let qTokens = [], srcList = [];
   const pass = (r, skip) =>
     (skip === 'cat' || !S.cat || r.cat === S.cat) &&
     (skip === 'fam' || !S.fam || r.fam === S.fam) &&
     (skip === 'county' || !S.county || r.county === S.county) &&
     (skip === 'uat' || !S.uat || r.u === S.uat) &&
-    (!S.src || srcTest[S.src](r)) && (!S.web || r.w) &&
+    (skip === 'src' || !srcList.length || (S.srcMode === 'all' ? srcList.every(k => srcTest[k](r)) : srcList.some(k => srcTest[k](r)))) &&
+    (!S.web || r.w) &&
     qTokens.every(t => r.hay.includes(t));
 
   const $ = id => document.getElementById(id);
-  const el = { q: $('q'), cat: $('cat'), fam: $('fam'), county: $('county'), uat: $('uat'), src: $('src'), web: $('web') };
+  const el = { q: $('q'), cat: $('cat'), fam: $('fam'), county: $('county'), uat: $('uat'), web: $('web') };
 
   function fillSelect(sel, allLabel, entries, current) {   // entries: [[value, label, count]]
     sel.replaceChildren(h('option', { value: '' }, allLabel),
@@ -247,7 +272,7 @@
     fillSelect(el.fam, 'Toate tipurile', fams.filter(x => f.has(x) || x === S.fam).map(x => [x, x, f.get(x) || 0]), S.fam);
     const k = tally('county', r => r.county);
     fillSelect(el.county, 'Toate județele', counties.filter(x => k.has(x) || x === S.county).map(x => [x, x, k.get(x) || 0]), S.county);
-    el.src.value = S.src;
+    refreshSrc();
     el.uat.disabled = !S.county;
     if (S.county) {
       const u = new Map();
@@ -394,7 +419,7 @@
     for (const list of kids.values()) list.sort((a, b) => coll.compare(a.n, b.n));
     const groups = new Map();
     for (const r of roots) { if (!groups.has(r.cat)) groups.set(r.cat, []); groups.get(r.cat).push(r); }
-    const filtered = !!(S.q || S.cat || S.fam || S.county || S.uat || S.src || S.web);
+    const filtered = !!(S.q || S.cat || S.fam || S.county || S.uat || S.srcs.size || S.web);
     const size = list => list.reduce((n, r) => n + 1 + (kids.get(r.f) || []).length, 0);
     const ordered = [...groups].sort((a, b) => size(b[1]) - size(a[1]));
     const ctx = { kids, matchSet, cols: AUTH_COLS };
@@ -494,8 +519,7 @@
         h('div', { class: 'sec' }, 'Identificare'),
         h('dl', null, pair('Tip', r.fam && h('span', null, r.fam, ' · ',
             h('button', { class: 'link', type: 'button', style: 'color:var(--accent)', onclick: () => {
-              dlg.close(); Object.assign(S, { q: '', cat: '', county: '', uat: '', src: '', web: false, fam: r.fam });
-              el.q.value = ''; el.web.checked = false; setView('list'); } }, `arată toate (${fmt(famSize.get(r.fam))})`))),
+              dlg.close(); clearFilters({ fam: r.fam }); setView('list'); } }, `arată toate (${fmt(famSize.get(r.fam))})`))),
           pair('CIF', r.f), pair('CIF TVA', r.t),
           pair('Alte denumiri', r.al && h('ul', { class: 'plain' }, r.al.map(a => h('li', null, a)))),
           pair('Nr. Registru', r.rn && r.rn.join(', ')),
@@ -513,11 +537,52 @@
     dlg.scrollTop = 0;
   }
 
+  /* ---------- source filter: checkbox dropdown + intersection / cumulative switch ---------- */
+  const srcBox = $('src');
+  const srcInputs = new Map(), srcCounts = new Map();
+  for (const [k, label] of SOURCES) {
+    const input = h('input', { type: 'checkbox', onchange: () => { input.checked ? S.srcs.add(k) : S.srcs.delete(k); update(); } });
+    const count = h('span', { class: 'count' });
+    srcInputs.set(k, input); srcCounts.set(k, count);
+    $('src-opts').append(h('label', { class: 'opt' }, input, h('span', null, label), count));
+  }
+  srcBox.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { S.srcMode = b.dataset.mode; update(); }));
+  document.addEventListener('click', e => { if (!srcBox.contains(e.target)) srcBox.open = false; });
+  srcBox.addEventListener('toggle', () => {              // right-aligned by default; nudge back inside the viewport
+    if (!srcBox.open) return;
+    const panel = srcBox.querySelector('.panel');
+    panel.style.right = '0px';
+    const left = panel.getBoundingClientRect().left;
+    if (left < 8) panel.style.right = `${left - 8}px`;
+  });
+  srcBox.addEventListener('keydown', e => { if (e.key === 'Escape') { srcBox.open = false; srcBox.querySelector('summary').focus(); } });
+
+  function refreshSrc() {
+    const n = new Map();                                   // per-source counts, ignoring the source filter itself
+    for (const r of rows) if (pass(r, 'src')) for (const [k] of SOURCES) if (srcTest[k](r)) n.set(k, (n.get(k) || 0) + 1);
+    for (const [k] of SOURCES) { srcInputs.get(k).checked = S.srcs.has(k); srcCounts.get(k).textContent = fmt(n.get(k) || 0); }
+    const labels = SOURCES.filter(([k]) => S.srcs.has(k)).map(([, l]) => l);
+    const text = labels.length ? labels.join(S.srcMode === 'all' ? ' și ' : ' sau ') : 'Orice sursă';
+    $('src-label').textContent = text;
+    srcBox.querySelector('summary').title = text;
+    srcBox.classList.toggle('active', labels.length > 0);
+    srcBox.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === S.srcMode)));
+    $('src-hint').textContent = labels.length < 2 ? 'Bifează 2+ surse ca să le combini.'
+      : S.srcMode === 'all' ? 'Doar instituțiile prezente în toate sursele bifate.'
+      : 'Instituțiile prezente în cel puțin una dintre sursele bifate.';
+  }
+
+  function clearFilters(extra = {}) {
+    Object.assign(S, { q: '', cat: '', fam: '', county: '', uat: '', srcMode: 'all', web: false, ...extra });
+    S.srcs.clear();
+    el.q.value = ''; el.web.checked = false;
+  }
+
   /* ---------- orchestration ---------- */
-  el.src.replaceChildren(...SOURCES.map(([v, label]) => h('option', { value: v }, label)));
   let items = [];
   function update() {
     qTokens = fold(S.q).split(/\s+/).filter(Boolean);
+    srcList = [...S.srcs];
     items = rows.filter(r => pass(r));
     refreshFacets();
     $('stats').textContent = `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
@@ -530,10 +595,9 @@
   el.fam.addEventListener('change', () => { S.fam = el.fam.value; update(); });
   el.county.addEventListener('change', () => { S.county = el.county.value; S.uat = ''; update(); });
   el.uat.addEventListener('change', () => { S.uat = el.uat.value; update(); });
-  el.src.addEventListener('change', () => { S.src = el.src.value; update(); });
   el.web.addEventListener('change', () => { S.web = el.web.checked; update(); });
   $('reset').addEventListener('click', () => {
-    Object.assign(S, { q: '', cat: '', fam: '', county: '', uat: '', src: '', web: false }); el.q.value = ''; el.web.checked = false; update();
+    clearFilters(); update();
   });
   const tabs = [...document.querySelectorAll('.tabs button')];
   function setView(view) {
