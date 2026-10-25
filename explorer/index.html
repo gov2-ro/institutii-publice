@@ -9,13 +9,13 @@
   :root {
     --bg: #fafaf9; --surface: #fff; --text: #1c1917; --muted: #6b645f; --line: #e5e2df;
     --accent: #0f766e; --accent-soft: #d9f3ef; --chip: #f1efed; --warn: #92400e; --warn-soft: #fef3c7;
-    --anaf: #1d4ed8; --roepas: #15803d; --reg: #b45309;
+    --anaf: #1d4ed8; --roepas: #15803d; --reg: #b45309; --decl: #7e22ce;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0e0c0b; --surface: #1a1716; --text: #f3f1ef; --muted: #a39d98; --line: #2e2a28;
       --accent: #2dd4bf; --accent-soft: #123f3a; --chip: #262221; --warn: #fcd34d; --warn-soft: #3b2a0a;
-      --anaf: #7aa2ff; --roepas: #5fd38a; --reg: #f0b05a;
+      --anaf: #7aa2ff; --roepas: #5fd38a; --reg: #f0b05a; --decl: #c99bf5;
     }
   }
   * { box-sizing: border-box; }
@@ -55,7 +55,13 @@
   #reset { height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px;
            background: var(--surface); cursor: pointer; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .tabs { display: flex; gap: 2px; margin-top: 10px; overflow-x: auto; }
+  .viewbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px 12px; margin-top: 10px; }
+  .tabs { display: flex; gap: 2px; overflow-x: auto; max-width: 100%; }
+  .sortby { margin-left: auto; padding-bottom: 6px; display: flex; gap: 6px; align-items: center;
+            font-size: 13px; color: var(--muted); }
+  .sortby[hidden] { display: none; }
+  .sortby select { height: 30px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+                   color: var(--text); padding: 0 6px; }
   .tabs button { padding: 8px 14px; border: 0; border-bottom: 2px solid transparent; background: none;
                  color: var(--muted); cursor: pointer; white-space: nowrap; }
   .tabs button[aria-selected=true] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
@@ -83,7 +89,7 @@
           font-size: 12px; color: var(--muted); white-space: nowrap; }
   .src { display: inline-block; padding: 0 6px; margin-right: 3px; border: 1px solid currentColor;
          border-radius: 4px; font-size: 11px; font-weight: 600; }
-  .src.a { color: var(--anaf); } .src.r { color: var(--roepas); } .src.g { color: var(--reg); }
+  .src.a { color: var(--anaf); } .src.r { color: var(--roepas); } .src.g { color: var(--reg); } .src.d { color: var(--decl); }
   .flag { display: inline-block; padding: 1px 8px; border-radius: 6px; background: var(--warn-soft);
           color: var(--warn); font-size: 12px; }
 
@@ -164,27 +170,45 @@
       <label class="chk"><input type="checkbox" id="web"> are site</label>
       <button id="reset" type="button">Resetează</button>
     </div>
-    <div class="tabs" role="tablist">
-      <button role="tab" data-view="list" aria-selected="true">Listă</button>
-      <button role="tab" data-view="auth" aria-selected="false">Autoritate → subordonate</button>
-      <button role="tab" data-view="fam" aria-selected="false">Tip → instituții</button>
-      <button role="tab" data-view="loc" aria-selected="false">Județ → localitate</button>
+    <div class="viewbar">
+      <div class="tabs" role="tablist">
+        <button role="tab" data-view="list" aria-selected="true">Listă</button>
+        <button role="tab" data-view="auth" aria-selected="false">Autoritate → subordonate</button>
+        <button role="tab" data-view="fam" aria-selected="false">Tip → instituții</button>
+        <button role="tab" data-view="loc" aria-selected="false">Județ → localitate</button>
+      </div>
+      <label class="sortby">Ordonare
+        <select id="sort">
+          <option value="n">A–Z</option>
+          <option value="dc">nr. declarații ANI</option>
+        </select>
+      </label>
     </div>
   </div>
 </header>
 <main id="main"></main>
 <dialog id="detail"></dialog>
 
-<script src="../data/consolidated/explorer-data.js"></script>
 <script>
 (() => {
   const main = document.getElementById('main');
-  const D = window.EXPLORER_DATA;
-  if (!D) {
+  let D = null;
+
+  // Load metadata first (small, ~6KB), then rows (large, async)
+  Promise.all([
+    fetch('metadata.json').then(r => r.json()),
+    fetch('rows.json').then(r => r.json())
+  ]).then(([metadata, rows]) => {
+    D = { ...metadata, rows };
+    init(D);
+  }).catch(err => {
+    console.error('Failed to load data:', err);
     main.append(Object.assign(document.createElement('p'), { className: 'notice',
       textContent: 'Lipsesc datele. Rulează: python3 scripts/consolidate.py' }));
-    return;
-  }
+  });
+
+  function init(D) {
+    if (!D) return;
 
   /* ---------- helpers ---------- */
   const h = (tag, props, ...kids) => {
@@ -234,13 +258,13 @@
     subordinates.get(c).push(r);
   }
 
-  const SOURCES = [['anaf', 'ANAF'], ['roepas', 'ROePAS'], ['reg', 'Registru'], ['nocif', 'fără ANAF']];
+  const SOURCES = [['anaf', 'ANAF'], ['roepas', 'ROePAS'], ['reg', 'Registru'], ['decl', 'Declarații ANI'], ['nocif', 'fără ANAF']];
   const srcTest = {
-    anaf: r => r.s & 1, roepas: r => r.s & 2, reg: r => r.s & 4, nocif: r => !r.f,
+    anaf: r => r.s & 1, roepas: r => r.s & 2, reg: r => r.s & 4, decl: r => r.s & 8, nocif: r => !r.f,
   };
 
   /* ---------- filter state ---------- */
-  const S = { q: '', cat: '', fam: '', county: '', uat: '', srcs: new Set(), srcMode: 'all', web: false, view: 'list' };
+  const S = { q: '', cat: '', fam: '', county: '', uat: '', srcs: new Set(), srcMode: 'all', web: false, view: 'list', sort: 'n' };
   let qTokens = [], srcList = [];
   const pass = (r, skip) =>
     (skip === 'cat' || !S.cat || r.cat === S.cat) &&
@@ -252,7 +276,7 @@
     qTokens.every(t => r.hay.includes(t));
 
   const $ = id => document.getElementById(id);
-  const el = { q: $('q'), cat: $('cat'), fam: $('fam'), county: $('county'), uat: $('uat'), web: $('web') };
+  const el = { q: $('q'), cat: $('cat'), fam: $('fam'), county: $('county'), uat: $('uat'), web: $('web'), sort: $('sort') };
 
   function fillSelect(sel, allLabel, entries, current) {   // entries: [[value, label, count]]
     sel.replaceChildren(h('option', { value: '' }, allLabel),
@@ -289,6 +313,7 @@
     (r.s & 1) > 0 && h('span', { class: 'src a', title: 'Lista entităților publice ANAF' }, 'ANAF'),
     (r.s & 2) > 0 && h('span', { class: 'src r', title: 'Portalul ROePAS' }, 'ROePAS'),
     (r.s & 4) > 0 && h('span', { class: 'src g', title: 'Registrul Național al Instituțiilor Publice' }, 'Registru'),
+    (r.s & 8) > 0 && h('span', { class: 'src d', title: `Declarații de avere și interese (ANI): ${fmt(r.dc)}` }, 'ANI'),
   ];
   const where = r => [r.u, r.county].filter(Boolean).join(', ');
   const domain = u => u.replace(/^https?:\/\//i, '').replace(/\/$/, '');
@@ -327,7 +352,8 @@
         h('div', { class: 'sub' }, [r.cat, r.fam, where(r)].filter(Boolean).join(' · '))),
       h('td', { class: 'c contact' }, [r.w && h('div', null, siteLink(r)),
         r.e && h('div', null, r.e), r.ph && h('div', null, r.ph)]),
-      h('td', null, srcBadges(r), !r.f && r.d ? h('div', { class: 'flag' }, 'posibil duplicat') : null));
+      h('td', null, srcBadges(r), r.dc ? h('div', { class: 'sub', style: 'white-space:nowrap' }, plural(r.dc, 'declarație', 'declarații')) : null,
+        !r.f && r.d ? h('div', { class: 'flag' }, 'posibil duplicat') : null));
     wrap.append(table);
     chunked(body, items, row, 100, false, wrap);
     return wrap;
@@ -497,7 +523,9 @@
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
   const pair = (k, v) => v ? [h('dt', null, k), h('dd', null, v)] : [];
   const linkTo = (url, text) => isHttp(url) ? h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, text || url) : text || url;
-  const tierText = { exact: 'nume identic', canonical: 'nume normalizat (autoritate locală)', tokens: 'nume similar' };
+  const tierText = { exact: 'nume identic', canonical: 'nume normalizat (autoritate locală)', tokens: 'nume similar',
+    unit: 'același număr de unitate militară', national: 'nume identic, instituție centrală (depusă din alt județ)',
+    elsewhere: 'nume identic, unic în țară (depusă din alt județ)' };
 
   function showDetail(r) {
     const parents = (r.p || []).map(c => byCif.get(c)).filter(Boolean);
@@ -523,7 +551,11 @@
           pair('CIF', r.f), pair('CIF TVA', r.t),
           pair('Alte denumiri', r.al && h('ul', { class: 'plain' }, r.al.map(a => h('li', null, a)))),
           pair('Nr. Registru', r.rn && r.rn.join(', ')),
-          pair('Legătură ROePAS', r.lr && tierText[r.lr]), pair('Legătură Registru', r.lg && tierText[r.lg])),
+          pair('Legătură ROePAS', r.lr && tierText[r.lr]), pair('Legătură Registru', r.lg && tierText[r.lg]),
+          pair('Declarații ANI', r.dc && `${fmt(r.dc)}${r.ld ? ` · ${tierText[r.ld]}` : ''}`),
+          pair('Grupă în formularul ANI', r.dg),
+          pair('Declarații pe județe', r.dk && r.dk.slice(0, 8).map(([c, n]) => `${c} ${fmt(n)}`).join(' · ')
+            + (r.dk.length > 8 ? ` · … încă ${r.dk.length - 8}` : ''))),
         parents.length ? [h('div', { class: 'sec' }, 'Ordonator principal de credite'),
           h('ul', { class: 'plain' }, parents.map(p => h('li', null, peer(p))))] : null,
         subs.length ? [h('div', { class: 'sec' }, `Subordonate (${fmt(subs.length)})`),
@@ -573,9 +605,9 @@
   }
 
   function clearFilters(extra = {}) {
-    Object.assign(S, { q: '', cat: '', fam: '', county: '', uat: '', srcMode: 'all', web: false, ...extra });
+    Object.assign(S, { q: '', cat: '', fam: '', county: '', uat: '', srcMode: 'all', web: false, sort: 'n', ...extra });
     S.srcs.clear();
-    el.q.value = ''; el.web.checked = false;
+    el.q.value = ''; el.web.checked = false; el.sort.value = 'n';
   }
 
   /* ---------- orchestration ---------- */
@@ -584,6 +616,8 @@
     qTokens = fold(S.q).split(/\s+/).filter(Boolean);
     srcList = [...S.srcs];
     items = rows.filter(r => pass(r));
+    if (S.sort === 'dc') items.sort((a, b) => (b.dc || 0) - (a.dc || 0));
+    el.sort.closest('.sortby').hidden = S.view !== 'list';
     refreshFacets();
     $('stats').textContent = `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
     main.replaceChildren({ list: renderList, auth: renderAuthTree, fam: renderFamTree, loc: renderLocTree }[S.view](items));
@@ -596,6 +630,7 @@
   el.county.addEventListener('change', () => { S.county = el.county.value; S.uat = ''; update(); });
   el.uat.addEventListener('change', () => { S.uat = el.uat.value; update(); });
   el.web.addEventListener('change', () => { S.web = el.web.checked; update(); });
+  el.sort.addEventListener('change', () => { S.sort = el.sort.value; update(); });
   $('reset').addEventListener('click', () => {
     clearFilters(); update();
   });
@@ -605,8 +640,9 @@
     tabs.forEach(x => x.setAttribute('aria-selected', String(x.dataset.view === view)));
     update();
   }
-  tabs.forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
-  update();
+    tabs.forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+    update();
+  }
 })();
 </script>
 </body>
