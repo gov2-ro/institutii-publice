@@ -2,6 +2,13 @@
 
 Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the reason).
 
+## Implementation handoff
+- [ ] Data correctness and dense explorer, version 1:
+      [spec](specs/explorer-quality-v1.md), [implementation brief](briefs/explorer-quality-v1.md).
+      Includes conservative matching, confirmed category fixes, tree visibility, dense responsive filters, record links,
+      review filters, CSV export, loading feedback, minimal dataset provenance and compact overview navigation.
+      This is the bounded next release. The spec lists deferred research and data-enrichment work explicitly.
+
 ## Explorer: "Structura statului" (spec: specs/structura-statului.md)
 - [x] Version 1: top layer from the Constitution, local administration, focus and breadcrumb, URL hash
       (brief: briefs/structura-statului-v1.md)
@@ -9,6 +16,26 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       members share one parent. Measured 2026-10-25: 3,544 of 11,861 records. Show these parents in a
       different style ("atribuit după tip").
 - [ ] Later: a treemap or icicle chart of the top two levels, sized by number of institutions.
+- [ ] Filtered tree: include all descendants of attached roots in `subtree()`. Search `#v=stat&q=39847338`
+      reports one match but shows no record. All eight children of MF acțiuni generale have this path problem.
+      The existing root-count check passes. Add a check for descendant visibility under filters.
+- [ ] Show the notes on `STATE_MEMBERS` in the tree and detail dialog. The page discards the third tuple value.
+      CNCAN's disputed-placement note is present in metadata but absent from its dialog.
+
+## Explorer: usability and data presentation
+- [ ] Fix filter overflow between the 900 px breakpoint and the grid's minimum width. Measured:
+      a 901 px viewport has 1,042 px of document width; a 1,024 px viewport also overflows.
+- [ ] Reduce the sticky filter area on phones. It occupies 349 px at 390 px width and 380 px at 320 px width.
+      Keep search visible. Put secondary filters behind a disclosure.
+- [ ] Normalize punctuation in search. `Bistrița-Năsăud` returns 26 records; `Bistrita Nasaud` returns 408.
+- [ ] Add stable record links and a copy-link action. Opening a detail dialog does not change the URL.
+      The compact rows omit the record ID, which source-only records need for links.
+- [ ] Add loading feedback and a retry action. The main area stays blank while JSON loads.
+      The current error text gives visitors a developer command.
+- [ ] Preserve known zero procedure counts in compact rows. There are 2,074 such records in the full JSON;
+      none retains `pc` in the explorer. Zero and unknown must stay distinct.
+- [ ] Offer a filtered CSV download and filters for unresolved records and duplicate candidates.
+      Show source dates and explain that ANI totals count declarations, not institutions or employees.
 
 ## Data quality
 - [ ] Companii de stat: 937 of 954 are in "(fără tip comun)". 719 of them come only from ANI. Ideas:
@@ -25,7 +52,42 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Resolve ANI-only records (state companies) to a CUI with the ONRC open data. (from README)
 
 - [ ] Linker ties: when two ANAF rows get the same best token score, the first row wins. Consider "weak"
-      for a tie instead (two equal candidates means the link is ambiguous).
+      for a tie instead (two equal candidates means the link is ambiguous). Confirmed contact errors:
+      DSP București `4400956` receives `dspilfov.ro`; DAS Dorohoi `4392462` receives `dasbotosani.ro`.
+      Use locality hints in token matching. Keep jurisdiction names as identity evidence.
+      Also review ambiguous exact/canonical matches; they select the first candidate too.
+- [ ] Bound the ancestor category patterns to whole words. `culturii` matches inside `agriculturii` before
+      the agriculture rule. Measured: 32 ANI records under an agriculture umbrella have the culture category.
+- [ ] Reconcile source-only records across sources, with review before merging. There are 344 groups
+      containing 694 records with the same normalized county and name and no CIF. Example: DGASPC Sector 6
+      appears separately in ROePAS, Registrul and ANI. A shared name alone does not prove identity.
+- [ ] Retain each source row, match score, candidate alternatives and field choice in the output provenance.
+      The current record exposes only the best link tier per source, which can hide mixed match quality.
+- [ ] Add source snapshots, checksums, dates and a reproducible release manifest. Surface capped ANI exports
+      in metadata. Document how to obtain ignored inputs. Add refresh rules to the ROePAS detail cache.
+      Keep historical names and organizational units distinct from confirmed current legal entities.
+
+## Comparative research proposals (not an accepted implementation spec)
+- [ ] Keep high information density in institution results. The owner rejected GOV.UK's sparse layout as a UI reference.
+      Borrow its grouping and relationship labels. India's screenshots suggest a compact overview of browsing routes,
+      followed by dense results. Avoid a mandatory landing screen, oversized tiles and nested scrolling lists.
+- [ ] Explore two complementary entry routes: state structure and familiar institution families (schools, hospitals,
+      municipalities). Show counts and open the corresponding filtered results or tree directly.
+      Navigation groups do not establish legal form or public ownership.
+- [ ] Separate policy function, body type, government level, ownership and territorial remit.
+      Keep office location separate from the territory served. The EU directory separates type and subject.
+      Australia separates portfolio and body classifications. Use Romanian terms with documented definitions.
+- [ ] Plan stable organisation profiles with a short purpose statement, typed relationships, source dates,
+      contact links and history. Keep closed records at their existing URLs, following GOV.UK's approach.
+- [ ] Define relationship types before adding more hierarchy: administrative supervision, ANAF budget authority,
+      internal unit, ownership and inferred placement. Record the source and validity dates for each relationship.
+      Preserve the accepted constitutional view. Treat these as proposed additions, not new facts about a body.
+- [ ] Map public-organisation fields to EU CPOV and organisation/unit concepts to W3C ORG.
+      Document Romanian extensions for budget relationships and company ownership. Consider JSON-LD export later.
+      Use COFOG as an optional function mapping; it does not define institutional hierarchy.
+- [ ] Add a short explanation of public-sector scope and the tree's relationship meanings.
+      Keep internal staff/unit structures separate from the directory of institutions. Add a dataset field guide,
+      release dates and named source maintainers where known. See the comparative-research activity entry.
 
 ## Verified limits
 - The ANAF parent link (ordonator principal de credite) is one level deep. It gives no middle level
