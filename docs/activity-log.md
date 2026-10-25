@@ -1,5 +1,24 @@
 # Activity log
 
+## 2026-10-25 — Fix: București records without a sector grouped by level
+**Done** (Opus, a small change while the design moved)
+- Owner request: replace "Fără localitate / sector necunoscut" with central-level groups above "Sectoare".
+- `explorer/index.html`: `bucLevel` sorts București records without a UAT by name pattern into
+  "Nivel central (sediu în București, sector necunoscut)" with 13 kind groups (ministere, agenții naționale,
+  autorități, instanțe, companii naționale...), "Nivel București (municipal și servicii deconcentrate)",
+  and a remaining "Sector necunoscut". Navigation grouping only; not a legal classification.
+- Added the owner's curation request (flag duplicates, other edits) to the backlog with a proposal.
+
+**Measured**
+- București 1,248 records without a sector: 746 central (largest: companii 166, federații și asociații 121,
+  institute 106), 60 București-level, 442 sector necunoscut (mostly schools and kindergartens).
+- t10: group sums equal the county total in all 42 profiles. t11: 8 of 8 checks. No page errors
+  (the only console errors are 404s for the untracked `explorer/assets/favicon/`).
+
+**Decided**
+- Group in the page, not in `consolidate.py`. *Why:* it is a view of existing fields and needs no schema change.
+  The cost: the patterns live in JavaScript, and the CSV does not carry the level.
+
 ## 2026-10-25 — Build: București sectors, same-name merges, ANI prefix tier
 **Done**
 - Owner screenshots showed 12 sector groups, 1,426 București records without a locality, and visible duplicates.

@@ -858,19 +858,54 @@
     const uatKind = (county, u) => {
       const [k, n] = uatParts(u);
       if (u === UNKNOWN_UAT || u === UNKNOWN_SECTOR) return 'none';
+      if (county === 'Bucuresti' && BUC_LABEL.has(u)) return BUC_LABEL.get(u);
       if (k === 's') return 's';
       if (k === 'm' && county !== 'Bucuresti' && looseName(n) === seatKey(county)) return 'seat';
       if (k === 'o' && looseName(n) === seatKey(county)) return 'seat';
       return k;
     };
-    const UNKNOWN_UAT = '(localitate necunoscută)', UNKNOWN_SECTOR = 'Municipiul București (sector necunoscut)';
-    const unknownUat = county => county === 'Bucuresti' ? UNKNOWN_SECTOR : UNKNOWN_UAT;
-    const GROUPS = [['seat', 'Reședința de județ'], ['s', 'Sectoare'], ['m', 'Municipii'], ['o', 'Orașe'], ['c', 'Comune'], ['?', 'Altele'], ['none', 'Fără localitate']];
+    const UNKNOWN_UAT = '(localitate necunoscută)', UNKNOWN_SECTOR = 'Sector necunoscut';
+    /* București records without a sector: most are national bodies with a seat in the capital. Sort them by level
+       and kind from the name (first match wins), so they sit above the sectors instead of under "Fără localitate".
+       This is a navigation grouping from the name, not a legal classification. */
+    const BUC_CENTRAL = [
+      ['Parlament, Președinție, autorități constituționale', /^(camera deputatilor|senatul|parlamentul romaniei|administratia prezidentiala|curtea (constitutionala|de conturi)|avocatul poporului|consiliul (legislativ|superior al magistraturii|economic si social))/],
+      ['Ministere și Guvern', /^(ministerul|guvernul|secretariatul (general|de stat)|cancelaria|departamentul)\b/],
+      ['Instanțe și parchete', /\b(judecatoria|tribunalul|curtea de apel|parchetul|inalta curte)\b/],
+      ['Unități militare', /\b(unitatea militara|u m|um) ?\d/],
+      ['Agenții naționale', /^agentia\b/],
+      ['Autorități și consilii naționale', /^(autoritatea|oficiul|consiliul|comisia)\b/],
+      ['Inspectorate și direcții generale', /^(inspectoratul general|inspectia|directia generala|garda nationala|politia romana|jandarmeria romana)\b/],
+      ['Universități și academii', /^(universitatea|academia|scoala (nationala|superioara))\b/],
+      ['Spitale', /^(spitalul|institutul clinic|centrul medical)\b/],
+      ['Institute și centre naționale', /^(institutul|centrul national|centru national)\b|\bcercetare\b/],
+      ['Companii și societăți naționale', /\b(compania nationala|societatea nationala|s a|sa|srl|s r l|regia autonoma|ra|c n)\b/],
+      ['Federații și asociații', /^(federatia|asociatia|uniunea|fundatia|sindicatul|ordinul|colegiul (medicilor|farmacistilor))\b/],
+    ];
+    const BUC_MUNI = /\b(municipiului bucuresti|capitalei|municipal[ae]?|cgmb|primaria generala)\b/;   // a body of the capital
+    const BUC_CITY = /^(administratia|directia|regia|compania|societatea|serviciul|centrul|teatrul|muzeul)\b.*\bbucuresti$/;
+    const BUC_NATIONAL = /\b(nationala?|romana|romaniei|romane|romania)\b/;
+    const BUC_LOCAL = /^(scoala|liceul|colegiul|gradinita|clubul|biblioteca|caminul|centrul de zi|directia de asistenta|serviciul public|administratia (serviciilor|parcuri|spitalelor)|comuna)\b/;
+    const bucLevel = name => {
+      const n = norm(name);
+      if (BUC_LOCAL.test(n)) return ['none', UNKNOWN_SECTOR];
+      const hit = BUC_CENTRAL.find(([, re]) => re.test(n));
+      if (hit && !(BUC_MUNI.test(n) && !/^(ministerul|guvernul|parchetul|curtea|inalta|tribunalul)/.test(n))) return ['central', hit[0]];
+      if (BUC_MUNI.test(n) || BUC_CITY.test(n) && !BUC_NATIONAL.test(n)) return ['muni', 'Instituții la nivelul Municipiului București'];
+      if (BUC_NATIONAL.test(n)) return ['central', 'Alte instituții centrale'];
+      return ['none', UNKNOWN_SECTOR];
+    };
+    const BUC_LABEL = new Map([...BUC_CENTRAL.map(([l]) => [l, 'central']), ['Alte instituții centrale', 'central'],
+      ['Instituții la nivelul Municipiului București', 'muni']]);
+    const unknownUat = (county, r) => county === 'Bucuresti' ? bucLevel(r.n)[1] : UNKNOWN_UAT;
+    const GROUPS = [['central', 'Nivel central (sediu în București, sector necunoscut)'], ['muni', 'Nivel București (municipal și servicii deconcentrate)'],
+      ['seat', 'Reședința de județ'], ['s', 'Sectoare'], ['m', 'Municipii'], ['o', 'Orașe'], ['c', 'Comune'], ['?', 'Altele'],
+      ['none', 'Fără localitate']];
 
     function renderLocTree(items) {
       const byCounty = new Map();
       for (const r of items) {
-        const k = r.county || '(județ necunoscut)', u = r.u || unknownUat(k);
+        const k = r.county || '(județ necunoscut)', u = r.u || unknownUat(k, r);
         if (!byCounty.has(k)) byCounty.set(k, new Map());
         const m = byCounty.get(k);
         if (!m.has(u)) m.set(u, []);
@@ -881,12 +916,15 @@
       const groupsOf = (county, m) => {
         const g = new Map(GROUPS.map(([c]) => [c, []]));
         for (const e of m) g.get(uatKind(county, e[0])).push(e);
-        return GROUPS.map(([c, label]) => [label, g.get(c).sort((a, b) => coll.compare(a[0], b[0])), c]).filter(x => x[1].length);
+        const rank = u => { const i = BUC_CENTRAL.findIndex(([l]) => l === u); return i < 0 ? BUC_CENTRAL.length : i; };
+        return GROUPS.map(([c, label]) => [label, g.get(c).sort((a, b) => c === 'central' ? rank(a[0]) - rank(b[0]) : coll.compare(a[0], b[0])), c])
+          .filter(x => x[1].length);
       };
       const groupNodes = (county, m, bx) => {
         for (const [label, uats, code] of groupsOf(county, m)) bx.append(branch({ cls: 'grp', label,
-          meta: `${plural(uats.length, 'localitate', 'localități')} · ${fmt(uats.reduce((n, e) => n + e[1].length, 0))} înregistrări`,
-          open: !!S.uat || code === 'seat' || code === 's',
+          meta: `${code === 'central' || code === 'muni' ? plural(uats.length, 'grupă', 'grupe') + ' · ' : plural(uats.length, 'localitate', 'localități') + ' · '}`
+            + `${fmt(uats.reduce((n, e) => n + e[1].length, 0))} înregistrări`,
+          open: !!S.uat || code === 'seat' || code === 's' || code === 'central',
           kids: box => chunked(box, uats, ([u, list]) => branch({
             label: u, meta: fmt(list.length), open: !!S.uat || list.length <= 3 && uats.length <= 8,
             kids: b2 => b2.append(leafTable(list.slice().sort((a, b) => coll.compare(a.n, b.n)), matchSet, ['n', 'cat', 'site', 'src'])) }), 100, true) }));

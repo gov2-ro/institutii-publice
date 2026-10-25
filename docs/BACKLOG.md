@@ -48,6 +48,17 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Add a review list if a wrong merge turns up. Spelling variants ("ADMINISTRATIE" vs "ADMINISTRARE")
       and ANI sub-units ("ANAF … ACTIVITATE ECONOMICA") remain separate, under "de verificat".
 
+## Curation (owner request, 2026-10-25)
+- [ ] A method to flag duplicates and make other manual edits. Proposal, not yet a spec:
+      a tracked overrides file (for example `curation/overrides.csv`: `id, action, value, note, author, date`)
+      that `consolidate.py` applies last, with actions such as `merge_into`, `not_duplicate_of`, `set_uat`,
+      `set_category`, `set_parent`, `hide`. Each applied override is recorded in the record's provenance.
+      The static explorer gets a "Semnalează" action in the record dialog that prefills a GitHub issue
+      (or copies an override line), because the page has no backend. Needs a spec: id stability across
+      re-runs, conflicting overrides, and how a reviewer accepts a flag.
+- [ ] București "Nivel central" groups come from name patterns in `explorer/index.html` (`BUC_CENTRAL`).
+      442 records stay under "Sector necunoscut" (mostly schools and kindergartens). Overrides could place the rest.
+
 ## Data quality
 - [ ] Companii de stat: 937 of 954 are in "(fără tip comun)". 719 of them come only from ANI. Ideas:
       curated group heads (Electrica, CNAIR/DRDP, CFR, Romsilva, Transelectrica, ROMARM, Hidroelectrica);
