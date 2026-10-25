@@ -37,6 +37,13 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Offer a filtered CSV download and filters for unresolved records and duplicate candidates.
       Show source dates and explain that ANI totals count declarations, not institutions or employees.
 
+## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)
+- [x] Landing view `acasa`, county choropleth, county profile with UAT map and seat/municipii/orașe/comune groups.
+- [ ] 12 ANAF UAT roots have no map shape (e.g. Orasul Victoria, Orasul Balan, Comuna Saniob; Orasul Stei has null
+      geometry). București is one polygon, so sectors have no shape. A SIRUTA join would remove the name matching.
+- [ ] ANAF UAT root names look wrong for two sector CIFs: "Sectorul 6" named JUDETUL ILFOV, "Sectorul 5" named
+      MUNICIPIUL BUCURESTI. Check against ANAF before correcting.
+
 ## Data quality
 - [ ] Companii de stat: 937 of 954 are in "(fără tip comun)". 719 of them come only from ANI. Ideas:
       curated group heads (Electrica, CNAIR/DRDP, CFR, Romsilva, Transelectrica, ROMARM, Hidroelectrica);

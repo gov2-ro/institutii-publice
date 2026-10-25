@@ -68,6 +68,10 @@ candidates, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure co
 ANI exports add `exported_at` and `capped`). Ambiguous source rows stay separate records with `match_candidates`
 (CSV column `match_candidate_cifs`). It also carries `state`, the "Structura statului" tree: the curated top layer (`STATE_NODES`,
 `STATE_MEMBERS`, `STATE_ATTACH` in `consolidate.py`, keyed by CIF) plus the UAT and unclassified root CIFs.
+Views: `acasa` (landing: overview, families, county choropleth; opened by an empty hash), `list`, `stat`, `fam`,
+`loc` (`k=<county>` gives the county profile: coat of arms, UAT map, seat/municipii/orașe/comune groups).
+Maps are inline SVG from `explorer/assets/gis/` (TopoJSON decoded in the page), loaded on first use;
+coats of arms are `explorer/assets/steme-judete/<COD>_<Name>.png`. County seats are the `SEATS` constant.
 Spec: `docs/specs/structura-statului.md`. In the page console, `explorer.reachableRoots()` must equal
 `explorer.expectedRoots()`.
 

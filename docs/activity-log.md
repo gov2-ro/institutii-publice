@@ -1,5 +1,28 @@
 # Activity log
 
+## 2026-10-25 — Build: landing page, county map and county profiles
+**Done**
+- Owner request: landing page, county choropleth, UAT maps per county, localities split by kind. Opus wrote
+  `docs/briefs/explorer-landing-maps.md`; Sonnet built it in `explorer/index.html`; Opus reviewed.
+- New view `acasa` (empty hash): overview, all families by category, county choropleth with a visible county list.
+  `#v=loc&k=<county>` is the county profile: coat of arms, UAT choropleth, groups Reședința de județ / Sectoare /
+  Municipii / Orașe / Comune / Altele / Fără localitate. Inline SVG, inline TopoJSON decoder, no dependency.
+- Opus changed the map classes to quantiles of distinct values. Before, Brașov's UAT map had 3 classes
+  (2, 3, 4–164) because most UATs have 2–4 records; now it has 5.
+
+**Measured**
+- Join: 42/42 counties; 3,209 of 3,228 ANAF UAT roots (99.4%; 7 are București sectors without shapes);
+  3,276 of 3,308 distinct row locality labels. All 41 seats found. Exact-only name matching gave 96.4%.
+- Brașov: seat 164, Municipii 46, Orașe 37, Comune 123, Fără localitate 299 = 669 records.
+- Old hashes keep their views. No overflow at 320–1,440 px. 0 console errors. Regression scripts t5–t8 pass.
+  With GIS requests blocked, a message replaces the map and the lists still work.
+
+**Decided**
+- The owner's request supersedes the v1 rule "no mandatory landing page". The landing page shows the whole
+  dataset; a filter or search there opens the list. The cost: the list now writes `#v=list` explicitly.
+- Name join with spelling tolerance (î/â as i/a, one edit when unique) instead of SIRUTA: ANAF has no SIRUTA code.
+- The `explorer/assets/` files are committed: the page needs them at runtime. They are not pipeline inputs.
+
 ## 2026-10-25 — Build: data correctness and dense explorer, version 1
 Brief: `docs/briefs/explorer-quality-v1.md`. Opus split the brief into two Sonnet briefs (data, UI) and reviewed both.
 
