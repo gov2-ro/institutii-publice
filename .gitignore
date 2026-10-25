@@ -70,3 +70,6 @@ node_modules/
 test-results/
 playwright-report/
 webapp-php/static/code-version.txt
+
+# Source inputs stay out of git: the repo holds the process and the result.
+/docs/reference/
