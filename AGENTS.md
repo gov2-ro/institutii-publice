@@ -8,17 +8,20 @@ website, contacts, etc. It also feeds [gov2-ro/stiri](https://github.com/gov2-ro
 Names, comments and UI text mix Romanian and English; the explorer UI is Romanian.
 
 ## Commands
-No tests, linter or build step. Two scripts and a static page:
+No linter or build step. Two scripts, a static page and standard-library tests:
 
     uv run scripts/consolidate.py              # rebuild data/consolidated/ (needs openpyxl; inline uv script deps)
     python3 scripts/scrape_roepas.py [--workers 4] [--limit N]   # re-scrape roepas.ro -> data/roepas/ (requests, lxml)
     python3 -m http.server                     # then open http://localhost:8000/explorer/
+    python3 -m unittest discover -s tests      # matching and category fixtures; no inputs, no openpyxl needed
+    sh tests/determinism.sh                    # full data: same CSV under PYTHONHASHSEED=1 and 2
 
 `consolidate.py` prints a summary to stderr (record counts per source combination, link tiers, ANI umbrella
 stats, category counts). Compare it before/after a change to the matching rules — it is the de facto regression check.
 `scrape_roepas.py` appends to `data/roepas/details.jsonl`, so an interrupted run resumes.
 
 ## Data flow
+The ignored inputs listed here are not in git. Copy them from the owner's checkout, at the same relative paths.
 Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
 - **ANAF** public-entity list `docs/reference/Lista_EP_portal_01102026.xlsx` — the backbone (CIF, UAT, address, parent CIFs). Record id `A<cif>`.
 - **ROePAS** scrape `data/roepas/institutii.json` — website, email, phone, coords, procedures. Standalone id `R<id>`.
@@ -58,9 +61,12 @@ Git: `.gitignore` excludes `data/*` except `data/consolidated/institutii.csv`, s
 Single self-contained vanilla-JS page (no build, no deps) that fetches `metadata.json` + `rows.json`; it must be
 served over HTTP, not opened as file://. Rows use the compact schema from `write_explorer_data`: short keys
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
-declaratii=8, `f` cif, `p` parent cifs, ...), empty values omitted. Adding a field means changing both
+declaratii=8, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
+candidates, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
 `write_explorer_data` and the decoding in `index.html`.
-`metadata.json` also carries `state`, the "Structura statului" tree: the curated top layer (`STATE_NODES`,
+`metadata.json` also carries `dataset` (generation time; per input file the path, bytes, SHA-256, mtime, row count;
+ANI exports add `exported_at` and `capped`). Ambiguous source rows stay separate records with `match_candidates`
+(CSV column `match_candidate_cifs`). It also carries `state`, the "Structura statului" tree: the curated top layer (`STATE_NODES`,
 `STATE_MEMBERS`, `STATE_ATTACH` in `consolidate.py`, keyed by CIF) plus the UAT and unclassified root CIFs.
 Spec: `docs/specs/structura-statului.md`. In the page console, `explorer.reachableRoots()` must equal
 `explorer.expectedRoots()`.

@@ -20,12 +20,20 @@ candidate (overlap 0.5-0.75) is NOT merged: the source row stays its own record 
 possible ANAF match in `possible_duplicate_of`. Source rows with no candidate are kept as-is, so
 the output is a union with provenance in `sources` and `link`.
 
-Outputs (data/consolidated/): institutii.json, institutii.csv, and metadata.json + rows.json, the
-compact copy that explorer/index.html loads.
+Ambiguity: when several eligible ANAF rows tie (same name, equal token score) and neither a locality
+hint nor a county name in the source name singles one out, nothing merges; the source row stays its own
+record and lists the tied rows in `match_candidates` ({cif, tier, score}, sorted by -score, cif).
+`possible_duplicate_of` is kept for a single weak candidate only.
+
+Outputs (data/consolidated/): institutii.json (`match_candidates` is omitted when empty), institutii.csv
+(`match_candidate_cifs`, " | " joined), and metadata.json + rows.json, the compact copy that
+explorer/index.html loads. metadata.json carries `dataset`: generation time plus path, size, SHA-256,
+mtime and row count of every input file read (ANI exports also `exported_at`, and `capped` at 10,000 rows).
 
 Usage: uv run scripts/consolidate.py   (or python3 with openpyxl installed)
 """
 import csv
+import datetime
 import hashlib
 import json
 import math
@@ -34,8 +42,6 @@ import sys
 import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
-
-import openpyxl
 
 ROOT = Path(__file__).resolve().parent.parent
 ANAF_XLSX = ROOT / "docs/reference/Lista_EP_portal_01102026.xlsx"
@@ -64,8 +70,31 @@ def fold(s):
 
 # ---------------------------------------------------------------- loaders
 
+PROVENANCE = []         # one entry per input file read; written to metadata.json as `dataset.inputs`
+KIBANA_TS = re.compile(r"\[(\d{4}-\d\d-\d\dT\d\d)_(\d\d)_(\d\d(?:\.\d+)?)([+-]\d\d)_(\d\d)\]")
+
+
+def iso_utc(ts):
+    return datetime.datetime.fromtimestamp(ts, datetime.timezone.utc).isoformat(timespec="seconds")
+
+
+def record_input(source, path, rows, **extra):
+    """Remember an input file for the `dataset` block: path, size, SHA-256, mtime, data-row count."""
+    data = path.read_bytes()
+    PROVENANCE.append({"source": source, "path": path.relative_to(ROOT).as_posix(), "bytes": len(data),
+                       "sha256": hashlib.sha256(data).hexdigest(), "modified_at": iso_utc(path.stat().st_mtime),
+                       "rows": rows, **extra})
+
+
+def kibana_export_time(filename):
+    """'Lens Visualization [2026-10-19T20_26_13.348+03_00] 3.csv' -> '2026-10-19T20:26:13.348+03:00' or None."""
+    m = KIBANA_TS.search(filename)
+    return f"{m.group(1)}:{m.group(2)}:{m.group(3)}{m.group(4)}:{m.group(5)}" if m else None
+
+
 
 def load_anaf():
+    import openpyxl                                 # lazy: the tests import this module without openpyxl
     ws = openpyxl.load_workbook(ANAF_XLSX, read_only=True, data_only=True).worksheets[0]
     rows = []
     for r in list(ws.iter_rows(values_only=True))[1:]:
@@ -74,6 +103,7 @@ def load_anaf():
             continue
         rows.append({"county": v[0], "cif": v[1], "cif_tva": v[2], "name": v[3], "uat": v[4],
                      "address": v[5], "parent_cifs": [c for c in dict.fromkeys([v[6], v[8]]) if c]})
+    record_input("anaf", ANAF_XLSX, len(rows))
     return rows
 
 
@@ -103,6 +133,7 @@ def load_registrul():
         if m:
             county, name = m.group(1), (m.group(2) + " " + (name if county else "")).strip()
         out.append({"num": num, "county": county, "name": name})
+    record_input("registrul", REGISTRUL_CSV, len(out))
     return out
 
 
@@ -129,6 +160,7 @@ def load_roepas():
         r["website_url"] = clean_website(raw)
         if raw and "@" in raw and not r["email"]:           # an address typed into the website box
             r["email"] = squash(raw)
+    record_input("roepas", ROEPAS_JSON, len(rows))
     return rows
 
 
@@ -143,7 +175,10 @@ def load_declaratii():
     for path in sorted(DECLARATII_DIR.glob("Lens Visualization*.csv")):
         with path.open(encoding="utf-8-sig", newline="") as fh:
             rows = list(csv.reader(fh))[1:]
-        if len(rows) >= 10000:
+        capped = len(rows) >= 10000
+        record_input("declaratii", path, len(rows), exported_at=kibana_export_time(path.name),
+                     **({"capped": True} if capped else {}))
+        if capped:
             print(f"warning: {path.name} hit the 10,000-value cap, its rarest names are missing", file=sys.stderr)
         for key, count in rows:
             raw[key] = max(raw.get(key, 0), int(count.replace(",", "")))
@@ -164,7 +199,7 @@ def load_declaratii():
 
 UAT_RE = re.compile(
     r"^(?:primaria|primarie|consiliul local|consiliul judetean|comuna|orasul|oras|municipiul|municipiu|"
-    r"sectorul|judetul)(?:\s+al)?(?:\s+(?:comunei|orasului|municipiului|sectorului|judetului|comuna|orasul|"
+    r"sectorul|judetul|municipiului|comunei|orasului)(?:\s+al)?(?:\s+(?:comunei|orasului|municipiului|sectorului|judetului|comuna|orasul|"
     r"municipiul))?\s+")
 COUNTY_RE = re.compile(r"^(?:consiliul? judetean|judetul)\b")
 ALIASES = [
@@ -207,12 +242,26 @@ def prep(name):
 UNIT_RE = re.compile(r"\b(?:unitatea militara|u ?m)\s*(?:nr\s*)?(\d{3,5})\b")
 
 
+TIE_EPS = 1e-9          # token scores closer than this are equal: float sums must not decide a match
+
+
 class Linker:
-    """Link (county, name) to an ANAF row. link() -> (tier, [anaf indexes], score)."""
+    """Link (county, name) to an ANAF row.
+
+    link() -> (tier, [anaf indexes], score, candidates). Tiers that merge: exact, canonical, unit, tokens.
+    `weak` is a possible duplicate (not merged). `ambiguous` means several eligible rows tie and nothing
+    singles one out (no merge). `candidates` lists {"cif", "tier", "score"} of every tied eligible row
+    (and of a single weak row), sorted by -score, cif. A locality `hint` breaks a tie only when exactly
+    one tied row's UAT ends with it. In the canonical tier a second tie-break applies: `prep` collapses
+    "Consiliul Local X - Serviciul apa" onto the locality of "Comuna X", so the candidate whose name has the
+    same " - suffix" structure as the source name (plain or with suffix) wins when it is the only one. A county name in the source name that differs from every county
+    name in a candidate's name makes that candidate ineligible (DSP Ilfov is not DSP Bucuresti)."""
 
     def __init__(self, anaf):
         self.anaf = anaf
         self.county_tokens = {t for a in anaf for t in fold(a["county"]).split()}
+        names = sorted({fold(a["county"]) for a in anaf if fold(a["county"])}, key=lambda c: (-len(c), c))
+        self.county_re = re.compile(r"\b(" + "|".join(map(re.escape, names)) + r")\b") if names else None
         self.exact, self.canon = defaultdict(list), defaultdict(list)
         self.tokidx = defaultdict(lambda: defaultdict(set))
         df = Counter()
@@ -221,6 +270,9 @@ class Linker:
             a["_f"] = fold(a["name"])
             a["_kind"], a["_canon"] = prep(a["name"])
             a["_toks"] = self.tokens(a["_canon"])
+            a["_nums"] = set(re.findall(r"\d+", a["_canon"]))
+            a["_geo"] = self.geo(a["_f"])
+            a["_plain"] = " - " not in squash(a["name"])
             self.exact[(a["_ck"], a["_f"])].append(i)
             self.canon[(a["_ck"], a["_canon"])].append(i)
             df.update(a["_toks"])
@@ -237,6 +289,10 @@ class Linker:
             self.nat_exact[a["_f"]].append(i)
             self.nat_canon[a["_canon"]].append(i)
 
+    def geo(self, folded):
+        """The county names written in a folded name (frozenset)."""
+        return frozenset(self.county_re.findall(folded)) if self.county_re else frozenset()
+
     def tokens(self, canon):
         ts = {t for t in canon.replace("uat:", "").split() if t not in STOP and len(t) > 1 and not t.isdigit()}
         return (ts - self.county_tokens) or ts
@@ -246,40 +302,74 @@ class Linker:
         union = sum(w(t) for t in sorted(t1 | t2))   # sorted: float sums must not depend on the hash seed
         return sum(w(t) for t in sorted(t1 & t2)) / union if union else 0.0
 
+    def by_hint(self, idx, hint):
+        """The one row of `idx` whose UAT ends with the locality hint, or None when none or several do."""
+        h = fold(hint)
+        if not h:
+            return None
+        hit = [i for i in idx if fold(self.anaf[i]["uat"]).endswith(h)]
+        return hit[0] if len(hit) == 1 else None
+
+    def cands(self, scored, tier):
+        """[(index, score)] -> sorted candidate dicts."""
+        out = [{"cif": self.anaf[i]["cif"], "tier": tier, "score": round(s, 4)} for i, s in scored]
+        return sorted(out, key=lambda c: (-c["score"], c["cif"]))
+
     def link(self, county, name, hint=None):
+        src_geo = self.geo(fold(name))               # before strip_suffix drops "- Judetul Ilfov"
         name = strip_suffix(name)
         ck, f = fold(county), fold(name)
         kind, canon = prep(name)
         for tier, idx in (("exact", self.exact.get((ck, f))), ("canonical", self.canon.get((ck, canon)))):
             if idx:
-                if len(idx) > 1 and hint:           # same name on several CIFs: prefer the matching UAT
-                    idx = sorted(idx, key=lambda i: not fold(self.anaf[i]["uat"]).endswith(fold(hint)))
-                return tier, idx[:1], 1.0
+                pick = idx[0] if len(idx) == 1 else self.by_hint(idx, hint)
+                if pick is None and tier == "canonical":
+                    same = [i for i in idx if self.anaf[i]["_plain"] == (" - " not in name)]
+                    pick = same[0] if len(same) == 1 else None
+                if pick is not None:
+                    return tier, [pick], 1.0, []
+                return "ambiguous", sorted(idx), 1.0, self.cands([(i, 1.0) for i in idx], tier)
         m = UNIT_RE.search(f)
         if m and self.units.get(m.group(1).zfill(5)):
-            idx = sorted(self.units[m.group(1).zfill(5)], key=lambda i: self.anaf[i]["_ck"] != ck)
-            return "unit", idx[:1], 1.0
+            idx = self.units[m.group(1).zfill(5)]
+            same = [i for i in idx if self.anaf[i]["_ck"] == ck]
+            pool = same if len(idx) > 1 and same else idx
+            pick = pool[0] if len(pool) == 1 else self.by_hint(pool, hint)
+            if pick is not None:
+                return "unit", [pick], 1.0, []
+            return "ambiguous", sorted(pool), 1.0, self.cands([(i, 1.0) for i in pool], "unit")
         toks = self.tokens(canon)
+        nums = set(re.findall(r"\d+", canon))
         cand = set()
         for t in toks:
             if self.idf.get(t, 4.0) > 2.0:           # skip very common words when generating candidates
                 cand |= self.tokidx[ck].get(t, set())
-        best, best_i = 0.0, None
-        for i in sorted(cand):                       # sorted: ties go to the first ANAF row, whatever the hash seed
+        strong, weak = [], []
+        for i in sorted(cand):                       # eligibility first, then the best of the eligible rows
             a = self.anaf[i]
             if a["_kind"] != kind:
                 continue
+            if src_geo and a["_geo"] and src_geo.isdisjoint(a["_geo"]):
+                continue                             # names another county: "DSP Ilfov" is not "DSP Bucuresti"
+            if nums and a["_nums"] and nums != a["_nums"]:
+                continue                             # "Scoala nr 1" is not "Scoala nr 2"
             s = self.score(toks, a["_toks"])
-            if s > best:
-                best, best_i = s, i
-        if best_i is None:
-            return None, [], 0.0
-        nums, best_nums = set(re.findall(r"\d+", canon)), set(re.findall(r"\d+", self.anaf[best_i]["_canon"]))
-        if best >= 0.75 and nums == best_nums:
-            return "tokens", [best_i], best
-        if best >= 0.5 and not (nums and best_nums and nums != best_nums):   # "Scoala nr 1" is not "Scoala nr 2"
-            return "weak", [best_i], best
-        return None, [], best
+            if s >= 0.75 and nums == a["_nums"]:
+                strong.append((i, s))
+            elif s >= 0.5:
+                weak.append((i, s))
+        for pool, tier in ((strong, "tokens"), (weak, "weak")):
+            if not pool:
+                continue
+            best = max(s for _, s in pool)
+            tied = [(i, s) for i, s in pool if best - s <= TIE_EPS]
+            pick = tied[0][0] if len(tied) == 1 else self.by_hint([i for i, _ in tied], hint)
+            if pick is not None:
+                s = dict(tied)[pick]
+                return tier, [pick], s, ([] if tier == "tokens" else self.cands([(pick, s)], "weak"))
+            return ("ambiguous" if tier == "tokens" else "weak"), sorted(i for i, _ in tied), best, \
+                self.cands(tied, tier)
+        return None, [], 0.0, []
 
     def anywhere(self, name):
         """The one ANAF row with this exact/canonical name in any county, or None."""
@@ -347,14 +437,16 @@ def split_umbrella(name, labels):
 
 
 def link_declaratii(linker, name, county, county_re, widespread):
-    """-> (tier, idx, score, folded county). The ANI county is not always where the institution sits (a
+    """-> (tier, idx, score, folded county, candidates). The ANI county is not always where the institution sits (a
     ministry shows up under all 42), so a county named in the institution name is tried first, and a name
     that does not link in its county is looked up among the Bucharest bodies (exact/canonical only, tier
     'national'), then among all counties when exactly one row has that name (tier 'elsewhere': a commune
     filed under the wrong county). Local kinds (schools, clubs, street administrations...) skip both
     fallbacks: a "Scoala gimnaziala Ion Creanga" elsewhere is another school. A `widespread` name
     (DECL_SPREAD+ counties) is a stale dropdown label ("INSPECTORATUL TERITORIAL DE MUNCA BOTOSANI"
-    filed in 36 counties): its own county goes first."""
+    filed in 36 counties): its own county goes first. When a county has several eligible rows and nothing
+    singles one out (tier 'ambiguous'), the fallbacks are skipped: the name stays unresolved and keeps
+    its candidates."""
     ck, f = fold(county), fold(name)
     for pat, rep in DECL_ABBREV:
         f = pat.sub(rep, f).strip()
@@ -364,21 +456,25 @@ def link_declaratii(linker, name, county, county_re, widespread):
     named = set(county_re.findall(f))
     order = [named.pop()] if len(named) == 1 and ck not in named else []
     order = [ck] + order if widespread else order + [ck]
-    weak = None
+    weak = amb = None
     for c in order:
-        tier, idx, score = linker.link(c, name)
+        tier, idx, score, cands = linker.link(c, name)
         if tier in ("exact", "canonical", "unit", "tokens"):
-            return tier, idx, score, c
+            return tier, idx, score, c, []
+        if tier == "ambiguous" and not amb:
+            amb = (tier, idx, score, c, cands)
         if tier == "weak" and not weak:
-            weak = (tier, idx, score, c)
+            weak = (tier, idx, score, c, cands)
+    if amb:
+        return amb
     if not DECL_LOCAL_KIND.search(f):
-        tier, idx, score = linker.link("bucuresti", name)
+        tier, idx, score, _ = linker.link("bucuresti", name)
         if tier in ("exact", "canonical"):
-            return "national", idx, score, "bucuresti"
+            return "national", idx, score, "bucuresti", []
         i = linker.anywhere(name)
         if i is not None:
-            return "elsewhere", [i], 1.0, linker.anaf[i]["_ck"]
-    return weak or (None, [], 0.0, order[0])
+            return "elsewhere", [i], 1.0, linker.anaf[i]["_ck"], []
+    return weak or (None, [], 0.0, order[0], [])
 
 
 # ---------------------------------------------------------------- categories
@@ -390,14 +486,19 @@ UTIL, FIN, TRANS = "Servicii publice locale și regii", "Finanțe publice", "Tra
 RES, CENT = "Cercetare", "Autorități centrale și deconcentrate"
 ORG, OTHER = "Asociații și organizații profesionale", "Altele"
 COMPANY = "Companii de stat"
-COMPANY_RE = re.compile(r"\b(s a|sa|s r l|srl|compania nationala|societatea nationala|societatea comerciala|"
-                        r"cn|sn)\b")
+# A legal form (S A, SA, S R L, SRL) makes a company, with one exception: right after a single-letter word it can
+# be the tail of an initialism ("D S V S A ALBA LABORATOR SANITAR VETERINAR" = D.S.V.S.A.). Then the name is a
+# company only if no institutional noun follows ("C N A I R S A SECTIA DRUMURI" stays a company).
+_FORM = r"\b(?:s a|sa|s r l|srl)\b"
+_INSTITUTIONAL = r"\b(?:laborator\w*|sanitar\w*|veterinar\w*|directia|serviciul|inspectoratul|scoala|spital\w*)\b"
+COMPANY_RE = re.compile(rf"(?<!\b[a-z] ){_FORM}|(?<=\b[a-z] ){_FORM}(?!.*{_INSTITUTIONAL})|"
+                        r"\b(?:compania nationala|societatea nationala|societatea comerciala|cn|sn)\b")
 
 RULES = [  # first match wins; patterns run on fold()ed names
     (ORG, r"^(colegiul (medicilor|farmacistilor|dentistilor|veterinar)|ordinul|oamgmamr|uniunea|federatia|asociatia|"
           r"fundatia|camera (de comert|notarilor|auditorilor|consultantilor)|sindicat|patronat|cooperativa)\b"),
     (LOCAL, r"^(primaria|primarie|consiliul? local|consiliul? judetean|consiliul general|comuna|orasul|oras|"
-            r"municipiul|sectorul|judetul|uat|unitatea administrativ)\b(?!.*\b(scoala|liceul|spital|spitalul|directia|serviciul|centrul|"
+            r"municipiul|municipiului|comunei|orasului|sectorul|judetul|uat|unitatea administrativ)\b(?!.*\b(scoala|liceul|spital|spitalul|directia|serviciul|centrul|"
             r"clubul|biblioteca|gradinita|colegiul|casa|caminul|administratia|regia|politia)\b)"),
     (COMPANY, COMPANY_RE.pattern),
     (JUST, r"\b(judecatoria|tribunalul|curtea de apel|parchetul|penitenciar\w*|inalta curte|magistraturii|"
@@ -410,6 +511,7 @@ RULES = [  # first match wins; patterns run on fold()ed names
           r"camera de conturi|autoritatea vamala|directia regionala vamala|vamal\w*|impozite si taxe|"
           r"venituri (buget|la bugetul)|buget local)\b"),
     (RES, r"\b(cercetare|statiunea de cercetare|institutul national de|institutul de (cercetare|inginerie))\b"),
+    (AGRI, r"\b(sanitar veterinar\w*|sanitara veterinara|veterinar\w* si pentru siguranta)\b"),   # before HEALTH: "laborator"
     (HEALTH, r"\b(spital\w*|policlinica|dispensar\w*|sanatoriul|ambulanta|centrul (de sanatate|medical)|"
              r"sanatate publica|asigurari de sanatate|laborator\w*|medicina legala|farmacia|transfuzie|"
              r"institutul (de|clinic|oncologic|national de boli|national de sanatate)|crucea rosie|"
@@ -462,7 +564,8 @@ ANCESTOR_HINTS = [
     (FIN, r"finantelor"), (TRANS, r"transporturilor|infrastructurii|lucrarilor publice"),
     (CENT, r"secretariatul general al guvernului|guvernul"),
 ]
-ANCESTOR_HINTS = [(label, re.compile(p)) for label, p in ANCESTOR_HINTS]
+# word boundaries: `culturii` must not match inside `agriculturii`
+ANCESTOR_HINTS = [(label, re.compile(r"\b(?:" + p + r")\b")) for label, p in ANCESTOR_HINTS]
 
 
 def categorize(name, ancestor_names=()):
@@ -677,6 +780,23 @@ def assign_families(records, min_members=5, min_counties=4):
 
 # ---------------------------------------------------------------- build
 
+def union_candidates(lists):
+    """Candidate dicts of several rows -> one list, one entry per CIF (best score), sorted by -score, cif."""
+    best = {}
+    for c in (c for cs in lists for c in cs):
+        if c["cif"] not in best or c["score"] > best[c["cif"]]["score"]:
+            best[c["cif"]] = c
+    return sorted(best.values(), key=lambda c: (-c["score"], c["cif"]))
+
+
+def candidate_fields(cands):
+    """-> (possible_duplicate_of, match_candidates). One weak candidate is a possible duplicate; several
+    are an unresolved match and name no single target."""
+    if len(cands) == 1:
+        return cands[0]["cif"], []
+    return None, list(cands)
+
+
 def declaratii_standalone(rows, aggregate):
     """Unlinked ANI names become records of their own. The same name filed under several counties is one
     institution (its staff live or work elsewhere, or the county was misfiled): one record in the county
@@ -691,7 +811,8 @@ def declaratii_standalone(rows, aggregate):
         per_county = []
         for ts in by_county.values():                 # rows that resolved to the same county add up
             top = max(ts, key=lambda t: t[3]["count"])
-            per_county.append((top[0], top[1], top[2], {**top[3], "count": sum(t[3]["count"] for t in ts)}))
+            per_county.append((top[0], top[1], top[2], {**top[3], "count": sum(t[3]["count"] for t in ts)},
+                               union_candidates(t[4] for t in ts)))
         per_county.sort(key=lambda t: -t[3]["count"])
         total = sum(t[3]["count"] for t in per_county)
         if DECL_LOCAL_KIND.search(f):
@@ -701,7 +822,8 @@ def declaratii_standalone(rows, aggregate):
         elif total >= DECL_MIN_COUNT:
             top = per_county[0]
             split = [[t[3]["county"], t[3]["count"]] for t in per_county] if len(per_county) > 1 else None
-            out.append((top[0], top[1], top[2], {**top[3], "count": total, "by_county": split}))
+            out.append((top[0], top[1], top[2], {**top[3], "count": total, "by_county": split},
+                        union_candidates(t[4] for t in per_county)))
     return out
 
 
@@ -709,6 +831,7 @@ TIER_RANK = {"exact": 0, "canonical": 1, "unit": 1, "tokens": 2, "national": 3, 
 
 
 def main():
+    PROVENANCE.clear()
     anaf, registrul, roepas, declaratii = load_anaf(), load_registrul(), load_roepas(), load_declaratii()
     print(f"sources: anaf={len(anaf)} registrul={len(registrul)} roepas={len(roepas)} "
           f"declaratii={len(declaratii)}", file=sys.stderr)
@@ -726,11 +849,11 @@ def main():
     standalone = {"roepas": [], "registrul": [], "declaratii": []}
     for src, rows in (("roepas", roepas), ("registrul", registrul)):
         for row in rows:
-            tier, idx, score = linker.link(row["county"], row["name"], row.get("city"))
+            tier, idx, score, cands = linker.link(row["county"], row["name"], row.get("city"))
             if tier in TIER_RANK:
                 links[src][idx[0]].append((tier, row))
             else:
-                standalone[src].append((tier, idx, score, row))
+                standalone[src].append((tier, idx, score, row, cands))
     county_re = re.compile(r"\b(" + "|".join(sorted(county_display, key=len, reverse=True)) + r")\b")
     aggregate, labels = [], umbrella_labels(declaratii)
     spread = Counter(fold(r["name"]) for r in declaratii)
@@ -741,13 +864,13 @@ def main():
                 aggregate.append(row)
                 continue
             row = {**row, "name": specific, "group": group}
-        tier, idx, score, ck = link_declaratii(linker, row["name"], row["county"], county_re,
+        tier, idx, score, ck, cands = link_declaratii(linker, row["name"], row["county"], county_re,
                                                 spread[fold(row["name"])] >= DECL_SPREAD)
         row = {**row, "county": county_of(ck)}
         if tier in TIER_RANK:
             links["declaratii"][idx[0]].append((tier, row))
         else:
-            standalone["declaratii"].append((tier, idx, score, row))
+            standalone["declaratii"].append((tier, idx, score, row, cands))
 
     def best_roepas(i):
         cands = links["roepas"].get(i, [])
@@ -788,28 +911,29 @@ def main():
             rec["declaratii_count"] = sum(r["count"] for _, r in dec)
         records.append(rec)
 
-    def possible(idx):
-        return anaf[idx[0]]["cif"] if idx else None
+    def standalone_link(cands):
+        """The link fields of a source row with no merge: `possible_duplicate_of` and `match_candidates`."""
+        possible, multi = candidate_fields(cands)
+        return {"possible_duplicate_of": possible, **({"match_candidates": multi} if multi else {})}
 
-    for tier, idx, score, r in standalone["roepas"]:
+    for tier, idx, score, r, cands in standalone["roepas"]:
         records.append({
             "id": "R" + r["id"], "name": r["name"], "county": county_of(r["county"]),
             "uat": uat_of(r["county"], r["city"]), "address": r["address"], "cif": None, "cif_tva": None, "parents": [],
-            "category": categorize(r["name"]), "sources": ["roepas"], "link": {},
-            "possible_duplicate_of": possible(idx) if tier == "weak" else None,
+            "category": categorize(r["name"]), "sources": ["roepas"], "link": {}, **standalone_link(cands),
             "website": r["website"], "website_url": r["website_url"], "email": r["email"],
             "phone": r["phone"], "fax": r["fax"], "lat": r["lat"], "lon": r["lon"],
             "roepas_ids": [r["id"]], "roepas_url": r["detail_url"],
             "procedures_count": r["procedures_count"], "online_procedures_count": r["online_procedures_count"],
             "org_units": r["org_units"]})
-    for tier, idx, score, r in standalone["registrul"]:
+    for tier, idx, score, r, cands in standalone["registrul"]:
         records.append({
             "id": "G" + r["num"], "name": r["name"], "county": county_of(r["county"]), "uat": None,
             "address": None, "cif": None, "cif_tva": None, "parents": [],
             "category": categorize(r["name"]), "sources": ["registrul"], "link": {},
-            "possible_duplicate_of": possible(idx) if tier == "weak" else None,
+            **standalone_link(cands),
             "registrul_nums": [r["num"]]})
-    for tier, idx, score, r in declaratii_standalone(standalone["declaratii"], aggregate):
+    for tier, idx, score, r, cands in declaratii_standalone(standalone["declaratii"], aggregate):
         group = r.get("group")
         records.append({
             "id": "D" + hashlib.sha1(f"{fold(r['name'])}|{fold(r['county'])}".encode()).hexdigest()[:8],
@@ -817,7 +941,7 @@ def main():
             "cif_tva": None, "parents": [],
             "category": COMPANY if group and re.match(r"(societati|companii|regii)", group)
             else categorize(r["name"], [group] if group else []),
-            "sources": ["declaratii"], "link": {}, "possible_duplicate_of": possible(idx) if tier == "weak" else None,
+            "sources": ["declaratii"], "link": {}, **standalone_link(cands),
             "declaratii_count": r["count"], "declaratii_group": group and group.upper(),
             "declaratii_by_county": r.get("by_county")})
 
@@ -831,7 +955,7 @@ def main():
 
 CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif", "cif_tva", "parent_cifs",
             "parent_names", "website", "website_url", "email", "phone", "fax", "lat", "lon", "sources",
-            "link_roepas", "link_registrul", "possible_duplicate_of", "roepas_ids", "roepas_url",
+            "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
             "declaratii_count", "declaratii_group"]
 
@@ -847,10 +971,18 @@ def write_csv(path, records):
             row["parent_names"] = flat([p["name"] for p in r["parents"]])
             row["link_roepas"], row["link_registrul"] = r["link"].get("roepas"), r["link"].get("registrul")
             row["link_declaratii"] = r["link"].get("declaratii")
+            row["match_candidate_cifs"] = flat([c["cif"] for c in r.get("match_candidates", [])])
             w.writerow(row)
 
 
 SRC_BIT = {"anaf": 1, "roepas": 2, "registrul": 4, "declaratii": 8}
+
+
+def dataset_block():
+    """`dataset` in metadata.json: when the output was built and from which input files (see record_input).
+    Only the ANI exports carry `exported_at` (from the Kibana file name); `modified_at` is the file mtime."""
+    return {"generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+            "inputs": sorted(PROVENANCE, key=lambda e: (e["source"], e["path"]))}
 
 
 def write_explorer_data(out_dir, records):
@@ -864,7 +996,7 @@ def write_explorer_data(out_dir, records):
     fi = {f: i for i, f in enumerate(families)}
     rows = []
     for r in records:
-        row = {"n": r["name"], "c": ci[r["category"]], "s": sum(SRC_BIT[x] for x in r["sources"])}
+        row = {"i": r["id"], "n": r["name"], "c": ci[r["category"]], "s": sum(SRC_BIT[x] for x in r["sources"])}
         optional = {
             "k": ki.get(r["county"]), "u": r["uat"], "a": r["address"], "f": r["cif"], "t": r["cif_tva"],
             "p": [p["cif"] for p in r["parents"]], "w": r.get("website_url"), "e": r.get("email"),
@@ -874,14 +1006,16 @@ def write_explorer_data(out_dir, records):
             "lr": r["link"].get("roepas"), "lg": r["link"].get("registrul"), "al": r.get("aliases"),
             "m": fi.get(r["family"]), "dc": r.get("declaratii_count"), "ld": r["link"].get("declaratii"),
             "dg": r.get("declaratii_group"), "dk": r.get("declaratii_by_county"),
+            "mc": [c["cif"] for c in r.get("match_candidates", [])],
         }
         for k, v in optional.items():
-            if v is None or v == "" or v == [] or (k in ("pc", "po") and not v):
+            if v is None or v == "" or v == []:           # a known 0 (pc, po) stays: it differs from unknown
                 continue
             row[k] = v
         rows.append(row)
     state, _ = state_tree(records)
-    meta = {"categories": cats, "counties": counties, "families": families, "state": state}
+    meta = {"categories": cats, "counties": counties, "families": families, "state": state,
+            "dataset": dataset_block()}
     (out_dir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
     (out_dir / "rows.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
@@ -894,8 +1028,10 @@ def report(records, anaf, links, standalone, declaratii, aggregate):
     for src in ("roepas", "registrul"):
         linked = sum(len(v) for v in links[src].values())
         weak = sum(1 for t, *_ in standalone[src] if t == "weak")
+        amb = sum(1 for t, *_ in standalone[src] if t == "ambiguous")
         print(f"{src}: {linked} rows merged into ANAF, {weak} weak candidates kept separate, "
-              f"{len(standalone[src]) - weak} with no candidate", file=sys.stderr)
+              f"{len(standalone[src]) - weak - amb} with no candidate, {amb} ambiguous (several candidates)",
+              file=sys.stderr)
     total = sum(r["count"] for r in declaratii)
     linked = [r for v in links["declaratii"].values() for _, r in v]
     print(f"declaratii: {len(declaratii)} names, {total} declarations", file=sys.stderr)
@@ -908,7 +1044,8 @@ def report(records, anaf, links, standalone, declaratii, aggregate):
     print(f"  umbrella entries: {len(aggregate)} names ({sum(r['count'] for r in aggregate)} declarations)",
           file=sys.stderr)
     own = [r for r in records if r["sources"] == ["declaratii"]]
-    print(f"  records of their own: {len(own)} ({sum(1 for r in own if r['possible_duplicate_of'])} weak), "
+    print(f"  records of their own: {len(own)} ({sum(1 for r in own if r['possible_duplicate_of'])} weak, "
+          f"{sum(1 for r in own if r.get('match_candidates'))} ambiguous), "
           f"{sum(r['declaratii_count'] for r in own)} declarations", file=sys.stderr)
     _, loose = state_tree(records)
     print(f"\nneclasificate (central roots with no STATE_TREE entry): {len(loose)}", file=sys.stderr)
