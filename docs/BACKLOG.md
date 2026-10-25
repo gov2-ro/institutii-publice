@@ -3,7 +3,7 @@
 Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the reason).
 
 ## Implementation handoff
-- [ ] Data correctness and dense explorer, version 1:
+- [x] Data correctness and dense explorer, version 1 (built and accepted 2026-10-25):
       [spec](specs/explorer-quality-v1.md), [implementation brief](briefs/explorer-quality-v1.md).
       Includes conservative matching, confirmed category fixes, tree visibility, dense responsive filters, record links,
       review filters, CSV export, loading feedback, minimal dataset provenance and compact overview navigation.
@@ -16,25 +16,25 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       members share one parent. Measured 2026-10-25: 3,544 of 11,861 records. Show these parents in a
       different style ("atribuit după tip").
 - [ ] Later: a treemap or icicle chart of the top two levels, sized by number of institutions.
-- [ ] Filtered tree: include all descendants of attached roots in `subtree()`. Search `#v=stat&q=39847338`
+- [x] Filtered tree: include all descendants of attached roots in `subtree()`. Search `#v=stat&q=39847338`
       reports one match but shows no record. All eight children of MF acțiuni generale have this path problem.
       The existing root-count check passes. Add a check for descendant visibility under filters.
-- [ ] Show the notes on `STATE_MEMBERS` in the tree and detail dialog. The page discards the third tuple value.
+- [x] Show the notes on `STATE_MEMBERS` in the tree and detail dialog. The page discards the third tuple value.
       CNCAN's disputed-placement note is present in metadata but absent from its dialog.
 
 ## Explorer: usability and data presentation
-- [ ] Fix filter overflow between the 900 px breakpoint and the grid's minimum width. Measured:
+- [x] Fix filter overflow between the 900 px breakpoint and the grid's minimum width. Measured:
       a 901 px viewport has 1,042 px of document width; a 1,024 px viewport also overflows.
-- [ ] Reduce the sticky filter area on phones. It occupies 349 px at 390 px width and 380 px at 320 px width.
+- [x] Reduce the sticky filter area on phones. It occupies 349 px at 390 px width and 380 px at 320 px width.
       Keep search visible. Put secondary filters behind a disclosure.
-- [ ] Normalize punctuation in search. `Bistrița-Năsăud` returns 26 records; `Bistrita Nasaud` returns 408.
-- [ ] Add stable record links and a copy-link action. Opening a detail dialog does not change the URL.
+- [x] Normalize punctuation in search. `Bistrița-Năsăud` returns 26 records; `Bistrita Nasaud` returns 408.
+- [x] Add stable record links and a copy-link action. Opening a detail dialog does not change the URL.
       The compact rows omit the record ID, which source-only records need for links.
-- [ ] Add loading feedback and a retry action. The main area stays blank while JSON loads.
+- [x] Add loading feedback and a retry action. The main area stays blank while JSON loads.
       The current error text gives visitors a developer command.
-- [ ] Preserve known zero procedure counts in compact rows. There are 2,074 such records in the full JSON;
+- [x] Preserve known zero procedure counts in compact rows. There are 2,074 such records in the full JSON;
       none retains `pc` in the explorer. Zero and unknown must stay distinct.
-- [ ] Offer a filtered CSV download and filters for unresolved records and duplicate candidates.
+- [x] Offer a filtered CSV download and filters for unresolved records and duplicate candidates.
       Show source dates and explain that ANI totals count declarations, not institutions or employees.
 
 ## Data quality
@@ -45,33 +45,41 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       "Electrica Furnizare SFEE Transilvania Sud").
 - [ ] Ugly network-family labels in Companii de stat: "Electrica furnizare sa sfee transilvania sud brasov
       afee", "Smart sa sucursala".
-- [ ] Wrong categories: "D S V S A ALBA LABORATOR SANITAR VETERINAR" is in Companii de stat (it belongs under
-      ANSVSA). "MUNICIPIULUI MANGALIA" is in Altele (the genitive form is not matched). IDPSAR is in Sănătate.
-      SRR and SRTV are in "Servicii publice locale și regii".
+- [x] Wrong categories: "D S V S A ALBA LABORATOR SANITAR VETERINAR" was in Companii de stat (now Agricultură).
+      "MUNICIPIULUI MANGALIA" was in Altele (now Administrație locală; the genitive form matches).
+- [ ] Wrong categories, needing evidence first: IDPSAR is in Sănătate. SRR and SRTV are in
+      "Servicii publice locale și regii".
 - [ ] Re-export the two capped ANI county groups (full tail of rare names). (from README)
 - [ ] Resolve ANI-only records (state companies) to a CUI with the ONRC open data. (from README)
 
-- [ ] Linker ties: when two ANAF rows get the same best token score, the first row wins. Consider "weak"
+- [x] Linker ties: when two ANAF rows get the same best token score, the first row wins. Consider "weak"
       for a tie instead (two equal candidates means the link is ambiguous). Confirmed contact errors:
       DSP București `4400956` receives `dspilfov.ro`; DAS Dorohoi `4392462` receives `dasbotosani.ro`.
       Use locality hints in token matching. Keep jurisdiction names as identity evidence.
       Also review ambiguous exact/canonical matches; they select the first candidate too.
-- [ ] Bound the ancestor category patterns to whole words. `culturii` matches inside `agriculturii` before
+- [x] Bound the ancestor category patterns to whole words. `culturii` matches inside `agriculturii` before
       the agriculture rule. Measured: 32 ANI records under an agriculture umbrella have the culture category.
 - [ ] Reconcile source-only records across sources, with review before merging. There are 344 groups
       containing 694 records with the same normalized county and name and no CIF. Example: DGASPC Sector 6
       appears separately in ROePAS, Registrul and ANI. A shared name alone does not prove identity.
 - [ ] Retain each source row, match score, candidate alternatives and field choice in the output provenance.
       The current record exposes only the best link tier per source, which can hide mixed match quality.
-- [ ] Add source snapshots, checksums, dates and a reproducible release manifest. Surface capped ANI exports
-      in metadata. Document how to obtain ignored inputs. Add refresh rules to the ROePAS detail cache.
+- [x] Surface input checksums, sizes, file dates and capped ANI exports in `metadata.dataset` and the
+      "Despre date" panel. Document how to obtain ignored inputs (CLAUDE.md / AGENTS.md).
+- [ ] Add source snapshots and a reproducible release manifest. Add refresh rules to the ROePAS detail cache.
       Keep historical names and organizational units distinct from confirmed current legal entities.
+- [ ] Review the 236 records with `match_candidates`. Most are exact-name duplicates in ANAF (two
+      "CURTEA DE APEL CRAIOVA", "TRIBUNALUL BUCURESTI" rows with different CIFs and parents). Since v1 they no
+      longer receive Registrul/ANI data. A curated CIF choice per name, or an ANAF parent hint, could resolve them.
+- [ ] CSV export: the formula guard prefixes `'` to 96 phone numbers that start with `+`. Consider exempting
+      `+` followed by digits in the phone column.
+- [ ] Header at 768 px is 215 px tall (filters wrap to two lines). No spec limit covers it.
 
 ## Comparative research proposals (not an accepted implementation spec)
-- [ ] Keep high information density in institution results. The owner rejected GOV.UK's sparse layout as a UI reference.
+- [x] Keep high information density in institution results. The owner rejected GOV.UK's sparse layout as a UI reference.
       Borrow its grouping and relationship labels. India's screenshots suggest a compact overview of browsing routes,
       followed by dense results. Avoid a mandatory landing screen, oversized tiles and nested scrolling lists.
-- [ ] Explore two complementary entry routes: state structure and familiar institution families (schools, hospitals,
+- [x] Explore two complementary entry routes: state structure and familiar institution families (schools, hospitals,
       municipalities). Show counts and open the corresponding filtered results or tree directly.
       Navigation groups do not establish legal form or public ownership.
 - [ ] Separate policy function, body type, government level, ownership and territorial remit.

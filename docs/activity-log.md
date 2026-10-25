@@ -1,5 +1,66 @@
 # Activity log
 
+## 2026-10-25 — Build: data correctness and dense explorer, version 1
+Brief: `docs/briefs/explorer-quality-v1.md`. Opus split the brief into two Sonnet briefs (data, UI) and reviewed both.
+
+**Done — data (`scripts/consolidate.py`, `tests/`)**
+- `Linker.link` returns candidates and a new tier `ambiguous`. Exact, canonical, unit and token ties merge only when
+  a locality hint or a matching " - suffix" structure singles out one row. Token eligibility (kind, numbers,
+  county names) is checked before the best score. Tie tolerance `TIE_EPS = 1e-9`. Thresholds 0.75 / 0.5 unchanged.
+- A county name in the source name is identity evidence: a candidate that names only other counties is not eligible.
+- New output: `match_candidates` (JSON), `match_candidate_cifs` (CSV), compact `i` and `mc`, known zero `pc`/`po`,
+  `metadata.dataset` (generation time; per input path, bytes, SHA-256, mtime, rows; ANI `exported_at`, `capped`).
+- Categories: word-bounded `ANCESTOR_HINTS`; `COMPANY_RE` ignores `S A` after single-letter abbreviations;
+  a narrow "sanitar veterinar" rule before Sănătate; genitive `municipiului/comunei/orasului` as local authority.
+- 20 `unittest` fixtures (`python3 -m unittest discover -s tests`), and `sh tests/determinism.sh` (hash seeds 1 and 2).
+
+**Done — explorer (`explorer/index.html`)**
+- Tree: full descendant traversal below attached roots, unique-record scoped counts, member notes in tree and dialog,
+  `explorer.descendantVisibility()`.
+- Wrapping header; "Filtre" disclosure with an active-filter badge on phones; in-strip tab scrolling.
+- Overview "Explorează toate instituțiile" (closed initially): 15 state groups and 8 families with unique counts.
+- One search normaliser for query and text. Loading status, Romanian error messages, retry.
+- `id` hash parameter, "Copiază linkul", accessible dialog focus. "fără corespondent ANAF" and "de verificat"
+  (`review=1`) filters. "Descarcă CSV" with the 17 spec columns. "Despre date" panel.
+
+**Measured** (local inputs, same as the audit)
+- Records 25,343 → 25,450 (+107). ANAF records 13,485 in both, with identical ids and parent CIFs.
+  Registrul-only 6,043 → 6,076; ANI-only 5,328 → 5,403; ROePAS-only 487 → 486.
+- ROePAS: 2 rows re-targeted, 1 newly merged, 0 un-merged. ROePAS 11057765 (`dspilfov.ro`) moves from DSP București
+  `4400956` to DSP Ilfov `11445640`. ROePAS 11072883 (`dasbotosani.ro`) moves from DAS Dorohoi `4392462` to DAS
+  Botoșani `15305089`. "Primaria Municipiului Mangalia" now merges into MUNICIPIULUI MANGALIA.
+- Registrul: 6,632 → 6,599 merged; 56 ambiguous. 59 rows un-merged (identical ANAF names, e.g. CURTEA DE APEL BACAU),
+  26 newly merged (e.g. GRADINITA 268, previously shadowed by an incompatible number), 3 re-targeted.
+- ANI: merged names 17,429 → 16,990; token tier 2,795 → 2,302; 162 ambiguous standalone records; 401 token links
+  re-targeted (e.g. ITM BOTOSANI filed under Vaslui now links in Botoșani).
+- 236 records carry `match_candidates`; 2,557 carry `possible_duplicate_of` (was 2,581). Review filter: 2,793.
+- Categories: 38 Cultură → Agricultură (the audit counted 32; 6 more come from the matching changes), D S V S A ALBA
+  Companii → Agricultură, MUNICIPIULUI MANGALIA Altele → Administrație locală, 1 Sănătate → Agricultură.
+- Integrity: ids unique; every parent, duplicate and candidate CIF resolves; CSV identical under two hash seeds.
+  2,074 rows carry `pc:0`. Tests: 20 pass.
+- Browser (playwright-core, installed Chrome): no document overflow at 320–1,440 px in four views and both schemes.
+  Collapsed header 146 px at 390 and 320 px width. Bistrița-Năsăud variants return the same 408 ids.
+  Roots 3,296 = 3,296; descendant check 8 of 8. `#v=stat&q=39847338` shows MF → acțiuni generale → DGRFP Brașov.
+  Full CSV 25,450 unique ids, 0 mismatches with `rows.json`; focused-MF+query CSV holds only `A39847338`.
+  Delayed, HTTP 503 and truncated-JSON loads show status or error + retry; retry adds no duplicate handlers.
+  Record hashes (A/R/G/D), unknown id, Back/Forward, Escape, backdrop and copy-link behave as specified.
+  Opus re-ran the check scripts after the last UI edit: all pass. Scripts and screenshots stay in the session
+  scratchpad, outside the repo.
+
+**Hard**
+- `prep` collapses "CONSILIUL LOCAL X - SERVICIUL APA" and "COMUNA X" onto one key. Strict tie rules alone turned 104
+  correct commune merges ambiguous; the " - suffix" structure rule restores them.
+- Exact-name duplicates in ANAF (courts, tribunals) have no distinguishing evidence in the sources. They now stay
+  unresolved and lose Registrul/ANI data they received before by first-row choice.
+- Ports 8765 and 8791 were in use; the browser checks used a small Node static server.
+
+**Decided**
+- Prefer unresolved over wrong. *Why:* a wrong merge moves contacts to another institution, and no count reveals it.
+  The cost: 236 records need review and some court records lost ANI/Registrul data.
+- Multiple weak candidates set `match_candidates` and leave `possible_duplicate_of` empty (spec §1).
+- The CSV formula guard applies to all text cells, including phone numbers that start with `+` (96 cells).
+  Logged as a follow-up rather than special-cased now.
+
 ## 2026-10-25 — Handoff: implementation spec and brief
 **Done**
 - Prepared `docs/specs/explorer-quality-v1.md` and `docs/briefs/explorer-quality-v1.md` for another implementation session.
