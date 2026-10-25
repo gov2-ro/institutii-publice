@@ -1,5 +1,40 @@
 # Activity log
 
+## 2026-10-26 — Landing cleanup, text tabs for types, labelled county maps
+
+**Done**
+- Landing: removed section headings and notes, the "largest types" row, and the duplicate state directory.
+  One inline row of state branches stays, without Neclasificate and Fără corespondent ANAF.
+- Type categories are text tabs (no borders or backgrounds). A click opens the category's types under the row;
+  a second click closes them. The open tab survives a return to Acasă.
+- The header counter shows only the active count. The full "N din M înregistrări" text is in its tooltip.
+- County profile: the map sits in a right column (max 420 px, sticky under the header), the locality tree on the left.
+  On phones the map comes between the header and the tree.
+- New `scripts/build_uat_maps.py` (stdlib) splits the LAU polygon file into `explorer/assets/gis/uat/<COD>.json`, with
+  SIRUTA, ANAF-style name, display label and a label point (polylabel). It replaces `ro-uats3_polygon-topo.json`.
+- The UAT map shows names: seat, municipii and sectors, towns, then communes by count and size. Labels that overlap
+  a placed label are left out; their names stay in the tooltip. București now has a sector map.
+
+**Hard**
+- The LAU file capitalizes the letter after a diacritic ("MăGura", "șTefan"). The script repairs the case.
+
+**Measured**
+- Old shapes: about 6.6 points per UAT (20,907 points). New: about 49 per UAT (156,403 points), 3.0 MB in 42 files,
+  63–105 KB per county.
+- `explorer.mapJoin()`: ANAF UAT roots 3,209 → 3,225 of 3,228; locality labels 3,276 → 3,289 of 3,302.
+  One label is lost: Bihor "Abramut" (absent from the LAU file).
+- Suceava shows 60 of 114 labels. No horizontal overflow at 320, 390, 900 and 1,440 px.
+  `reachableRoots()` = `expectedRoots()`; no console errors; `git diff --check` passes.
+
+**Decided**
+- One state row instead of two. The owner asked for both inline; they had the same links.
+- Per-county GeoJSON with 4-decimal coordinates instead of one national TopoJSON. A profile loads one county
+  (about 70 KB), and the files need no topology encoder. The cost is duplicated shared borders (about 3 MB in total).
+- Publish to GitHub Pages (https://org.gov2.ro) from this machine with `scripts/publish_pages.sh`: an orphan
+  `gh-pages` commit, force-pushed on each publish. CI cannot rebuild the data, because the inputs stay out of git.
+  The rejected alternative (tracked data + an Actions deploy workflow) adds about 6 MB to `main` per regeneration
+  and still depends on this machine for the data.
+
 ## 2026-10-26 — Compact landing types, title-row menu, and flat government focus
 
 **Done**

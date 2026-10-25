@@ -110,12 +110,18 @@
   .home-sec { margin: 0 0 28px; }
   .home-sec > h2 { font-size: 17px; margin: 0 0 8px; }
   .ov-body { font-size: 14px; }
-  .ov-body p { margin: 0 0 6px; }
   .ov-g { display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: baseline; margin: 6px 0; }
-  .ov-g strong { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); flex: 0 0 100%; }
   .ov-g > span { min-width: 0; max-width: 100%; }
   .ov-g a { overflow-wrap: anywhere; }
   .ov-g .count { margin-left: 3px; }
+  .cat-tabs { display: flex; flex-wrap: wrap; gap: 4px 18px; border-bottom: 1px solid var(--line); }
+  .cat-tab { display: inline-flex; gap: 5px; align-items: baseline; padding: 4px 0 6px; margin-bottom: -1px; border: 0;
+             border-bottom: 2px solid transparent; background: none; color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+  .cat-tab:hover { color: var(--accent); }
+  .cat-tab[aria-expanded=true] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .cat-panel { padding-top: 10px; }
+  .cat-panel[hidden] { display: none; }
+  .cat-panel .famgrid { margin: 0; }
   .famgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 2px 16px; margin: 2px 0 8px 18px; }
   .famgrid .it { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
   .famgrid .link { min-width: 0; overflow-wrap: anywhere; }
@@ -146,6 +152,17 @@
   .cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px 12px; margin: 0; padding: 0; list-style: none; }
   .cgrid li { display: flex; gap: 6px; align-items: center; min-width: 0; }
   .cgrid .link { min-width: 0; overflow-wrap: anywhere; padding: 3px 0; }
+  .cprof { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 420px); grid-template-rows: auto 1fr;
+           grid-template-areas: "head map" "tree map"; gap: 0 32px; align-items: start; }
+  .cprof > .prof { grid-area: head; }
+  .cprof-tree { grid-area: tree; min-width: 0; }
+  .cprof-map { grid-area: map; position: sticky; top: calc(var(--top-h, 0px) + 12px); min-width: 0; }
+  .cprof-map svg.map { max-height: calc(100vh - var(--top-h, 0px) - 140px); }
+  .cprof-map .sub { font-size: 12px; }
+  svg.map .labels text { fill: var(--text); stroke: var(--bg); stroke-width: 2.5px; stroke-linejoin: round; paint-order: stroke;
+                         text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  svg.map .labels .k-seat { font-weight: 700; } svg.map .labels .k-m, svg.map .labels .k-s, svg.map .labels .k-o { font-weight: 600; }
+  svg.map .labels .k-c { fill: var(--muted); }
   .prof { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 0 0 12px; }
   .prof img { width: 72px; height: 72px; object-fit: contain; flex: none; }
   .prof h2 { margin: 0; font-size: 20px; }
@@ -233,6 +250,8 @@
   ul.plain li { overflow-wrap: anywhere; }
 
   @media (max-width: 760px) {
+    .cprof { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "map" "tree"; }
+    .cprof-map { position: static; margin-bottom: 12px; }
     .top { padding: 8px 12px 0; } main { padding: 10px 12px 12px; }
     .title { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand menu" "stats about"; margin-bottom: 6px; }
     .brand { gap: 8px; }
@@ -825,13 +844,14 @@
       },
       /* map join check: how many counties / ANAF UAT roots / distinct locality labels reach a map shape */
       mapJoin: async () => {
-        const g = await gis('romania-counties.geojson'), ix = await uatIdx();
+        const g = await gis('romania-counties.geojson'), ix = {};
+        for (const c of counties) ix[c] = await uatIdx(c);
         const feats = countyFeatures(g), found = new Set(feats.map(x => x.name).filter(Boolean));
         const roots = ST.uat.map(c => byCif.get(c)).filter(r => r && r.county && r.u);
-        const bad = r => { const e = ix.join(r.county, r.u); return !(e && e.g.arcs); };
-        const rootBad = roots.filter(bad).map(r => `${r.county} | ${r.u}`);
+        const bad = (c, u) => !(ix[c] && ix[c].join(u));
+        const rootBad = roots.filter(r => bad(r.county, r.u)).map(r => `${r.county} | ${r.u}`);
         const labels = new Map(); for (const r of rows) if (r.county && r.u) labels.set(r.county + ' | ' + r.u, [r.county, r.u]);
-        const labBad = [...labels].filter(([, [c, u]]) => { const e = ix.join(c, u); return !(e && e.g.arcs); }).map(([k]) => k);
+        const labBad = [...labels].filter(([, [c, u]]) => bad(c, u)).map(([k]) => k);
         const seatMissing = Object.keys(SEATS).filter(c => !rows.some(r => r.county === c && r.u && uatKind(c, r.u) === 'seat'));
         return { counties: { matched: counties.filter(c => found.has(c)).length, total: counties.length, unmatched: counties.filter(c => !found.has(c)) },
           roots: { total: ST.uat.length, withLabel: roots.length, matched: roots.length - rootBad.length, unmatched: rootBad },
@@ -1007,7 +1027,7 @@
       if (profile) {
         const m = byCounty.get(S.county);
         if (m) groupNodes(S.county, m, tree); else tree.append(emptyMsg());
-        return h('div', null, countyHeader(S.county), tree);
+        return countyProfile(S.county, tree);
       }
       if (!byCounty.size) return emptyMsg();
       for (const [county, m] of [...byCounty].sort((a, b) => coll.compare(a[0], b[0]))) {
@@ -1047,12 +1067,6 @@
       }
       return d;
     }
-    function decodeTopo(t) {
-      const [sx, sy] = t.transform.scale, [tx, ty] = t.transform.translate;
-      const arcs = t.arcs.map(a => { let x = 0, y = 0; return a.map(([dx, dy]) => { x += dx; y += dy; return [x * sx + tx, y * sy + ty]; }); });
-      const ring = idxs => { const out = []; for (const i of idxs) { const a = i < 0 ? arcs[~i].slice().reverse() : arcs[i]; out.push(...(out.length ? a.slice(1) : a)); } return out; };
-      return g => !g.arcs ? [] : g.type === 'Polygon' ? [g.arcs.map(ring)] : g.arcs.map(p => p.map(ring));
-    }
 
     /* quantile classes over the non-zero values: returns { cls(v), legend: [[class, text]] } */
     function classes(vals) {
@@ -1070,7 +1084,7 @@
       h('span', null, measure + ':'), legend.map(([c, t]) => h('span', { class: 'lg' }, h('span', { class: 'sw q' + c }), t)));
 
     /* one choropleth. shapes: [{ d, count, name, pick }]; pick = null when the shape is not selectable */
-    function choropleth(shapes, pj, measure, selectedName) {
+    function choropleth(shapes, pj, measure, selectedName, labels) {
       const { cls, legend } = classes(shapes.map(s => s.count));
       const svg = svgEl('svg', { class: 'map', viewBox: `0 0 ${pj.w} ${pj.h}`, role: 'group', 'aria-label': measure });
       for (const s of shapes) {
@@ -1083,6 +1097,14 @@
           p.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); s.pick(); } });
         }
         svg.append(p);
+      }
+      if (labels) {
+        const g = svgEl('g', { class: 'labels', 'aria-hidden': 'true' });
+        for (const l of labels) {
+          const t = svgEl('text', { x: f1(l.x), y: f1(l.y), class: l.cls, 'font-size': l.fs });
+          t.textContent = l.text; g.append(t);
+        }
+        svg.append(g);
       }
       return h('div', null, svg, legendEl(legend, measure));
     }
@@ -1102,16 +1124,11 @@
       }).catch(e => { console.error('county map', e); if (box.isConnected) mapError(box); });
     }
 
-    /* UATs: join an ANAF locality label to a shape of the TopoJSON, by county then name. Tiers: exact, spelling-tolerant, one edit apart */
-    let uatIndex = null;
-    function buildUatIndex(t) {
-      const geoms = t.objects.UTRuriOAR3.geometries, perCounty = new Map();
-      for (const g of geoms) {
-        const p = g.properties; if (!p) continue;
-        const [k, n] = uatParts(p.nume), c = norm(p.jud);
-        if (!perCounty.has(c)) perCounty.set(c, []);
-        perCounty.get(c).push({ g, k: k === '?' ? 'c' : k, n, ln: looseName(n) });
-      }
+    /* UATs: join an ANAF locality label to a shape of the county map file, by name. Tiers: exact, spelling-tolerant, one edit apart.
+       One file per county (assets/gis/uat/<COD>.json, built by scripts/build_uat_maps.py), loaded on first use. */
+    const UAT_IX = {};
+    function buildUatIndex(file) {
+      const list = file.uats.map(u => { const [k, n] = uatParts(u.n); return { g: u, k, n, ln: looseName(n) }; });
       const near = (a, b) => {
         if (a === b) return true;
         if (Math.abs(a.length - b.length) > 1) return false;
@@ -1119,53 +1136,70 @@
         return a.length === b.length ? a.slice(i + 1) === b.slice(i + 1) : a.length > b.length ? a.slice(i + 1) === b.slice(i) : b.slice(i + 1) === a.slice(i);
       };
       const cache = new Map();
-      const join = (county, u) => {
-        const key = county + '|' + u;
-        if (cache.has(key)) return cache.get(key);
-        const [k, n] = uatParts(u), list = perCounty.get(norm(county)) || [], ln = looseName(n);
+      const join = u => {
+        if (cache.has(u)) return cache.get(u);
+        const [k, n] = uatParts(u), ln = looseName(n);
         const pick = l => l.find(e => e.k === k) || (l.length === 1 ? l[0] : null);
         const res = pick(list.filter(e => e.n === n)) || pick(list.filter(e => e.ln === ln))
           || (c => c.length === 1 ? c[0] : null)(list.filter(e => near(e.ln, ln) && (e.k === k || k === '?')));
-        cache.set(key, res);
+        cache.set(u, res);
         return res;
       };
-      return { join, perCounty, decode: decodeTopo(t) };
+      return { join, list };
     }
-    const uatIdx = () => uatIndex ? Promise.resolve(uatIndex) : gis('ro-uats3_polygon-topo.json').then(t => uatIndex = buildUatIndex(t));
+    const uatIdx = county => !COD[county] ? Promise.resolve(null)
+      : UAT_IX[county] || (UAT_IX[county] = gis(`uat/${COD[county]}.json`).then(buildUatIndex).catch(e => { delete UAT_IX[county]; throw e; }));
+
+    /* map labels: placed greedily by priority (seat, municipii and sectors, towns, then communes by count and size); a label that
+       would overlap a placed one is left out, and its name stays in the shape's tooltip */
+    const LABEL_FS = { seat: 13, m: 11, s: 11, o: 10, c: 8.5 };
+    function placeLabels(labels) {
+      const boxes = [], out = [];
+      for (const l of labels.sort((a, b) => a.prio - b.prio || b.count - a.count || b.size - a.size)) {
+        const w = l.text.length * l.fs * 0.56 + 2, ht = l.fs + 2;
+        const b = [l.x - w / 2, l.y - ht / 2, l.x + w / 2, l.y + ht / 2];
+        if (boxes.some(o => b[0] < o[2] && o[0] < b[2] && b[1] < o[3] && o[1] < b[3])) continue;
+        boxes.push(b); out.push(l);
+      }
+      return out;
+    }
 
     function uatMap(county, box, note) {
-      if (county === 'Bucuresti') { box.replaceChildren(h('p', { class: 'sub' }, 'Municipiul București este împărțit în sectoare; harta nu are formă separată pentru fiecare sector.')); return; }
-      uatIdx().then(ix => {
+      uatIdx(county).then(ix => {
         if (!box.isConnected) return;
+        if (!ix) { box.replaceChildren(h('p', { class: 'maperr' }, 'Nu există hartă pentru acest județ.')); return; }
         const counts = new Map();
         let noU = 0;
         for (const r of rows) if (r.county === county && pass(r, 'uat')) { if (r.u) counts.set(r.u, (counts.get(r.u) || 0) + 1); else noU++; }
         const shapes = new Map();                                  // entry -> { count, best label }
         let unmatched = 0;
         for (const [u, n] of counts) {
-          const e = ix.join(county, u);
-          if (!e || !e.g.arcs) { unmatched++; continue; }
+          const e = ix.join(u);
+          if (!e) { unmatched++; continue; }
           const s = shapes.get(e) || { count: 0, best: u, bestN: 0 };
           s.count += n; if (n > s.bestN) { s.best = u; s.bestN = n; }
           shapes.set(e, s);
         }
-        const list = ix.perCounty.get(norm(county)) || [];
-        const polysOf = e => ix.decode(e.g);
-        const pj = project(list.flatMap(polysOf));
-        const out = list.filter(e => e.g.arcs).map(e => {
-          const s = shapes.get(e);
-          return { d: pathOf(polysOf(e), pj), count: s ? s.count : 0, name: s ? s.best : titleCase(e.g.properties.nume),
-            pick: s ? () => { S.uat = s.best; update(); } : null };
+        const pj = project(ix.list.flatMap(e => e.g.g), 480);
+        const seat = seatKey(county), labels = [];
+        const out = ix.list.map(e => {
+          const s = shapes.get(e), d = pathOf(e.g.g, pj);
+          const kind = (e.k === 'm' || e.k === 'o') && e.ln === seat ? 'seat' : e.k;
+          const [x, y] = pj.pt(e.g.p), ring = e.g.g[0][0].map(pj.pt);
+          const size = (Math.max(...ring.map(q => q[0])) - Math.min(...ring.map(q => q[0]))) * (Math.max(...ring.map(q => q[1])) - Math.min(...ring.map(q => q[1])));
+          labels.push({ text: e.g.l, x, y, fs: LABEL_FS[kind] || 8.5, cls: 'k-' + kind, prio: ['seat', 'm', 's', 'o'].indexOf(kind) + 1 || 9,
+            count: s ? s.count : 0, size });
+          return { d, count: s ? s.count : 0, name: s ? s.best : e.g.l, pick: s ? () => { S.uat = s.best; update(); } : null };
         });
         if (!out.length) { box.replaceChildren(h('p', { class: 'maperr' }, 'Nu există formă pe hartă pentru acest județ.')); return; }
-        box.replaceChildren(choropleth(out, pj, 'Înregistrări pe localitate', S.uat));
+        box.replaceChildren(choropleth(out, pj, 'Înregistrări pe localitate', S.uat, placeLabels(labels)));
         note.textContent = `Pe hartă: ${fmt(shapes.size)} din ${fmt(counts.size)} localități cu înregistrări`
-          + (unmatched ? ` (${fmt(unmatched)} fără formă pe hartă, vezi lista de mai jos)` : '') + `. Fără localitate: ${plural(noU, 'înregistrare', 'înregistrări')}.`;
+          + (unmatched ? ` (${fmt(unmatched)} fără formă pe hartă, vezi lista)` : '') + `. Fără localitate: ${plural(noU, 'înregistrare', 'înregistrări')}.`;
       }).catch(e => { console.error('uat map', e); if (box.isConnected) mapError(box); });
     }
 
-    /* county profile header: coat of arms, name, counts and the locality map */
-    function countyHeader(county) {
+    /* county profile: coat of arms, name and counts on the left above the locality tree; the locality map in a column on the right */
+    function countyProfile(county, tree) {
       const all = rows.filter(r => r.county === county), noU = all.filter(r => !r.u).length;
       const locs = new Set(all.filter(r => r.u).map(r => r.u));
       const mapBox = h('div', null, h('p', { class: 'sub', role: 'status' }, 'Se încarcă harta…'));
@@ -1173,17 +1207,20 @@
       const img = stemaUrl(county) ? h('img', { src: stemaUrl(county), alt: `Stema județului ${county}`, width: 72, height: 72,
         onerror: e => e.target.remove() }) : null;
       uatMap(county, mapBox, note);
-      return h('section', { class: 'profile', 'aria-label': 'Profil județ' },
+      return h('section', { class: 'cprof', 'aria-label': 'Profil județ' },
         h('div', { class: 'prof' }, img, h('div', { class: 'prof-head' },
           h('h2', null, county === 'Bucuresti' ? 'București' : county),
           h('p', { class: 'sub' }, `${plural(all.length, 'înregistrare', 'înregistrări')} · ${plural(locs.size, 'localitate', 'localități')} · ${fmt(noU)} fără localitate`
             + (items.length !== all.length ? ` · ${fmt(items.length)} potrivite cu filtrele` : '')),
           h('button', { class: 'btn sm', type: 'button', onclick: () => { clearFilters(); setView('acasa'); window.scrollTo(0, 0); } }, '← Toate județele'),
           S.uat ? [' ', h('button', { class: 'btn sm', type: 'button', onclick: () => { S.uat = ''; update(); } }, `× ${S.uat}`)] : null)),
-        h('div', { class: 'maprow' }, h('div', { class: 'mapcol' }, mapBox, note)));
+        h('div', { class: 'cprof-map', role: 'region', 'aria-label': 'Harta localităților' }, mapBox, note),
+        h('div', { class: 'cprof-tree' }, tree));
     }
 
     /* ---------- landing page: original shortcuts and type grid, new directories, county map ---------- */
+    const HOME_HIDDEN = new Set(['neclasificate', 'fara-anaf']);
+    let homeCat = '';                                        // the open category tab on the landing page
     function renderHome(items) {
       const ctx = buildCtx(items, isFiltered());
       const byFam = new Map();
@@ -1197,17 +1234,13 @@
       const shortcut = (link, count) => h('span', null, link, h('span', { class: 'count' }, fmt(count)));
       const stateMatches = n => [...subtree(n.id)].filter(r => ctx.matchSet.has(r));
       const stateHref = (n, matches) => matches.length === 1 ? browseHref({ id: matches[0].id }) : browseHref({ v: 'stat', n: stateTarget(n.id) });
-      const overview = h('section', { class: 'home-sec', 'aria-labelledby': 'h-ov' },
-        h('h2', { id: 'h-ov' }, 'Explorează toate instituțiile'),
-        h('div', { class: 'ov-body', id: 'ov-body' },
-          h('p', { class: 'sub' }, 'Numerele sunt înregistrări unice care corespund filtrelor. Filtrul „are site” este în „Mai multe”.'),
-          h('div', { class: 'ov-g' }, h('strong', null, 'Structura statului'),
-            vnode.get(STAT).nodes.filter(n => ctx.visible(n.id)).map(n => {
-              const matches = stateMatches(n);
-              return shortcut(browseLink(n.label.replace(/ \(ierarhie necunoscută\)/, ''), stateHref(n, matches), () => focusNode(n.id)), matches.length);
-            })),
-          h('div', { class: 'ov-g' }, h('strong', null, 'Cele mai mari tipuri de instituții'),
-            families.slice(0, 8).map(([f, list]) => shortcut(familyLink(f, list), list.length)))));
+      // the leftover roots (unclassified, no ANAF match) stay in the "Structura statului" view only
+      const stateLinks = vnode.get(STAT).nodes.filter(n => ctx.visible(n.id) && !HOME_HIDDEN.has(n.id)).map(n => {
+        const matches = stateMatches(n);
+        return shortcut(browseLink(n.label, stateHref(n, matches), () => focusNode(n.id)), matches.length);
+      });
+      const overview = h('section', { class: 'home-sec', 'aria-label': 'Structura statului' },
+        h('div', { class: 'ov-body' }, stateLinks.length ? h('div', { class: 'ov-g' }, stateLinks) : null));
       const byCat = new Map();
       for (const [f, list] of families) {
         const cat = famCat.get(f);
@@ -1215,29 +1248,24 @@
         byCat.get(cat).push([f, list]);
       }
       const catN = list => list.reduce((n, [, records]) => n + records.length, 0);
-      const grid = h('div', { class: 'tree' });
-      for (const [cat, list] of [...byCat].sort((a, b) => catN(b[1]) - catN(a[1]))) {
-        grid.append(branch({ cls: 'grp', label: cat,
-          meta: `${plural(list.length, 'tip', 'tipuri')} · ${fmt(catN(list))} înregistrări`, open: false,
-          kids: box => box.append(h('div', { class: 'famgrid' }, list.map(([f, records]) => h('div', { class: 'it' },
-            familyLink(f, records, 'link acc'), h('span', { class: 'count' }, fmt(records.length)))))) }));
+      // categories as a row of tabs; the open one lists its types in the panel under the row
+      const cats = [...byCat].sort((a, b) => catN(b[1]) - catN(a[1]));
+      if (!byCat.has(homeCat)) homeCat = '';
+      const panel = h('div', { class: 'cat-panel', id: 'cat-panel', role: 'region' });
+      const tabs = cats.map(([cat, list]) => h('button', { class: 'cat-tab', type: 'button', 'aria-controls': 'cat-panel',
+        title: plural(list.length, 'tip', 'tipuri'), onclick: () => { homeCat = homeCat === cat ? '' : cat; showCat(); } },
+        h('span', null, cat), h('span', { class: 'count' }, fmt(catN(list)))));
+      function showCat() {
+        cats.forEach(([cat], i) => tabs[i].setAttribute('aria-expanded', cat === homeCat));
+        const list = byCat.get(homeCat);
+        panel.hidden = !list;
+        panel.setAttribute('aria-label', homeCat);
+        panel.replaceChildren(list ? h('div', { class: 'famgrid' }, list.map(([f, records]) => h('div', { class: 'it' },
+          familyLink(f, records, 'link acc'), h('span', { class: 'count' }, fmt(records.length))))) : '');
       }
-      const noFamily = items.filter(r => !r.fam);
-      const types = h('section', { class: 'home-sec', 'aria-labelledby': 'h-types' }, h('h2', { id: 'h-types' }, 'Tipuri de instituții'),
-        h('p', { class: 'sub' }, 'Instituțiile de același fel sunt grupate (ex. toate Casele Corpului Didactic, câte una pe județ). ',
-          noFamily.length ? browseLink(`${fmt(noFamily.length)} de înregistrări nu au un tip comun.`,
-            browseHref({ v: 'fam', fam: NO_FAMILY, cat: '' }), () => focusFamily(NO_FAMILY, '', noFamily)) : null), grid);
-      const links = h('ul', { class: 'directory' });
-      for (const n of vnode.get(STAT).nodes) {
-        if (!ctx.visible(n.id)) continue;
-        const matches = stateMatches(n);
-        links.append(directoryEntry(n.label.replace(/ \(ierarhie necunoscută\)/, ''), matches.length,
-          stateHref(n, matches),
-          () => focusNode(n.id)));
-      }
-      const sec1 = h('section', { class: 'home-sec', 'aria-labelledby': 'h-stat' }, h('h2', { id: 'h-stat' }, 'Structura statului'),
-        h('p', { class: 'sub' }, 'Alege o ramură pentru a vedea instituțiile și subordonatele ei.'),
-        links.childElementCount ? links : emptyMsg());
+      showCat();
+      const types = h('section', { class: 'home-sec', 'aria-label': 'Tipuri de instituții' },
+        cats.length ? h('div', { class: 'cat-tabs' }, tabs) : emptyMsg(), panel);
       // county map + a plain list of counties with counts (the non-map route)
       const counts = countyCounts(), mapBox = h('div', null, h('p', { class: 'sub', role: 'status' }, 'Se încarcă harta…'));
       const noCounty = items.filter(r => !r.county).length;
@@ -1251,7 +1279,7 @@
           + (noCounty ? ` ${plural(noCounty, 'înregistrare fără județ', 'înregistrări fără județ')}.` : '')),
         h('div', { class: 'maprow' }, h('div', { class: 'mapcol' }, mapBox), h('div', { class: 'mapside' }, list)));
       countyMap(mapBox);
-      return h('div', null, overview, types, sec1, sec3);
+      return h('div', null, overview, types, sec3);
     }
 
     /* ---------- detail dialog ---------- */
@@ -1502,6 +1530,9 @@
       $('csv-msg').textContent = `Exportate ${plural(list.length, 'înregistrare', 'înregistrări')}.`;
     });
 
+    // the sticky header height, for content that sticks under it (the county map)
+    new ResizeObserver(([e]) => document.documentElement.style.setProperty('--top-h', e.target.offsetHeight + 'px'))
+      .observe(document.querySelector('header.top'));
     /* ---------- orchestration ---------- */
     let items = [];
     function update() {
@@ -1514,7 +1545,8 @@
       const nAct = !!S.cat + !!S.fam + !!S.county + !!S.uat + (S.srcs.size ? 1 : 0) + S.web + S.review;
       $('fcount').textContent = nAct || '';
       $('ftoggle').setAttribute('aria-label', nAct ? `Filtre, ${nAct} active` : 'Filtre');
-      $('stats').textContent = `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
+      $('stats').textContent = fmt(items.length);
+      $('stats').title = `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
       $('csv-msg').textContent = '';
       $('toolbar').hidden = S.view === 'acasa';
       $('filters').hidden = S.view === 'acasa';

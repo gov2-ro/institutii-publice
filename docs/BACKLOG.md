@@ -41,18 +41,36 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Restore the previous landing sections alongside the new directories. Remove the introduction and move “are site” into “Mai multe”.
 - [x] Keep the compact type grid, remove its duplicate, close categories initially, and put view links in the title-row menu.
 - [x] Show SGG, ministries, and Organe de specialitate as peers in the Guvern focus.
-- [ ] Choose whether both the compact state shortcuts and the larger state directory stay. The compact type grid is chosen.
+- [x] Choose whether both the compact state shortcuts and the larger state directory stay. Owner choice 2026-10-26:
+      one inline row of state branches, without Neclasificate and Fără corespondent ANAF (they stay in the state view).
+- [x] Landing cleanup (owner request, 2026-10-26): no section headings or notes, header counter shows only the active
+      count, type categories are text tabs with the types in a panel under the row, no "largest types" row.
 - [x] Refactor landing navigation: linked crest, compact menu, website default, state and type focus, and result-only search.
       Owner request: 2026-10-26. Rules: [landing refactor brief](briefs/explorer-landing-refactor.md).
 - [x] Landing view `acasa`, county choropleth, county profile with UAT map and seat/municipii/orașe/comune groups.
-- [ ] 12 ANAF UAT roots have no map shape (e.g. Orasul Victoria, Orasul Balan, Comuna Saniob; Orasul Stei has null
-      geometry). București is one polygon, so sectors have no shape. A SIRUTA join would remove the name matching.
+- [x] 12 ANAF UAT roots have no map shape, and București has no sector shapes. Fixed 2026-10-26: the county map
+      reads per-county files from `scripts/build_uat_maps.py` (LAU polygons, 2025-03-26, with sectors).
+- [ ] 3 ANAF UAT roots and 13 locality labels still have no map shape (`explorer.mapJoin()`): Berzasca, Simnihaiul
+      de Cimpie, Vartoapele, "Stefanesti Stefanesti", "Municipiul Orsova - Mehedinti", Abramut (absent from the
+      LAU file). A SIRUTA join would remove the name matching; the map files carry SIRUTA in `s`.
+- [ ] Confirm the origin and licence of `ro_admin_lau_simplified_polygon.geojson` (copied from the owner's
+      `GIS/api-places-search`). Record it in "Despre date".
 - [-] ANAF UAT root names look wrong for two sector CIFs. Dropped: `4192545` JUDETUL ILFOV and `4267117` MUNICIPIUL
       BUCURESTI are correct. Their seats have București sector addresses; the UAT label is the seat's location.
 - [x] București sectors and same-name duplicates (brief: briefs/sectors-duplicates.md).
 - [ ] Same-name merge needs no review step yet. 323 groups merged automatically; sample of 14 looked right.
       Add a review list if a wrong merge turns up. Spelling variants ("ADMINISTRATIE" vs "ADMINISTRARE")
       and ANI sub-units ("ANAF … ACTIVITATE ECONOMICA") remain separate, under "de verificat".
+
+## Publishing
+- [~] Publish the explorer on GitHub Pages at https://org.gov2.ro (owner decision, 2026-10-26).
+      - `scripts/publish_pages.sh` builds the site from the committed `explorer/` of HEAD plus the generated
+        `metadata.json` and `rows.json`, and force-pushes it as one orphan commit to `gh-pages`, with `CNAME`.
+      - The owner publishes from this machine. CI cannot rebuild the data: the inputs stay out of git by design.
+      - Remaining: first publish, Cloudflare DNS record, Pages settings (branch `gh-pages`, custom domain, HTTPS).
+- [-] Track the explorer data in `explorer/` and deploy with a GitHub Actions workflow. Dropped 2026-10-26: CI
+      cannot rebuild the data, so the workflow would only copy files that one machine generated anyway. Tracking
+      `rows.json` adds about 6 MB to `main` history per regeneration.
 
 ## Curation (owner request, 2026-10-25)
 - [ ] A method to flag duplicates and make other manual edits. Proposal, not yet a spec:

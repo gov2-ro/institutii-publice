@@ -8,11 +8,13 @@ website, contacts, etc. It also feeds [gov2-ro/stiri](https://github.com/gov2-ro
 Names, comments and UI text mix Romanian and English; the explorer UI is Romanian.
 
 ## Commands
-No linter or build step. Two scripts, a static page and standard-library tests:
+No linter or build step. Four scripts, a static page and standard-library tests:
 
     uv run scripts/consolidate.py              # rebuild data/consolidated/ (needs openpyxl; inline uv script deps)
     python3 scripts/scrape_roepas.py [--workers 4] [--limit N]   # re-scrape roepas.ro -> data/roepas/ (requests, lxml)
+    python3 scripts/build_uat_maps.py          # rebuild explorer/assets/gis/uat/ from docs/reference/gis/*.geojson (stdlib)
     python3 -m http.server                     # then open http://localhost:8000/explorer/
+    sh scripts/publish_pages.sh [--dry-run]    # publish explorer/ + data to gh-pages -> https://org.gov2.ro
     python3 -m unittest discover -s tests      # matching and category fixtures; no inputs, no openpyxl needed
     sh tests/determinism.sh                    # full data: same CSV under PYTHONHASHSEED=1 and 2
 
@@ -34,6 +36,10 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
 Outputs: `institutii.json`, `institutii.csv` (the only consolidated file tracked in git), and the explorer's
 `metadata.json` + `rows.json`. `explorer/metadata.json` and `explorer/rows.json` are symlinks into
 `data/consolidated/`. `data/consolidated/explorer-data.js` is a stale leftover of an older format; nothing reads it.
+
+Publishing: GitHub Pages serves the `gh-pages` branch at https://org.gov2.ro (DNS on Cloudflare). The branch is
+one orphan commit that `publish_pages.sh` replaces; never edit it by hand. Publish after a committed change to
+`explorer/` or a data rebuild.
 
 Git: `.gitignore` excludes `data/*` except `data/consolidated/institutii.csv`, so the source inputs
 (`data/roepas/`, `data/declaratii-integritate/`) and the full outputs are local only.
@@ -72,7 +78,8 @@ ANI exports add `exported_at` and `capped`). Ambiguous source rows stay separate
 `STATE_MEMBERS`, `STATE_ATTACH` in `consolidate.py`, keyed by CIF) plus the UAT and unclassified root CIFs.
 Views: `acasa` (landing: overview, families, county choropleth; opened by an empty hash), `list`, `stat`, `fam`,
 `loc` (`k=<county>` gives the county profile: coat of arms, UAT map, seat/municipii/orașe/comune groups).
-Maps are inline SVG from `explorer/assets/gis/` (TopoJSON decoded in the page), loaded on first use;
+Maps are inline SVG from `explorer/assets/gis/`, loaded on first use: the county choropleth from `romania-counties.geojson`,
+the county profile from `uat/<COD>.json` (one file per county with labels and SIRUTA, built by `scripts/build_uat_maps.py`);
 coats of arms are `explorer/assets/steme-judete/<COD>_<Name>.png`. County seats are the `SEATS` constant.
 Spec: `docs/specs/structura-statului.md`. In the page console, `explorer.reachableRoots()` must equal
 `explorer.expectedRoots()`.
