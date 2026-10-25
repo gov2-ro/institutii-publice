@@ -15,7 +15,8 @@ sources are linked onto it by county + name:
     was typed after them.
 
 Link tiers: exact name / canonical (local authorities collapse to their locality name) / unit (same
-military unit number, anywhere) / tokens (IDF-weighted overlap >= 0.75, numbers must agree). Only those merge into an ANAF record. A weaker
+military unit number, anywhere) / tokens (IDF-weighted overlap >= 0.75, numbers must agree) / prefix (ANI
+only: the name is a cut-off form of exactly one ANAF name). Only those merge into an ANAF record. A weaker
 candidate (overlap 0.5-0.75) is NOT merged: the source row stays its own record and points at the
 possible ANAF match in `possible_duplicate_of`. Source rows with no candidate are kept as-is, so
 the output is a union with provenance in `sources` and `link`.
@@ -24,6 +25,10 @@ Ambiguity: when several eligible ANAF rows tie (same name, equal token score) an
 hint nor a county name in the source name singles one out, nothing merges; the source row stays its own
 record and lists the tied rows in `match_candidates` ({cif, tier, score}, sorted by -score, cif).
 `possible_duplicate_of` is kept for a single weak candidate only.
+
+Source-only records (ROePAS, Registrul, ANI with no ANAF match) that share a name and county across
+different sources are combined into one record (link `same_name`, absorbed ids in `merged_ids`). In Bucuresti,
+a record with no UAT gets its sector from the name (`uat_source` = "name"); sector labels are unified.
 
 Outputs (data/consolidated/): institutii.json (`match_candidates` is omitted when empty), institutii.csv
 (`match_candidate_cifs`, " | " joined), and metadata.json + rows.json, the compact copy that
@@ -40,6 +45,7 @@ import math
 import re
 import sys
 import unicodedata
+from bisect import bisect_left
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -201,6 +207,23 @@ UAT_RE = re.compile(
     r"^(?:primaria|primarie|consiliul local|consiliul judetean|comuna|orasul|oras|municipiul|municipiu|"
     r"sectorul|judetul|municipiului|comunei|orasului)(?:\s+al)?(?:\s+(?:comunei|orasului|municipiului|sectorului|judetului|comuna|orasul|"
     r"municipiul))?\s+")
+SECTOR_LABEL = "Sectorul {} al Municipiului Bucuresti"
+SECTOR_UAT_RE = re.compile(r"^sector(?:ul)? ?([1-6])(?: al municipiului bucuresti)?$")
+SECTOR_NAME_RE = re.compile(r"\bsect(?:or|orul|orului)?\.? ?([1-9])\b")
+
+
+def sector_label(uat):
+    """'Sector 3' / 'Sectorul 3' -> 'Sectorul 3 al Municipiului Bucuresti'; any other value is returned as is."""
+    m = SECTOR_UAT_RE.match(fold(uat or ""))
+    return SECTOR_LABEL.format(m.group(1)) if m else uat
+
+
+def sector_in_name(name):
+    """The one sector (1-6) that a name states, as a UAT label; None for none, two different, or an invalid one."""
+    found = set(SECTOR_NAME_RE.findall(fold(name)))
+    return SECTOR_LABEL.format(found.pop()) if len(found) == 1 and next(iter(found), "1") in "123456" else None
+
+
 COUNTY_RE = re.compile(r"^(?:consiliul? judetean|judetul)\b")
 ALIASES = [
     (r"\bscoala cu clasele? (?:i|1) ?(?:viii|8)\b", "scoala gimnaziala"),
@@ -284,6 +307,12 @@ class Linker:
             m = UNIT_RE.search(a["_f"])
             if m:
                 self.units[m.group(1).zfill(5)].append(i)
+        self.sorted_f = defaultdict(list)           # per county: sorted (folded name, index), for the prefix tier
+        for i, a in enumerate(anaf):
+            self.sorted_f[a["_ck"]].append((a["_f"], i))
+        for lst in self.sorted_f.values():
+            lst.sort()
+        self.all_f = sorted(a["_f"] for a in anaf)  # nationwide, to tell a generic head from a cut-off name
         self.nat_exact, self.nat_canon = defaultdict(list), defaultdict(list)
         for i, a in enumerate(anaf):
             self.nat_exact[a["_f"]].append(i)
@@ -315,7 +344,38 @@ class Linker:
         out = [{"cif": self.anaf[i]["cif"], "tier": tier, "score": round(s, 4)} for i, s in scored]
         return sorted(out, key=lambda c: (-c["score"], c["cif"]))
 
-    def link(self, county, name, hint=None):
+    def prefix_rows(self, ck, f, kind, src_geo):
+        """Eligible ANAF rows of the county whose folded name continues the folded source name `f` (a cut-off
+        form, ANI cut names at 60 characters). Needs 3+ content tokens, the same numbers, and a cut that does not
+        split a number (nr 1 / nr 12)."""
+        if kind != "other" or DECL_LOCAL_KIND.search(f) or len([t for t in f.split() if t not in STOP and len(t) > 1
+                                                                 and not t.isdigit()]) < 3:
+            return []
+        nums, lst, out = set(re.findall(r"\d+", f)), self.sorted_f.get(ck, []), []
+        k = bisect_left(lst, (f, -1))
+        while k < len(lst) and lst[k][0].startswith(f):
+            af, i = lst[k]
+            a, k = self.anaf[i], k + 1
+            if len(af) == len(f) or a["_kind"] != "other" or set(re.findall(r"\d+", af)) != nums:
+                continue
+            if f[-1].isdigit() and af[len(f)].isdigit():
+                continue
+            if src_geo and a["_geo"] and src_geo.isdisjoint(a["_geo"]):
+                continue
+            # a cut on a word boundary may be a generic head ("SERVICIUL DE UTILITATI PUBLICE" -> "... BUFTEA"):
+            # accept it only when one ANAF name in the whole country continues it. A mid-word cut is a truncation.
+            if af[len(f)] == " " and self.nationwide_prefix(f + " ") > 1:
+                continue
+            out.append(i)
+        return out
+
+    def nationwide_prefix(self, p):
+        k, n = bisect_left(self.all_f, p), 0
+        while k + n < len(self.all_f) and self.all_f[k + n].startswith(p) and n < 2:
+            n += 1
+        return n
+
+    def link(self, county, name, hint=None, prefix=False):
         src_geo = self.geo(fold(name))               # before strip_suffix drops "- Judetul Ilfov"
         name = strip_suffix(name)
         ck, f = fold(county), fold(name)
@@ -359,6 +419,12 @@ class Linker:
             elif s >= 0.5:
                 weak.append((i, s))
         for pool, tier in ((strong, "tokens"), (weak, "weak")):
+            if tier == "weak" and prefix:               # a cut-off name beats a weak overlap
+                rows = self.prefix_rows(ck, f, kind, src_geo)
+                if len(rows) == 1:
+                    return "prefix", rows, 1.0, []
+                if rows:
+                    return "ambiguous", rows, 1.0, self.cands([(i, 1.0) for i in rows], "prefix")
             if not pool:
                 continue
             best = max(s for _, s in pool)
@@ -458,8 +524,8 @@ def link_declaratii(linker, name, county, county_re, widespread):
     order = [ck] + order if widespread else order + [ck]
     weak = amb = None
     for c in order:
-        tier, idx, score, cands = linker.link(c, name)
-        if tier in ("exact", "canonical", "unit", "tokens"):
+        tier, idx, score, cands = linker.link(c, name, prefix=True)
+        if tier in ("exact", "canonical", "unit", "tokens", "prefix"):
             return tier, idx, score, c, []
         if tier == "ambiguous" and not amb:
             amb = (tier, idx, score, c, cands)
@@ -827,7 +893,100 @@ def declaratii_standalone(rows, aggregate):
     return out
 
 
-TIER_RANK = {"exact": 0, "canonical": 1, "unit": 1, "tokens": 2, "national": 3, "elsewhere": 3}
+# Kinds with many same-named bodies per county (village schools, kindergartens, libraries): never combined by name.
+# The other DECL_LOCAL_KIND kinds (hospitals, colleges, street administrations...) are unique per locality, so
+# a name with a proper noun combines (the brief's own example is "Administratia domeniului public sector 1").
+SAME_NAME_NEVER = re.compile(r"^(scoala|gradinita|grup scolar|biblioteca|caminul|parohia|casa de cultura)\b")
+SRC_ORDER = ["anaf", "roepas", "registrul", "declaratii"]
+SRC_PRIORITY = {"roepas": 0, "registrul": 1, "declaratii": 2}       # the surviving id of a same-name group
+
+
+def generic_name(f):
+    """A name with a family head but no proper noun after it ("scoala gimnaziala", "primaria"): many bodies share it."""
+    for _, pat, _cat in FAMILY_HEADS:
+        m = pat.search(f)
+        if m:
+            return not [t for t in f[m.end():].split() if t not in STOP and not t.isdigit()]
+    return False
+
+
+def same_name_key(rec):
+    f = fold(strip_suffix(rec["name"]))
+    sectors = sorted(set(SECTOR_NAME_RE.findall(fold(rec["name"]))))       # strip_suffix drops "- Sector 2": keep it
+    return (fold(rec["county"]), f, tuple(sectors))
+
+
+def merge_same_name(records):
+    """Combine source-only records (ROePAS, Registrul, ANI) with the same folded name and county across
+    different sources. Skipped: village-level kinds (SAME_NAME_NEVER), generic names, a group where any source holds the name more than once,
+    and a county-less record. The surviving id follows ROePAS > Registrul > ANI. Mutates `records`; -> stats."""
+    groups = defaultdict(list)
+    for rec in records:
+        if rec["sources"] in (["roepas"], ["registrul"], ["declaratii"]) and rec["county"]:
+            groups[same_name_key(rec)].append(rec)
+    stats = {"groups": Counter(), "ids": 0, "dup_source": 0, "generic": 0}
+    drop = set()
+    for key, grp in sorted(groups.items()):
+        if len({r["sources"][0] for r in grp}) < 2:
+            continue
+        if SAME_NAME_NEVER.search(key[1]) or generic_name(key[1]):
+            stats["generic"] += 1
+            continue
+        if any(n > 1 for n in Counter(r["sources"][0] for r in grp).values()):
+            stats["dup_source"] += 1
+            continue
+        grp.sort(key=lambda r: SRC_PRIORITY[r["sources"][0]])
+        keep, rest = grp[0], grp[1:]
+        cands = union_candidates(r["_cands"] for r in grp)
+        for r in rest:
+            src = r["sources"][0]
+            keep["sources"].append(src)
+            keep["link"][src] = "same_name"
+            if src == "registrul":
+                keep["registrul_nums"] = r["registrul_nums"]
+            else:
+                for k in ("declaratii_count", "declaratii_group", "declaratii_by_county"):
+                    keep[k] = r.get(k)
+            if keep["category"] == OTHER and r["category"] != OTHER:
+                keep["category"] = r["category"]
+            if fold(r["name"]) != fold(keep["name"]):
+                keep["aliases"] = sorted({*keep.get("aliases", []), squash(r["name"])})
+            drop.add(r["id"])
+        keep["sources"].sort(key=SRC_ORDER.index)
+        keep["merged_ids"] = [r["id"] for r in rest]
+        keep["possible_duplicate_of"], multi = candidate_fields(cands)
+        keep["_cands"] = cands
+        keep.pop("match_candidates", None)
+        if multi:
+            keep["match_candidates"] = multi
+        stats["groups"]["+".join(keep["sources"])] += 1
+        stats["ids"] += len(rest)
+    records[:] = [r for r in records if r["id"] not in drop]
+    return stats
+
+
+def infer_sectors(records):
+    """Unify sector labels on non-ANAF records, then set the sector of a Bucuresti record without UAT when its
+    name states exactly one sector (`uat_source` = "name"). -> stats."""
+    stats = {"unified": 0, "inferred": 0, "ambiguous": 0}
+    for rec in records:
+        if rec["cif"]:
+            continue
+        label = sector_label(rec["uat"])
+        if label != rec["uat"]:
+            rec["uat"] = label
+            stats["unified"] += 1
+        if fold(rec["county"]) == "bucuresti" and not rec["uat"]:
+            found = sector_in_name(rec["name"])
+            if found:
+                rec["uat"], rec["uat_source"] = found, "name"
+                stats["inferred"] += 1
+            elif len(set(SECTOR_NAME_RE.findall(fold(rec["name"])))) > 1:
+                stats["ambiguous"] += 1
+    return stats
+
+
+TIER_RANK = {"exact": 0, "canonical": 1, "unit": 1, "tokens": 2, "prefix": 2, "national": 3, "elsewhere": 3}
 
 
 def main():
@@ -843,7 +1002,13 @@ def main():
     uat_label = {}
     for a in anaf:
         uat_label.setdefault((fold(a["county"]), UAT_RE.sub("", fold(a["uat"]), count=1)), a["uat"])
-    uat_of = lambda county, city: uat_label.get((fold(county), fold(city)), city)
+    unified = Counter()
+
+    def uat_of(county, city):
+        raw = uat_label.get((fold(county), fold(city)), city)
+        label = sector_label(raw)
+        unified[label != raw] += 1
+        return label
 
     links = {"roepas": defaultdict(list), "registrul": defaultdict(list), "declaratii": defaultdict(list)}
     standalone = {"roepas": [], "registrul": [], "declaratii": []}
@@ -914,7 +1079,7 @@ def main():
     def standalone_link(cands):
         """The link fields of a source row with no merge: `possible_duplicate_of` and `match_candidates`."""
         possible, multi = candidate_fields(cands)
-        return {"possible_duplicate_of": possible, **({"match_candidates": multi} if multi else {})}
+        return {"possible_duplicate_of": possible, **({"match_candidates": multi} if multi else {}), "_cands": cands}
 
     for tier, idx, score, r, cands in standalone["roepas"]:
         records.append({
@@ -945,19 +1110,24 @@ def main():
             "declaratii_count": r["count"], "declaratii_group": group and group.upper(),
             "declaratii_by_county": r.get("by_county")})
 
+    merge_stats = merge_same_name(records)
+    sector_stats = infer_sectors(records)
+    sector_stats["unified"] += unified[True]
+    for rec in records:
+        rec.pop("_cands", None)
     assign_families(records)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / "institutii.json").write_text(json.dumps(records, ensure_ascii=False), encoding="utf-8")
     write_csv(OUT_DIR / "institutii.csv", records)
     write_explorer_data(OUT_DIR, records)
-    report(records, anaf, links, standalone, declaratii, aggregate)
+    report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats)
 
 
 CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif", "cif_tva", "parent_cifs",
             "parent_names", "website", "website_url", "email", "phone", "fax", "lat", "lon", "sources",
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
-            "declaratii_count", "declaratii_group"]
+            "declaratii_count", "declaratii_group", "uat_source", "merged_ids"]
 
 
 def write_csv(path, records):
@@ -1007,6 +1177,7 @@ def write_explorer_data(out_dir, records):
             "m": fi.get(r["family"]), "dc": r.get("declaratii_count"), "ld": r["link"].get("declaratii"),
             "dg": r.get("declaratii_group"), "dk": r.get("declaratii_by_county"),
             "mc": [c["cif"] for c in r.get("match_candidates", [])],
+            "us": 1 if r.get("uat_source") else None, "mi": r.get("merged_ids"),
         }
         for k, v in optional.items():
             if v is None or v == "" or v == []:           # a known 0 (pc, po) stays: it differs from unknown
@@ -1020,7 +1191,7 @@ def write_explorer_data(out_dir, records):
     (out_dir / "rows.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
-def report(records, anaf, links, standalone, declaratii, aggregate):
+def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats):
     n = Counter(tuple(r["sources"]) for r in records)
     print(f"\nconsolidated records: {len(records)}", file=sys.stderr)
     for k, v in sorted(n.items(), key=lambda kv: -kv[1]):
@@ -1047,6 +1218,18 @@ def report(records, anaf, links, standalone, declaratii, aggregate):
     print(f"  records of their own: {len(own)} ({sum(1 for r in own if r['possible_duplicate_of'])} weak, "
           f"{sum(1 for r in own if r.get('match_candidates'))} ambiguous), "
           f"{sum(r['declaratii_count'] for r in own)} declarations", file=sys.stderr)
+    mg = merge_stats
+    print(f"\nsame-name merges (source-only records of different sources): {sum(mg['groups'].values())} groups, "
+          f"{mg['ids']} ids absorbed; skipped: {mg['generic']} generic or village-level names, "
+          f"{mg['dup_source']} groups with a repeated name inside one source", file=sys.stderr)
+    for k, v in sorted(mg["groups"].items(), key=lambda kv: -kv[1]):
+        print(f"  {k:28s} {v}", file=sys.stderr)
+    prefix = sum(1 for v in links["declaratii"].values() for t, _ in v if t == "prefix")
+    pamb = sum(1 for r in records if any(c["tier"] == "prefix" for c in r.get("match_candidates", [])))
+    print(f"prefix tier: {prefix} ANI names merged into ANAF; {pamb} records with ambiguous prefix candidates",
+          file=sys.stderr)
+    print(f"sectors: {sector_stats['unified']} labels unified, {sector_stats['inferred']} inferred from the name, "
+          f"{sector_stats['ambiguous']} names state several sectors (left blank)", file=sys.stderr)
     _, loose = state_tree(records)
     print(f"\nneclasificate (central roots with no STATE_TREE entry): {len(loose)}", file=sys.stderr)
     for r in loose:

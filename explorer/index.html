@@ -3,8 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Instituții publice – explorer</title>
+<title>Instituții publice &middot; org.gov2.ro</title>
 <link rel="icon" href="data:,">
+<link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg" />
+<link rel="shortcut icon" href="/assets/favicon/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content="org.gov2.ro" />
+<link rel="manifest" href="/assets/favicon/site.webmanifest" />
+
 <style>
   :root {
     --bg: #fafaf9; --surface: #fff; --text: #1c1917; --muted: #6b645f; --line: #e5e2df;
@@ -355,11 +362,13 @@
       r.cat = cats[r.c];
       r.county = r.k == null ? '' : counties[r.k];
       r.fam = r.m == null ? '' : fams[r.m];
-      r.hay = norm([r.n, r.f, r.id, r.u, r.county, r.w, r.e, ...(r.al || [])].filter(Boolean).join(' '));
+      r.hay = norm([r.n, r.f, r.id, r.u, r.county, r.w, r.e, ...(r.al || []), ...(r.mi || [])].filter(Boolean).join(' '));
     });
     rows.sort((a, b) => coll.compare(a.n, b.n));
     const byId = new Map(), byCif = new Map();
     for (const r of rows) { byId.set(r.id, r); if (r.f) byCif.set(r.f, r); }
+    const mergedInto = new Map();                        // an id absorbed by a same-name merge -> the record that survived
+    for (const r of rows) for (const m of r.mi || []) mergedInto.set(m, r);
     const famSize = new Map(), famCat = new Map();
     {
       const perCat = new Map();
@@ -848,19 +857,20 @@
     const seatKey = county => SEATS[county] ? looseName(norm(SEATS[county])) : null;
     const uatKind = (county, u) => {
       const [k, n] = uatParts(u);
-      if (u === UNKNOWN_UAT) return 'none';
+      if (u === UNKNOWN_UAT || u === UNKNOWN_SECTOR) return 'none';
       if (k === 's') return 's';
       if (k === 'm' && county !== 'Bucuresti' && looseName(n) === seatKey(county)) return 'seat';
       if (k === 'o' && looseName(n) === seatKey(county)) return 'seat';
       return k;
     };
-    const UNKNOWN_UAT = '(localitate necunoscută)';
+    const UNKNOWN_UAT = '(localitate necunoscută)', UNKNOWN_SECTOR = 'Municipiul București (sector necunoscut)';
+    const unknownUat = county => county === 'Bucuresti' ? UNKNOWN_SECTOR : UNKNOWN_UAT;
     const GROUPS = [['seat', 'Reședința de județ'], ['s', 'Sectoare'], ['m', 'Municipii'], ['o', 'Orașe'], ['c', 'Comune'], ['?', 'Altele'], ['none', 'Fără localitate']];
 
     function renderLocTree(items) {
       const byCounty = new Map();
       for (const r of items) {
-        const k = r.county || '(județ necunoscut)', u = r.u || UNKNOWN_UAT;
+        const k = r.county || '(județ necunoscut)', u = r.u || unknownUat(k);
         if (!byCounty.has(k)) byCounty.set(k, new Map());
         const m = byCounty.get(k);
         if (!m.has(u)) m.set(u, []);
@@ -1113,7 +1123,9 @@
     const linkTo = (url, text) => isHttp(url) ? h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, text || url) : text || url;
     const tierText = { exact: 'nume identic', canonical: 'nume normalizat (autoritate locală)', tokens: 'nume similar',
       unit: 'același număr de unitate militară', national: 'nume identic, instituție centrală (depusă din alt județ)',
-      elsewhere: 'nume identic, unic în țară (depusă din alt județ)' };
+      elsewhere: 'nume identic, unic în țară (depusă din alt județ)',
+      prefix: 'nume trunchiat, început al unui nume ANAF', same_name: 'același nume și județ, combinat din surse fără ANAF' };
+    const srcOfId = { R: 'ROePAS', G: 'Registru', D: 'ANI' };
     const peerBtn = rr => h('button', { class: 'link acc', type: 'button', onclick: () => openRecord(rr) }, rr.n);
 
     function renderDialog(r) {
@@ -1159,7 +1171,7 @@
             h('ul', { class: 'plain' }, cands.map(([c, rr]) => h('li', null, rr ? [peerBtn(rr), ` · CIF ${c}`] : `CIF ${c} (nu este în setul curent)`)))) : null,
           dup ? h('p', { class: 'flag' }, 'Posibil duplicat al: ', peerBtn(dup), ' (potrivire nesigură, nu a fost combinat; scorul nu este o probabilitate)') : null,
           h('div', { class: 'sec' }, 'Locație'),
-          h('dl', null, pair('Județ', r.county), pair('Localitate (UAT)', r.u), pair('Adresă', r.a),
+          h('dl', null, pair('Județ', r.county), pair('Localitate (UAT)', r.u && (r.us ? [r.u, ' ', h('span', { class: 'sub' }, '(sector dedus din nume)')] : r.u)), pair('Adresă', r.a),
             pair('Coordonate', r.la != null && h('a', { href: `https://www.openstreetmap.org/?mlat=${r.la}&mlon=${r.lo}#map=15/${r.la}/${r.lo}`,
               target: '_blank', rel: 'noopener noreferrer' }, `${r.la}, ${r.lo}`))),
           (r.w || r.e || r.ph || r.fx) ? [h('div', { class: 'sec' }, 'Contact'),
@@ -1172,6 +1184,7 @@
             pair('CIF', r.f), pair('CIF TVA', r.t),
             pair('Alte denumiri', r.al && h('ul', { class: 'plain' }, r.al.map(a => h('li', null, a)))),
             pair('Nr. Registru', r.rn && r.rn.join(', ')),
+            pair('Combinat din', r.mi && h('ul', { class: 'plain' }, r.mi.map(m => h('li', null, `${m} (${srcOfId[m[0]] || 'sursă'})`)))),
             pair('Legătură ROePAS', r.lr && tierText[r.lr]), pair('Legătură Registru', r.lg && tierText[r.lg]),
             pair('Declarații ANI', r.dc && `${fmt(r.dc)}${r.ld ? ` · ${tierText[r.ld]}` : ''}`),
             pair('Grupă în formularul ANI', r.dg),
@@ -1232,7 +1245,11 @@
     });
     on(dlg, 'click', e => { if (e.target === dlg) dlg.close(); });
     function applyId(id) {                              // the URL changed under the dialog (Back, Forward, edited hash)
-      if (id) { const r = byId.get(id); showDialog(r, id); }
+      if (id) {
+        const r = byId.get(id) || mergedInto.get(id);
+        if (r && r.id !== id) { S.id = r.id; syncHash('replace'); }       // an absorbed id opens the surviving record
+        showDialog(r, id);
+      }
       else if (dlg.open) { ignoreClose = true; dlg.close(); restoreFocus(); }
     }
 

@@ -147,6 +147,129 @@ class Categories(unittest.TestCase):
         self.assertEqual(c.categorize("MUNICIPIULUI MANGALIA"), c.LOCAL)
 
 
+def source_rec(id_, name, county="Alba", **extra):
+    """A source-only record in the shape main() builds (only the fields merge_same_name and infer_sectors read)."""
+    src = {"R": "roepas", "G": "registrul", "D": "declaratii"}[id_[0]]
+    return {"id": id_, "name": name, "county": county, "uat": None, "cif": None, "category": c.OTHER,
+            "sources": [src], "link": {}, "possible_duplicate_of": None, "_cands": [],
+            **({"registrul_nums": [id_[1:]]} if src == "registrul" else {}),
+            **({"declaratii_count": 7, "declaratii_group": None, "declaratii_by_county": None}
+               if src == "declaratii" else {}), **extra}
+
+
+class Sectors(unittest.TestCase):
+    def test_labels_are_unified(self):
+        want = "Sectorul 3 al Municipiului Bucuresti"
+        for raw in ("Sector 3", "Sectorul 3", "SECTORUL 3 AL MUNICIPIULUI BUCURESTI", "sector3"):
+            self.assertEqual(c.sector_label(raw), want, raw)
+        for raw in ("Sector 7", "Comuna Test", None):
+            self.assertEqual(c.sector_label(raw), raw)
+
+    def test_sector_from_name(self):
+        f = c.sector_in_name
+        self.assertEqual(f("ADMINISTRATIA DOMENIULUI PUBLIC SECTOR 1"), "Sectorul 1 al Municipiului Bucuresti")
+        self.assertEqual(f("Primaria Sectorului 6"), "Sectorul 6 al Municipiului Bucuresti")
+        self.assertEqual(f("Directia X sect. 4"), "Sectorul 4 al Municipiului Bucuresti")
+        self.assertEqual(f("Directia sector 2 si sector 2"), "Sectorul 2 al Municipiului Bucuresti")
+        self.assertIsNone(f("Directia sector 1 si sector 2"))      # two sectors: no guess
+        self.assertIsNone(f("Directia sector 7"))                  # not a Bucuresti sector
+        self.assertIsNone(f("Directia Generala"))
+
+    def test_infer_only_for_bucuresti_without_uat(self):
+        recs = [source_rec("G1", "ADMINISTRATIA PIETELOR SECTOR 2", "Bucuresti"),
+                source_rec("G2", "ADMINISTRATIA PIETELOR SECTOR 2", "Alba"),
+                source_rec("G3", "ADMINISTRATIA PIETELOR SECTOR 1 SI SECTOR 2", "Bucuresti"),
+                source_rec("G4", "ADMINISTRATIA PIETELOR SECTOR 3", "Bucuresti", uat="Sector 1")]
+        stats = c.infer_sectors(recs)
+        self.assertEqual([r["uat"] for r in recs], ["Sectorul 2 al Municipiului Bucuresti", None, None,
+                                                    "Sectorul 1 al Municipiului Bucuresti"])
+        self.assertEqual(recs[0]["uat_source"], "name")
+        self.assertNotIn("uat_source", recs[3])
+        self.assertEqual((stats["inferred"], stats["unified"], stats["ambiguous"]), (1, 1, 1))
+
+
+class SameName(unittest.TestCase):
+    def test_priority_union_and_provenance(self):
+        recs = [source_rec("D9", "Judecatoria Filiasi"), source_rec("G5", "JUDECATORIA FILIASI"),
+                source_rec("R2", "Judecatoria Filiasi", website="x.ro", sources=["roepas"])]
+        stats = c.merge_same_name(recs)
+        self.assertEqual([r["id"] for r in recs], ["R2"])
+        r = recs[0]
+        self.assertEqual(r["sources"], ["roepas", "registrul", "declaratii"])
+        self.assertEqual(r["link"], {"registrul": "same_name", "declaratii": "same_name"})
+        self.assertEqual((r["merged_ids"], r["registrul_nums"], r["declaratii_count"]), (["G5", "D9"], ["5"], 7))
+        self.assertEqual(stats["ids"], 2)
+
+    def test_candidates_union_and_single_multiple_rule(self):
+        one = lambda cif: [{"cif": cif, "tier": "weak", "score": 0.6}]
+        same = [source_rec("G5", "Judecatoria Filiasi", possible_duplicate_of="1", _cands=one("1")),
+                source_rec("D9", "Judecatoria Filiasi", possible_duplicate_of="1", _cands=one("1"))]
+        c.merge_same_name(same)
+        self.assertEqual((same[0]["possible_duplicate_of"], "match_candidates" in same[0]), ("1", False))
+        diff = [source_rec("G5", "Judecatoria Filiasi", possible_duplicate_of="1", _cands=one("1")),
+                source_rec("D9", "Judecatoria Filiasi", possible_duplicate_of="2", _cands=one("2"))]
+        c.merge_same_name(diff)
+        self.assertIsNone(diff[0]["possible_duplicate_of"])
+        self.assertEqual([x["cif"] for x in diff[0]["match_candidates"]], ["1", "2"])
+
+    def test_stays_separate(self):
+        cases = {
+            "same source twice": [source_rec("G1", "Judecatoria Filiasi"), source_rec("G2", "Judecatoria Filiasi")],
+            "other county": [source_rec("G1", "Judecatoria Filiasi"), source_rec("D1", "Judecatoria Filiasi", "Dolj")],
+            "generic name": [source_rec("G1", "PRIMARIA"), source_rec("D1", "PRIMARIA")],
+            "generic family head": [source_rec("G1", "SCOALA GIMNAZIALA"), source_rec("D1", "SCOALA GIMNAZIALA")],
+            "village school": [source_rec("G1", "Scoala Gimnaziala Ion Creanga"),
+                               source_rec("D1", "Scoala Gimnaziala Ion Creanga")],
+            "different sectors": [source_rec("G1", "Directia Venituri - Sector 1", "Bucuresti"),
+                                  source_rec("D1", "Directia Venituri - Sector 2", "Bucuresti")],
+        }
+        for label, recs in cases.items():
+            n = len(recs)
+            c.merge_same_name(recs)
+            self.assertEqual(len(recs), n, label)
+            self.assertTrue(all("merged_ids" not in r for r in recs), label)
+
+    def test_anaf_records_are_never_touched(self):
+        anaf = {**source_rec("G1", "Judecatoria Filiasi"), "id": "A1", "cif": "1", "sources": ["anaf"]}
+        recs = [anaf, source_rec("D1", "Judecatoria Filiasi")]
+        c.merge_same_name(recs)
+        self.assertEqual(len(recs), 2)
+
+
+class PrefixTier(unittest.TestCase):
+    ANAF = "AGENTIA NATIONALA A MEDICAMENTULUI SI A DISPOZITIVELOR MEDICALE DIN ROMANIA"
+
+    def test_cut_off_ani_name_links_to_the_one_anaf_row(self):
+        L = linker([row(1, self.ANAF)])
+        tier, idx, score, cands = L.link("Valcea", "AGENTIA NATIONALA A MEDICAMENTULUI SI A DISPOZITIVELOR MEDIC",
+                                         prefix=True)
+        self.assertEqual((tier, L.anaf[idx[0]]["cif"]), ("prefix", "1"))
+        self.assertNotEqual(L.link("Valcea", "AGENTIA NATIONALA A MEDICAMENTULUI SI A DISPOZITIVELOR MEDIC")[0],
+                            "prefix")                              # only ANI asks for it
+
+    def test_two_anaf_rows_with_a_mid_word_cut_are_ambiguous(self):
+        L = linker([row(1, self.ANAF + " BUCURESTI"), row(2, self.ANAF + " FILIALA")])
+        tier, idx, score, cands = L.link("Valcea", "AGENTIA NATIONALA A MEDICAMENTULUI SI A DISPOZITIVELOR MEDIC",
+                                         prefix=True)
+        self.assertEqual((tier, [x["cif"] for x in cands], {x["tier"] for x in cands}),
+                         ("ambiguous", ["1", "2"], {"prefix"}))
+
+    def test_generic_head_cut_on_a_word_boundary_does_not_link(self):
+        # one row in this county, but the head continues into other names elsewhere: not a cut-off name
+        L = linker([row(1, "Serviciul de Utilitati Publice Buftea"),
+                    row(2, "Serviciul de Utilitati Publice Otopeni", county="Alba")])
+        self.assertNotEqual(L.link("Valcea", "Serviciul de Utilitati Publice", prefix=True)[0], "prefix")
+
+    def test_guards(self):
+        L = linker([row(1, "Agentia Nationala Pentru Plati Unitare Centrala"),
+                    row(2, "Scoala Gimnaziala Ion Creanga Satu Nou"), row(3, "Directia Generala Venituri Nr 12")])
+        link = lambda n: L.link("Valcea", n, prefix=True)[0]
+        self.assertNotEqual(link("Agentia Nationala"), "prefix")                       # fewer than 3 content tokens
+        self.assertNotEqual(link("Scoala Gimnaziala Ion Creanga"), "prefix")           # local kind
+        self.assertNotEqual(link("Directia Generala Venituri Nr 1"), "prefix")         # cut would split a number
+        self.assertEqual(L.link("Alba", "Agentia Nationala Pentru Plati", prefix=True)[0], None)   # other county
+
+
 class Provenance(unittest.TestCase):
     def test_kibana_export_time(self):
         name = "Lens Visualization [2026-10-19T20_26_13.348+03_00] 3.csv"

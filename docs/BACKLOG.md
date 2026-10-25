@@ -41,8 +41,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Landing view `acasa`, county choropleth, county profile with UAT map and seat/municipii/orașe/comune groups.
 - [ ] 12 ANAF UAT roots have no map shape (e.g. Orasul Victoria, Orasul Balan, Comuna Saniob; Orasul Stei has null
       geometry). București is one polygon, so sectors have no shape. A SIRUTA join would remove the name matching.
-- [ ] ANAF UAT root names look wrong for two sector CIFs: "Sectorul 6" named JUDETUL ILFOV, "Sectorul 5" named
-      MUNICIPIUL BUCURESTI. Check against ANAF before correcting.
+- [-] ANAF UAT root names look wrong for two sector CIFs. Dropped: `4192545` JUDETUL ILFOV and `4267117` MUNICIPIUL
+      BUCURESTI are correct. Their seats have București sector addresses; the UAT label is the seat's location.
+- [x] București sectors and same-name duplicates (brief: briefs/sectors-duplicates.md).
+- [ ] Same-name merge needs no review step yet. 323 groups merged automatically; sample of 14 looked right.
+      Add a review list if a wrong merge turns up. Spelling variants ("ADMINISTRATIE" vs "ADMINISTRARE")
+      and ANI sub-units ("ANAF … ACTIVITATE ECONOMICA") remain separate, under "de verificat".
 
 ## Data quality
 - [ ] Companii de stat: 937 of 954 are in "(fără tip comun)". 719 of them come only from ANI. Ideas:
@@ -66,7 +70,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Also review ambiguous exact/canonical matches; they select the first candidate too.
 - [x] Bound the ancestor category patterns to whole words. `culturii` matches inside `agriculturii` before
       the agriculture rule. Measured: 32 ANI records under an agriculture umbrella have the culture category.
-- [ ] Reconcile source-only records across sources, with review before merging. There are 344 groups
+- [~] Reconcile source-only records across sources, with review before merging. v0.7.0 merges exact same-name
+      groups across sources (rules in briefs/sectors-duplicates.md); fuzzy variants remain. There are 344 groups
       containing 694 records with the same normalized county and name and no CIF. Example: DGASPC Sector 6
       appears separately in ROePAS, Registrul and ANI. A shared name alone does not prove identity.
 - [ ] Retain each source row, match score, candidate alternatives and field choice in the output provenance.

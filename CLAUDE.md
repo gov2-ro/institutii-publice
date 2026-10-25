@@ -43,7 +43,9 @@ Git: `.gitignore` excludes `data/*` except `data/consolidated/institutii.csv`, s
 - **Linker** links `(county, name)` to an ANAF row in tiers: `exact` -> `canonical` (`prep` collapses local
   authorities — Primăria/Comuna/Consiliul Local X — to `uat:<locality>`, county councils to `uat:judet:<x>`,
   plus school-name `ALIASES`) -> `unit` (military unit number, nationwide) -> `tokens` (IDF-weighted overlap
-  >= 0.75, numbers must agree). Only those tiers merge into the ANAF record. `weak` (0.5–0.75) is NOT merged:
+  >= 0.75, numbers must agree) -> `prefix` (ANI only: a cut-off name that starts exactly one ANAF name, 3+ content
+  tokens). Only those tiers merge into the ANAF record. Source-only records of different sources with the same name and
+  county combine (`same_name`, absorbed ids in `merged_ids`); ANAF records never take part. `weak` (0.5–0.75) is NOT merged:
   the row stays its own record with `possible_duplicate_of` = the candidate CIF. Output is a union with
   provenance in `sources` and `link`.
 - **ANI-specific** (`link_declaratii`, `umbrella_labels`, `split_umbrella`, `declaratii_standalone`): the ANI
@@ -62,7 +64,7 @@ Single self-contained vanilla-JS page (no build, no deps) that fetches `metadata
 served over HTTP, not opened as file://. Rows use the compact schema from `write_explorer_data`: short keys
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
 declaratii=8, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
-candidates, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
+candidates, `us` 1 = sector inferred from the name (`uat_source`), `mi` ids absorbed by a same-name merge, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
 `write_explorer_data` and the decoding in `index.html`.
 `metadata.json` also carries `dataset` (generation time; per input file the path, bytes, SHA-256, mtime, row count;
 ANI exports add `exported_at` and `capped`). Ambiguous source rows stay separate records with `match_candidates`

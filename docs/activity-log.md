@@ -1,5 +1,36 @@
 # Activity log
 
+## 2026-10-25 — Build: București sectors, same-name merges, ANI prefix tier
+**Done**
+- Owner screenshots showed 12 sector groups, 1,426 București records without a locality, and visible duplicates.
+  Opus measured the causes and wrote `docs/briefs/sectors-duplicates.md`; Sonnet built it; Opus reviewed.
+- `sector_label` unifies "Sector N" (ROePAS) with "Sectorul N al Municipiului Bucuresti" (ANAF).
+  `infer_sectors` takes the sector from a name that states exactly one (`uat_source: "name"`, compact `us`).
+- `merge_same_name`: source-only records with the same folded name, county and sector numbers, from different
+  sources, each name unique within its source and county, merge. Priority R > G > D; `merged_ids` / `mi`;
+  `link.<src> = "same_name"`. The explorer resolves an absorbed id in `#id=` to the survivor.
+- ANI `prefix` tier: an ANI name that is a strict prefix of exactly one ANAF name in the county.
+- Opus tightened the prefix tier after review: a cut on a word boundary links only when one ANAF name in the
+  whole country continues it. Sonnet's version linked generic heads ("SERVICIUL DE UTILITATI PUBLICE" →
+  Buftea, "STATIUNEA DE CERCETARE DEZVOLTARE AGRICOLA" → Valu lui Traian). Prefix merges 56 → 26.
+
+**Measured**
+- Records 25,450 → 25,106. 328 ids absorbed in 323 groups: registrul+declaratii 283, roepas+registrul 26,
+  roepas+declaratii 9, roepas+registrul+declaratii 5. 25 generic/village groups and 5 repeated-name groups skipped.
+- 112 sector labels unified; 93 sectors inferred from names; București now has 6 sector groups.
+- ANAF records unchanged (13,485, same names, UATs, parents). Ids unique; all references resolve; no absorbed id
+  remains a record. 31 unit tests pass; CSV identical under two hash seeds. Browser checks t5–t11 pass.
+
+**Hard**
+- The brief excluded all `DECL_LOCAL_KIND` names from the same-name merge, but its own example (street
+  administration) is a local kind. Sonnet narrowed the exclusion to village-level kinds (schools, kindergartens,
+  libraries, cultural homes, parishes) plus generic heads without a proper noun. Opus accepted the deviation.
+
+**Decided**
+- `G10011`-style survivors keep the highest-priority source id, so ROePAS contacts stay on the visible record.
+  The cost: absorbed D/G ids now resolve only through `mi`.
+- Correction: ANAF `4192545` JUDETUL ILFOV and `4267117` MUNICIPIUL BUCURESTI are not misnamed (dropped item).
+
 ## 2026-10-25 — Build: landing page, county map and county profiles
 **Done**
 - Owner request: landing page, county choropleth, UAT maps per county, localities split by kind. Opus wrote
