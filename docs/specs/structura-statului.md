@@ -35,6 +35,9 @@ local administration. The view replaces the tab "Autoritate → subordonate".
 ## Tree
 Virtual nodes are in *italics*. A CIF is an ANAF root; its ANAF children hang under it as today.
 
+Display update, 2026-10-26: Guvernul shows SGG, each ministry, and Organe de specialitate at the same level.
+The display and ministry breadcrumbs skip Ministere. Metadata retains that group for counts and existing links.
+
 - *Parlamentul* (Titlul III, cap. I)
   - Camera Deputaților `4265795` · Senatul `4284070` · Consiliul Legislativ `7901650` (art. 79)
 - *Președintele României* (Titlul III, cap. II)

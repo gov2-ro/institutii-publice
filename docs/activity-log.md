@@ -1,5 +1,86 @@
 # Activity log
 
+## 2026-10-26 — Compact landing types, title-row menu, and flat government focus
+
+**Done**
+- Kept “Tipuri de instituții” and removed the duplicate “Tip → instituții” landing section.
+- Type categories start closed on Acasă and in the separate family view.
+- Moved both view links into “Mai multe”. The menu now shares the title row with the crest.
+- The government display shows SGG, each ministry, and Organe de specialitate as peers.
+- Ministry breadcrumbs skip the Ministere heading. Saved `n=ministere` links still work.
+- Updated the navigation brief, state display spec, and backlog.
+
+**Hard**
+- Browser checks must close the menu before using the reset button. The title-row menu overlays the filter row.
+- Website filters still hide branches without matches. The full government peer count uses `web=0`.
+
+**Measured**
+- Full government focus: SGG plus 16 ministry rows and one specialty group. Scope: 7,906 unique records.
+- Browser checks pass for focus, filtered leaf records, saved ministry links, direct records, menu filters, and history.
+- Five views fit at 320, 390, 768, 901, 1,024, and 1,440 pixels. The menu stays on the title row at each width.
+- Both colour schemes have no page or console errors. JavaScript syntax and `git diff --check` pass.
+- State integrity: 3,296 reachable roots = 3,296 expected roots. All eight attached descendant checks pass.
+
+**Decided**
+- Flatten the government display in the page. Metadata keeps Ministere, so counts and saved links retain their scope.
+  The alternative requires data regeneration for a display change.
+- Keep the compact type grid. Only the final choice between the two state presentations remains open.
+
+## 2026-10-26 — Restore the previous landing sections alongside the new directories
+
+**Done**
+- Restored the previous overview, largest-type shortcuts, and compact type grid from the committed page.
+- Kept the new state and type directories below those sections. Kept one county map after both layouts.
+- Removed the introductory title and instruction. Moved the single “are site” checkbox into “Mai multe”.
+- Both layouts share the active filters. Their links open focused groups or single-record details.
+- Added the final landing composition decision to the backlog. Updated the navigation brief.
+
+**Hard**
+- The first refactor replaced the previous sections. The owner clarified that both layouts must remain for comparison.
+- The restored overview overflowed at 320 pixels: document width was 349 pixels. Wrapping long links removed the overflow.
+
+**Measured**
+- Browser checks pass for the restored links, new directories, website menu, focus, records, refresh, and browser Back.
+- Five views fit at 320, 390, 768, 901, 1,024, and 1,440 pixels. Both colour schemes have no console or page errors.
+- State integrity remains 3,296 reachable and expected roots. All eight attached descendant checks pass.
+- JavaScript syntax and `git diff --check` pass. Desktop and phone screenshots remain under `/tmp`.
+
+**Decided**
+- Preserve both landing compositions until the owner chooses. The cost is temporary duplication and a longer page.
+- Keep one website checkbox in the menu. This avoids two controls for the same filter and keeps Acasă free of the search bar.
+
+## 2026-10-26 — Landing navigation and focused institution types
+
+**Done**
+- Checked the latest commits and local data. The current snapshot has 25,106 records and 2,180 website URLs.
+- Linked the supplied crest and title to `#`. Moved Listă and the two review filters into “Mai multe”.
+- Removed the county tab. County profiles remain available through the map and existing links.
+- Added state and type directories to Acasă. Groups open focused views; single results open their details.
+- Added family breadcrumbs and county groups for large families. Ungrouped records retain a route through their category.
+- Enabled “are site” by default. Explicit `web=0` links retain all records after refresh.
+- Hid the search and filter bar on Acasă, following the owner's additional request. Result views show it.
+- Fixed the favicon paths for hosting under `/explorer/`. Manifest icons use relative paths too.
+- Recorded the current navigation rules in `docs/briefs/explorer-landing-refactor.md`.
+
+**Measured**
+- Unit tests: 31 pass. JavaScript syntax and `git diff --check` pass.
+- Chrome checks: five views at 320, 390, 768, 901, 1,024, and 1,440 pixels. No document overflow.
+- Checked menu bounds, both colour schemes, and desktop and phone screenshots. No page or console errors.
+- Checked state focus, family focus, direct records, singleton shortcuts, refresh, Back, filters, and county profiles.
+- State integrity: 3,296 reachable roots = 3,296 expected roots. All eight attached descendant checks pass.
+- Default families include 1,156 commune records with websites. The full county list sums to 25,106 records.
+
+**Hard**
+- Chrome required execution outside the sandbox. Browser scripts and screenshots remain under `/tmp`.
+- An initial cleanup removed family totals still used by record dialogs. Restored them before the final browser checks.
+
+**Decided**
+- The landing directories and county map respect the website filter. This keeps their counts consistent with the destination.
+  The cost: branches without matching websites stay hidden until the visitor clears “are site”.
+- Keep a separate website checkbox on Acasă. This preserves access to all records while the search bar stays hidden.
+- Family focus uses the existing `v=fam` and `fam` parameters. The cost: family history entries need their own navigation key.
+- The review checked local data and navigation. It did not verify the supplied website URLs against live services.
+
 ## 2026-10-25 — Fix: București records without a sector grouped by level
 **Done** (Opus, a small change while the design moved)
 - Owner request: replace "Fără localitate / sector necunoscut" with central-level groups above "Sectoare".

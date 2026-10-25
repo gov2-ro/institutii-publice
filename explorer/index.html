@@ -4,13 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Instituții publice &middot; org.gov2.ro</title>
-<link rel="icon" href="data:,">
-<link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg" />
-<link rel="shortcut icon" href="/assets/favicon/favicon.ico" />
-<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="assets/favicon/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg" />
+<link rel="shortcut icon" href="assets/favicon/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-title" content="org.gov2.ro" />
-<link rel="manifest" href="/assets/favicon/site.webmanifest" />
+<link rel="manifest" href="assets/favicon/site.webmanifest" />
 
 <style>
   :root {
@@ -39,14 +38,19 @@
   .top { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line);
          padding: 10px 16px 0; }
   .wrap { max-width: 1180px; margin: 0 auto; }
-  .title { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .title { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: "brand stats about menu";
+    align-items: center; gap: 4px 12px; margin-bottom: 8px; }
+  .brand { grid-area: brand; display: inline-flex; align-items: center; gap: 10px; min-width: 0; color: var(--text); text-decoration: none; }
+  .brand img { width: 36px; height: 36px; object-fit: contain; }
   h1 { font-size: 18px; margin: 0; }
-  #stats { color: var(--muted); font-size: 13px; }
+  #stats { grid-area: stats; color: var(--muted); font-size: 13px; }
+  #about-btn { grid-area: about; }
   .txtbtn { margin-left: auto; border: 0; background: none; color: var(--accent); cursor: pointer; font-size: 13px;
             padding: 2px 0; text-decoration: underline; }
 
   /* controls: one wrapping row on desktop (.fmore dissolves into it), disclosure on phones */
   .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .filters[hidden] { display: none; }
   .filters[inert] { opacity: .55; }
   .filters > * { min-width: 0; }
   #q { flex: 2 1 220px; order: 0; }
@@ -83,11 +87,13 @@
             background: var(--accent); color: var(--bg); font-size: 12px; font-weight: 700; text-align: center; }
   .fbadge:empty { display: none; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .viewbar { display: flex; margin-top: 6px; }
-  .tabs { display: flex; gap: 2px; overflow-x: auto; min-width: 0; flex: 1 1 auto; scrollbar-width: thin; }
-  .tabs button { padding: 8px 14px; border: 0; border-bottom: 2px solid transparent; background: none;
-                 color: var(--muted); cursor: pointer; white-space: nowrap; flex: none; }
-  .tabs button[aria-selected=true] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .navmore { grid-area: menu; font-size: 13px; }
+  .navmore > summary { height: 32px; }
+  .navmore .panel { width: 270px; }
+  .navmore .chk { white-space: normal; }
+  .menu-link { display: block; width: 100%; padding: 6px 0; color: var(--accent); text-decoration: none; }
+  .menu-link[aria-current=page] { font-weight: 600; }
+  .menu-status { color: var(--accent); font-weight: 600; }
 
   main { max-width: 1180px; margin: 0 auto; padding: 12px 16px 16px; }
   .empty, .notice { padding: 32px 12px; text-align: center; color: var(--muted); }
@@ -107,11 +113,18 @@
   .ov-body p { margin: 0 0 6px; }
   .ov-g { display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: baseline; margin: 6px 0; }
   .ov-g strong { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); flex: 0 0 100%; }
-  .ov-g a { white-space: nowrap; }
+  .ov-g > span { min-width: 0; max-width: 100%; }
+  .ov-g a { overflow-wrap: anywhere; }
   .ov-g .count { margin-left: 3px; }
   .famgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 2px 16px; margin: 2px 0 8px 18px; }
   .famgrid .it { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
   .famgrid .link { min-width: 0; overflow-wrap: anywhere; }
+  .directory { margin: 0; padding: 0; list-style: none; }
+  .directory li { border-bottom: 1px solid var(--line); }
+  .directory a { display: flex; gap: 12px; align-items: baseline; padding: 8px 6px; color: var(--text); text-decoration: none; }
+  .directory a:hover { background: var(--accent-soft); }
+  .directory .label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .directory .arrow { color: var(--accent); }
 
   /* maps */
   .maprow { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-start; }
@@ -221,7 +234,12 @@
 
   @media (max-width: 760px) {
     .top { padding: 8px 12px 0; } main { padding: 10px 12px 12px; }
-    .title { margin-bottom: 6px; }
+    .title { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand menu" "stats about"; margin-bottom: 6px; }
+    .brand { gap: 8px; }
+    .brand img { width: 30px; height: 30px; }
+    h1 { font-size: 16px; }
+    #stats { font-size: 12px; }
+    .navmore .panel { position: absolute; width: 270px; max-width: calc(100vw - 24px); box-shadow: 0 8px 24px rgba(0, 0, 0, .18); }
     #q { flex: 1 1 100px; }
     #ftoggle { display: inline-flex; align-items: center; order: 1; }
     #reset { order: 1; padding: 0 10px; }
@@ -230,7 +248,6 @@
     .fmore > * { order: 0; }
     .fmore > .multi { grid-column: 1 / -1; }
     .multi .panel { position: static; width: auto; max-width: none; margin-top: 4px; box-shadow: none; }
-    .tabs button { padding: 7px 10px; font-size: 14px; }
     th.c, td.c, table.lt .c-cat, table.lt .c-where, table.lt .c-src { display: none; }
     dl { grid-template-columns: 1fr; gap: 0; } dt { margin-top: 8px; }
     .csv-hint { display: none; }
@@ -240,9 +257,21 @@
 <body>
 <header class="top">
   <div class="wrap">
-    <div class="title"><h1>Instituții publice</h1><span id="stats" role="status">Se încarcă datele…</span>
-      <button id="about-btn" class="txtbtn" type="button">Despre date<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></button></div>
-    <div class="filters" id="filters" inert>
+    <div class="title"><a class="brand" id="home-link" href="#" aria-label="Instituții publice — Acasă"><img src="assets/img/gx00.png" width="36" height="36" alt=""><h1>Instituții publice</h1></a><span id="stats" role="status">Se încarcă datele…</span>
+      <button id="about-btn" class="txtbtn" type="button">Despre date<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></button>
+      <details id="navmore" class="multi navmore" inert>
+        <summary>Mai multe<span id="menu-status" class="menu-status"></span></summary>
+        <div class="panel">
+          <a href="#v=stat" data-view="stat" class="menu-link">Structura statului</a>
+          <a href="#v=fam" data-view="fam" class="menu-link">Tip → instituții</a>
+          <a href="#v=list" id="list-link" class="menu-link">Listă</a>
+          <label class="chk"><input type="checkbox" id="web" checked> are site</label>
+          <label class="chk"><input type="checkbox" id="noanaf"> fără corespondent ANAF</label>
+          <label class="chk" title="Înregistrări cu posibil duplicat sau cu potrivire nerezolvată"><input type="checkbox" id="review"> de verificat</label>
+        </div>
+      </details>
+    </div>
+    <div class="filters" id="filters" inert hidden>
       <input id="q" type="search" placeholder="Caută: nume, CIF, localitate, site…" autocomplete="off" aria-label="Căutare">
       <button id="ftoggle" type="button" aria-expanded="false" aria-controls="fmore">Filtre<span class="fbadge" id="fcount"></span></button>
       <button id="reset" type="button">Resetează</button>
@@ -262,20 +291,9 @@
             <p class="hint" id="src-hint"></p>
           </div>
         </details>
-        <label class="chk"><input type="checkbox" id="web"> are site</label>
-        <label class="chk"><input type="checkbox" id="noanaf"> fără corespondent ANAF</label>
-        <label class="chk" title="Înregistrări cu posibil duplicat sau cu potrivire nerezolvată"><input type="checkbox" id="review"> de verificat</label>
       </div>
     </div>
-    <div class="viewbar" id="viewbar" inert>
-      <div class="tabs" role="tablist" aria-label="Vizualizare">
-        <button role="tab" data-view="acasa" aria-selected="false">Acasă</button>
-        <button role="tab" data-view="list" aria-selected="true">Listă</button>
-        <button role="tab" data-view="stat" aria-selected="false">Structura statului</button>
-        <button role="tab" data-view="fam" aria-selected="false">Tip → instituții</button>
-        <button role="tab" data-view="loc" aria-selected="false">Județ → localitate</button>
-      </div>
-    </div>
+
   </div>
 </header>
 <main id="main" aria-busy="true">
@@ -426,7 +444,10 @@
     }
     vnode.get('local').nodes.sort((a, b) => (a.label === 'Bucuresti') - (b.label === 'Bucuresti') || coll.compare(a.label, b.label));
     for (const r of rows) if (r.f && r.p && !place.has(r.f)) place.set(r.f, r.p[0]);   // a child sits under its first ordonator
-    const up = id => vnode.has(id) ? vnode.get(id).parent : place.get(id);
+    const up = id => {
+      const parent = vnode.has(id) ? vnode.get(id).parent : place.get(id);
+      return parent === 'ministere' ? 'guvern' : parent;
+    };
     const chain = id => { const out = []; for (let x = id, n = 0; x && n < 20; x = up(x), n++) out.unshift(x); return out; };   // [STAT, ..., id]
     const labelOf = id => vnode.has(id) ? vnode.get(id).label : byCif.get(id).n;
     const nodeKnown = id => vnode.has(id) || byCif.has(id);
@@ -473,12 +494,13 @@
     const on = (t, ev, fn) => wires.push(() => t.addEventListener(ev, fn));
 
     /* ---------- filter state ---------- */
-    const S = { q: '', cat: '', fam: '', county: '', uat: '', srcs: new Set(), srcMode: 'all', web: false, review: false,
+    const NO_FAMILY = '(fără tip comun)';
+    const S = { q: '', cat: '', fam: '', county: '', uat: '', srcs: new Set(), srcMode: 'all', web: true, review: false,
       view: 'list', sort: 'n', node: '', id: '' };
     let qTokens = [], srcList = [];
     const pass = (r, skip) =>
       (skip === 'cat' || !S.cat || r.cat === S.cat) &&
-      (skip === 'fam' || !S.fam || r.fam === S.fam) &&
+      (skip === 'fam' || !S.fam || (r.fam || NO_FAMILY) === S.fam) &&
       (skip === 'county' || !S.county || r.county === S.county) &&
       (skip === 'uat' || !S.uat || r.u === S.uat) &&
       (skip === 'src' || !srcList.length || (S.srcMode === 'all' ? srcList.every(k => srcTest[k](r)) : srcList.some(k => srcTest[k](r)))) &&
@@ -502,8 +524,8 @@
     function refreshFacets() {
       const c = tally('cat', r => r.cat);
       fillSelect(el.cat, 'Toate categoriile', cats.filter(x => c.has(x) || x === S.cat).map(x => [x, x, c.get(x) || 0]), S.cat);
-      const f = tally('fam', r => r.fam);
-      fillSelect(el.fam, 'Toate tipurile', fams.filter(x => f.has(x) || x === S.fam).map(x => [x, x, f.get(x) || 0]), S.fam);
+      const f = tally('fam', r => r.fam || NO_FAMILY);
+      fillSelect(el.fam, 'Toate tipurile', [...fams, NO_FAMILY].filter(x => f.has(x) || x === S.fam).map(x => [x, x, f.get(x) || 0]), S.fam);
       const k = tally('county', r => r.county);
       fillSelect(el.county, 'Toate județele', counties.filter(x => k.has(x) || x === S.county).map(x => [x, x, k.get(x) || 0]), S.county);
       refreshSrc();
@@ -651,14 +673,14 @@
 
     /* a record that has subordinates: counts are its unique descendants, the record itself excluded */
     function recordNode(r, ctx, open) {
-      const ks = ctx.kids.get(r.f), below = desc(r.f);
+      const ks = ctx.kids.get(r.f) || [], below = desc(r.f);
       let m = 0;
       if (ctx.filtered) for (const x of below) if (ctx.matchSet.has(x)) m++;
       const total = plural(below.size, 'subordonat', 'subordonate');
       return branch({ label: ctx.relabel.get(r.f) || r.n, note: noteOf.get(r.f),
         meta: ctx.filtered ? `${fmt(m)} / ${total}` : total, attrs: { 'data-cif': r.f },
         ctx: !ctx.matchSet.has(r), open: open || ctx.openAll, info: () => openRecord(r), focus: open ? null : () => focusNode(r.f),
-        kids: box => renderRecords(box, ks, ctx) });
+        kids: box => ks.length ? renderRecords(box, ks, ctx) : box.append(leafTable([r], ctx.matchSet, ctx.cols)) });
     }
 
     /* ---------- "Structura statului" ---------- */
@@ -670,6 +692,13 @@
     function renderVNode(id, box, ctx) {
       const v = vnode.get(id);
       const recs = (id === 'fara-anaf' ? ctx.noCif : v.recs).filter(r => ctx.matchSet.has(r) || ctx.kids.has(r.f));
+      if (id === 'guvern') {
+        // Flatten the ministry heading in this view. Keep the curated membership and counts intact.
+        const ministries = (vnode.get('ministere')?.recs || []).filter(r => ctx.matchSet.has(r) || ctx.kids.has(r.f));
+        for (const r of [...recs, ...ministries.slice().sort((a, b) => coll.compare(a.n, b.n))]) box.append(recordNode(r, ctx));
+        for (const n of v.nodes) if (n.id !== 'ministere' && ctx.visible(n.id)) box.append(vBranch(n.id, ctx));
+        return;
+      }
       if (id.startsWith('judet:')) {
         const county = recs.filter(isCountyRec), rest = recs.filter(r => !isCountyRec(r));
         for (const r of county) ctx.relabel.set(r.f, 'Consiliul Județean ' + v.label);
@@ -694,7 +723,16 @@
         open: focused || ctx.openAll, focus: focused ? null : () => focusNode(id), kids: box => renderVNode(id, box, ctx) });
     }
 
-    function focusNode(id) { S.node = id === STAT ? '' : id; update(); window.scrollTo(0, 0); }
+    function stateTarget(id) {
+      const v = vnode.get(id);
+      return v && !v.nodes.length && v.recs.length === 1 ? v.recs[0].f : id;
+    }
+    function focusNode(id) {
+      const matches = [...subtree(id)].filter(r => pass(r));
+      if (id !== STAT && matches.length === 1) { openRecord(matches[0]); return; }
+      S.node = id === STAT ? '' : stateTarget(id);
+      setView('stat'); window.scrollTo(0, 0);
+    }
     function crumbs(id) {
       const ids = chain(id), box = h('nav', { class: 'crumbs', 'aria-label': 'Poziția în structură' });
       ids.forEach((x, i) => {
@@ -804,10 +842,43 @@
       get filtered() { return items; },
     };
 
-    function renderFamTree(items) {
+    function browseHref(extra) {
+      const p = browseParams();
+      p.delete('n'); p.delete('v');
+      for (const [k, v] of Object.entries(extra)) v ? p.set(k, v) : p.delete(k);
+      return '#' + p;
+    }
+    function browseLink(label, href, fn, cls) {
+      return h('a', { href, class: cls, onclick: e => {
+        if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault(); fn();
+      } }, label);
+    }
+    function directoryEntry(label, count, href, fn) {
+      return h('li', null, browseLink([
+        h('span', { class: 'label' }, label), h('span', { class: 'count' }, fmt(count)),
+        h('span', { class: 'arrow', 'aria-hidden': 'true' }, '›')], href, fn));
+    }
+    function focusFamily(fam, cat, list) {
+      if (list.length === 1) { openRecord(list[0]); return; }
+      S.fam = fam; S.cat = fam === NO_FAMILY ? cat : '';
+      S.node = ''; setView('fam'); window.scrollTo(0, 0);
+    }
+    function renderFamTree(items, directory = false) {
       if (!items.length) return emptyMsg();
-      const NONE = '(fără tip comun)';
+      const NONE = NO_FAMILY;
       const matchSet = new Set(items);
+      if (S.fam && !directory) {
+        const nav = h('nav', { class: 'crumbs', 'aria-label': 'Poziția în tipuri' },
+          h('button', { class: 'link', type: 'button', onclick: () => { S.fam = ''; S.cat = ''; update(); } }, 'Tipuri de instituții'),
+          h('span', { class: 'sep' }, '›'), h('span', { class: 'here' }, S.fam));
+        const tree = h('div', { class: 'tree' }), ctx = buildCtx(items, isFiltered());
+        const sorted = items.slice().sort((a, b) => coll.compare(a.county, b.county) || coll.compare(a.n, b.n));
+        // A family is a peer group. Keep the focused results inside that group.
+        if (items.length > SPLIT_MIN) splitByCounty(tree, sorted, ctx);
+        else tree.append(leafTable(sorted, matchSet, ['n', 'where', 'site', 'src']));
+        return h('div', null, nav, h('h2', null, S.fam), h('p', { class: 'sub' }, plural(items.length, 'înregistrare', 'înregistrări')), tree);
+      }
       const byCat = new Map();                                  // category -> family -> rows
       for (const r of items) {
         const c = r.fam ? famCat.get(r.fam) : r.cat, f = r.fam || NONE;
@@ -821,12 +892,14 @@
       for (const [cat, m] of [...byCat].sort((a, b) => countOf(b[1]) - countOf(a[1]))) {
         const fl = [...m].sort((a, b) => (a[0] === NONE) - (b[0] === NONE) || b[1].length - a[1].length);
         tree.append(branch({ cls: 'grp', label: cat, meta: `${plural(m.has(NONE) ? fl.length - 1 : fl.length, 'tip', 'tipuri')} · ${fmt(countOf(m))} înregistrări`,
-          open: byCat.size <= 3,
-          kids: box => chunked(box, fl, ([fam, list]) => branch({
-            label: fam, meta: fmt(list.length), open: fam === S.fam,
-            kids: b2 => b2.append(leafTable(
-              list.slice().sort((a, b) => coll.compare(a.county, b.county) || coll.compare(a.n, b.n)), matchSet,
-              fam === NONE ? AUTH_COLS : ['n', 'where', 'site', 'src'])) }), 100, true) }));
+          open: false,
+          kids: box => {
+            const links = h('ul', { class: 'directory' });
+            chunked(links, fl, ([fam, list]) => directoryEntry(fam, list.length,
+              list.length === 1 ? browseHref({ id: list[0].id }) : browseHref({ v: 'fam', fam, cat: fam === NONE ? cat : '' }),
+              () => focusFamily(fam, cat, list)), 100, true, box);
+            box.prepend(links);
+          } }));
       }
       return h('div', null, h('p', { class: 'sub' },
         'Instituțiile de același fel sunt grupate (ex. toate Casele Corpului Didactic, câte una pe județ). Un tip stă sub categoria în care se încadrează majoritatea membrilor.'), tree);
@@ -1015,9 +1088,9 @@
     }
 
     /* counties */
-    const countyCounts = () => { const m = new Map(); for (const r of rows) if (r.county) m.set(r.county, (m.get(r.county) || 0) + 1); return m; };
+    const countyCounts = () => { const m = new Map(); for (const r of items) if (r.county) m.set(r.county, (m.get(r.county) || 0) + 1); return m; };
     const countyFeatures = g => g.features.map(f => ({ f, name: counties.find(c => norm(c) === norm(f.properties.name.replace(/^Municipiul /, ''))) || null }));
-    const openCounty = c => { clearFilters({ county: c }); closeDialogSilently(); setView('loc'); window.scrollTo(0, 0); };
+    const openCounty = c => { clearFilters({ county: c, web: S.web }); closeDialogSilently(); setView('loc'); window.scrollTo(0, 0); };
     function countyMap(box) {
       gis('romania-counties.geojson').then(g => {
         if (!box.isConnected) return;
@@ -1110,49 +1183,75 @@
         h('div', { class: 'maprow' }, h('div', { class: 'mapcol' }, mapBox, note)));
     }
 
-    /* ---------- landing page: shortcuts, institution types, county map. Always the whole dataset, unique records ---------- */
-    function renderHome() {
-      const go = fn => e => { e.preventDefault(); clearFilters(); closeDialogSilently(); fn(); window.scrollTo(0, 0); };
-      const link = (text, n, href, fn) => h('span', null, h('a', { href, onclick: go(fn) }, text), h('span', { class: 'count' }, fmt(n)));
-      const topFams = [...famSize].sort((a, b) => b[1] - a[1]).slice(0, 8);
-      const toFam = f => () => { S.fam = f; setView('list'); };
-      const sec1 = h('section', { class: 'home-sec', 'aria-labelledby': 'h-ov' }, h('h2', { id: 'h-ov' }, 'Explorează toate instituțiile'),
-        h('div', { class: 'ov-body', id: 'ov-body' },
-          h('p', { class: 'sub' }, 'Alegerea unei scurtături resetează filtrele. Numerele sunt înregistrări unice din tot setul de date.'),
-          h('div', { class: 'ov-g' }, h('strong', null, 'Structura statului'),
-            vnode.get(STAT).nodes.map(n => link(n.label.replace(/ \(ierarhie necunoscută\)/, ''), subtree(n.id).size,
-              '#' + new URLSearchParams({ v: 'stat', n: n.id }), () => { S.node = n.id; setView('stat'); }))),
-          h('div', { class: 'ov-g' }, h('strong', null, 'Cele mai mari tipuri de instituții'),
-            topFams.map(([f, n]) => link(f, n, '#' + new URLSearchParams({ fam: f }), toFam(f))))));
-      // all types, grouped by the category of most members; a type opens the list filtered by it
-      const byCat = new Map();
-      for (const [f, n] of famSize) { const c = famCat.get(f); if (!byCat.has(c)) byCat.set(c, []); byCat.get(c).push([f, n]); }
-      const catN = l => l.reduce((n, x) => n + x[1], 0);
-      const noFam = rows.filter(r => !r.fam).length;
-      const tree = h('div', { class: 'tree' });
-      let first = true;
-      for (const [cat, l] of [...byCat].sort((a, b) => catN(b[1]) - catN(a[1]))) {
-        l.sort((a, b) => b[1] - a[1] || coll.compare(a[0], b[0]));
-        tree.append(branch({ cls: 'grp', label: cat, meta: `${plural(l.length, 'tip', 'tipuri')} · ${fmt(catN(l))} înregistrări`, open: first,
-          kids: box => box.append(h('div', { class: 'famgrid' }, l.map(([f, n]) => h('div', { class: 'it' },
-            h('a', { class: 'link acc', href: '#' + new URLSearchParams({ fam: f }), onclick: go(toFam(f)) }, f), h('span', { class: 'count' }, fmt(n)))))) }));
-        first = false;
+    /* ---------- landing page: original shortcuts and type grid, new directories, county map ---------- */
+    function renderHome(items) {
+      const ctx = buildCtx(items, isFiltered());
+      const byFam = new Map();
+      for (const r of items) if (r.fam) {
+        if (!byFam.has(r.fam)) byFam.set(r.fam, []);
+        byFam.get(r.fam).push(r);
       }
-      const sec2 = h('section', { class: 'home-sec', 'aria-labelledby': 'h-fam' }, h('h2', { id: 'h-fam' }, 'Tipuri de instituții'),
-        h('p', { class: 'sub' }, `Instituțiile de același fel sunt grupate (ex. toate Casele Corpului Didactic, câte una pe județ). ${fmt(noFam)} de înregistrări nu au un tip comun; le găsești în Listă.`), tree);
+      const families = [...byFam].sort((a, b) => b[1].length - a[1].length || coll.compare(a[0], b[0]));
+      const familyHref = (f, list) => list.length === 1 ? browseHref({ id: list[0].id }) : browseHref({ v: 'fam', fam: f, cat: '' });
+      const familyLink = (f, list, cls) => browseLink(f, familyHref(f, list), () => focusFamily(f, '', list), cls);
+      const shortcut = (link, count) => h('span', null, link, h('span', { class: 'count' }, fmt(count)));
+      const stateMatches = n => [...subtree(n.id)].filter(r => ctx.matchSet.has(r));
+      const stateHref = (n, matches) => matches.length === 1 ? browseHref({ id: matches[0].id }) : browseHref({ v: 'stat', n: stateTarget(n.id) });
+      const overview = h('section', { class: 'home-sec', 'aria-labelledby': 'h-ov' },
+        h('h2', { id: 'h-ov' }, 'Explorează toate instituțiile'),
+        h('div', { class: 'ov-body', id: 'ov-body' },
+          h('p', { class: 'sub' }, 'Numerele sunt înregistrări unice care corespund filtrelor. Filtrul „are site” este în „Mai multe”.'),
+          h('div', { class: 'ov-g' }, h('strong', null, 'Structura statului'),
+            vnode.get(STAT).nodes.filter(n => ctx.visible(n.id)).map(n => {
+              const matches = stateMatches(n);
+              return shortcut(browseLink(n.label.replace(/ \(ierarhie necunoscută\)/, ''), stateHref(n, matches), () => focusNode(n.id)), matches.length);
+            })),
+          h('div', { class: 'ov-g' }, h('strong', null, 'Cele mai mari tipuri de instituții'),
+            families.slice(0, 8).map(([f, list]) => shortcut(familyLink(f, list), list.length)))));
+      const byCat = new Map();
+      for (const [f, list] of families) {
+        const cat = famCat.get(f);
+        if (!byCat.has(cat)) byCat.set(cat, []);
+        byCat.get(cat).push([f, list]);
+      }
+      const catN = list => list.reduce((n, [, records]) => n + records.length, 0);
+      const grid = h('div', { class: 'tree' });
+      for (const [cat, list] of [...byCat].sort((a, b) => catN(b[1]) - catN(a[1]))) {
+        grid.append(branch({ cls: 'grp', label: cat,
+          meta: `${plural(list.length, 'tip', 'tipuri')} · ${fmt(catN(list))} înregistrări`, open: false,
+          kids: box => box.append(h('div', { class: 'famgrid' }, list.map(([f, records]) => h('div', { class: 'it' },
+            familyLink(f, records, 'link acc'), h('span', { class: 'count' }, fmt(records.length)))))) }));
+      }
+      const noFamily = items.filter(r => !r.fam);
+      const types = h('section', { class: 'home-sec', 'aria-labelledby': 'h-types' }, h('h2', { id: 'h-types' }, 'Tipuri de instituții'),
+        h('p', { class: 'sub' }, 'Instituțiile de același fel sunt grupate (ex. toate Casele Corpului Didactic, câte una pe județ). ',
+          noFamily.length ? browseLink(`${fmt(noFamily.length)} de înregistrări nu au un tip comun.`,
+            browseHref({ v: 'fam', fam: NO_FAMILY, cat: '' }), () => focusFamily(NO_FAMILY, '', noFamily)) : null), grid);
+      const links = h('ul', { class: 'directory' });
+      for (const n of vnode.get(STAT).nodes) {
+        if (!ctx.visible(n.id)) continue;
+        const matches = stateMatches(n);
+        links.append(directoryEntry(n.label.replace(/ \(ierarhie necunoscută\)/, ''), matches.length,
+          stateHref(n, matches),
+          () => focusNode(n.id)));
+      }
+      const sec1 = h('section', { class: 'home-sec', 'aria-labelledby': 'h-stat' }, h('h2', { id: 'h-stat' }, 'Structura statului'),
+        h('p', { class: 'sub' }, 'Alege o ramură pentru a vedea instituțiile și subordonatele ei.'),
+        links.childElementCount ? links : emptyMsg());
       // county map + a plain list of counties with counts (the non-map route)
       const counts = countyCounts(), mapBox = h('div', null, h('p', { class: 'sub', role: 'status' }, 'Se încarcă harta…'));
-      const noCounty = rows.filter(r => !r.county).length;
+      const noCounty = items.filter(r => !r.county).length;
       const { cls } = classes([...counts.values()]);
       const list = h('ul', { class: 'cgrid', 'aria-label': 'Județe cu numărul de înregistrări' }, counties.map(c => h('li', null,
         h('span', { class: 'sw q' + cls(counts.get(c) || 0) }),
-        h('a', { class: 'link acc', href: '#' + new URLSearchParams({ v: 'loc', k: c }), onclick: go(() => openCounty(c)) }, c === 'Bucuresti' ? 'București' : c),
+        h('a', { class: 'link acc', href: browseHref({ v: 'loc', k: c }), onclick: e => { if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); openCounty(c); } }, c === 'Bucuresti' ? 'București' : c),
         h('span', { class: 'count' }, fmt(counts.get(c) || 0)))));
       const sec3 = h('section', { class: 'home-sec', 'aria-labelledby': 'h-map' }, h('h2', { id: 'h-map' }, 'Județe'),
-        h('p', { class: 'sub' }, `Numărul de înregistrări din fiecare județ (nu entități juridice și nu valori pe locuitor). ${fmt(noCounty)} de înregistrări nu au județ. Alege un județ pentru profilul lui.`),
+        h('p', { class: 'sub' }, 'Înregistrări care corespund filtrelor, pe județ. Alege un județ pentru profilul lui.'
+          + (noCounty ? ` ${plural(noCounty, 'înregistrare fără județ', 'înregistrări fără județ')}.` : '')),
         h('div', { class: 'maprow' }, h('div', { class: 'mapcol' }, mapBox), h('div', { class: 'mapside' }, list)));
       countyMap(mapBox);
-      return h('div', null, sec1, sec2, sec3);
+      return h('div', null, overview, types, sec1, sec3);
     }
 
     /* ---------- detail dialog ---------- */
@@ -1218,7 +1317,7 @@
           h('dl', null, pair('Identificator', r.id),
             pair('Tip', r.fam && h('span', null, r.fam, ' · ',
               h('button', { class: 'link acc', type: 'button', onclick: () => {
-                closeDialogSilently(); clearFilters({ fam: r.fam }); setView('list'); } }, `arată toate (${fmt(famSize.get(r.fam))})`))),
+                closeDialogSilently(); clearFilters({ fam: r.fam, web: false }); setView('fam'); } }, `arată toate (${fmt(famSize.get(r.fam))})`))),
             pair('CIF', r.f), pair('CIF TVA', r.t),
             pair('Alte denumiri', r.al && h('ul', { class: 'plain' }, r.al.map(a => h('li', null, a)))),
             pair('Nr. Registru', r.rn && r.rn.join(', ')),
@@ -1357,9 +1456,9 @@
     }
 
     function clearFilters(extra = {}) {
-      Object.assign(S, { q: '', cat: '', fam: '', county: '', uat: '', srcMode: 'all', web: false, review: false, sort: 'n', ...extra });
+      Object.assign(S, { q: '', cat: '', fam: '', county: '', uat: '', srcMode: 'all', web: true, review: false, sort: 'n', ...extra });
       S.srcs.clear();
-      el.q.value = ''; el.web.checked = false; el.review.checked = false; el.sort.value = 'n';
+      el.q.value = ''; el.web.checked = S.web; el.review.checked = false; el.sort.value = 'n';
     }
 
     /* ---------- CSV export of the current selection ---------- */
@@ -1418,6 +1517,14 @@
       $('stats').textContent = `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
       $('csv-msg').textContent = '';
       $('toolbar').hidden = S.view === 'acasa';
+      $('filters').hidden = S.view === 'acasa';
+      $('home-link').toggleAttribute('aria-current', S.view === 'acasa');
+      if (S.view === 'acasa') $('home-link').setAttribute('aria-current', 'page');
+      $('list-link').toggleAttribute('aria-current', S.view === 'list');
+      if (S.view === 'list') $('list-link').setAttribute('aria-current', 'page');
+      $('list-link').href = browseHref({ v: 'list' });
+      refreshViewLinks();
+      $('menu-status').textContent = S.web || S.review || S.srcs.has('nocif') ? ' •' : '';
       results.replaceChildren({ acasa: renderHome, list: renderList, stat: renderStat, fam: renderFamTree, loc: renderLocTree }[S.view](items));
       syncHash();
     }
@@ -1425,6 +1532,7 @@
     /* ---------- URL hash: view, focused node, filters, open record (#v=stat&n=4266456&q=spital&id=A4400956) ---------- */
     const HASH_KEYS = { v: 'view', n: 'node', q: 'q', cat: 'cat', fam: 'fam', k: 'county', u: 'uat', sort: 'sort' };
     let lastHash = '', lastNav = '', lastKey = '';
+    const navKey = () => S.view + '|' + (S.view === 'stat' ? S.node : S.view === 'fam' ? S.fam + '|' + S.cat : '');
     function browseParams() {                           // everything except the open record
       const p = new URLSearchParams();
       if (S.view !== 'list' && S.view !== 'acasa') p.set('v', S.view);
@@ -1432,7 +1540,7 @@
       for (const [k, f] of Object.entries(HASH_KEYS)) if (k !== 'v' && k !== 'n' && S[f] && !(k === 'sort' && S.sort === 'n')) p.set(k, S[f]);
       if (S.srcs.size) p.set('s', [...S.srcs].join(','));
       if (S.srcs.size > 1 && S.srcMode === 'any') p.set('sm', 'any');
-      if (S.web) p.set('web', '1');
+      if (!S.web) p.set('web', '0');
       if (S.review) p.set('review', '1');
       return p;
     }
@@ -1444,7 +1552,7 @@
       if (S.id) p.set('id', S.id);
       const hash = p.toString() ? '#' + p : '';
       if (hash === location.hash) { lastHash = hash; return; }
-      const nav = S.view + '|' + (S.view === 'stat' ? S.node : '');      // a new view or node gets its own history entry
+      const nav = navKey();                           // a new view or focused group gets its own history entry
       const url = hash || location.pathname + location.search;
       try {
         if (mode === 'push') {
@@ -1464,12 +1572,12 @@
       if (!['n', 'dc'].includes(S.sort)) S.sort = 'n';
       for (const k of (p.get('s') || '').split(',')) if (srcTest[k]) S.srcs.add(k);
       S.srcMode = p.get('sm') === 'any' ? 'any' : 'all';
-      S.web = p.get('web') === '1';
+      S.web = p.get('web') !== '0';
       S.review = p.get('review') === '1';
       S.id = p.get('id') || '';
       el.q.value = S.q; el.web.checked = S.web; el.review.checked = S.review; el.sort.value = S.sort;
-      tabs.forEach(x => x.setAttribute('aria-selected', String(x.dataset.view === S.view)));
-      lastNav = S.view + '|' + (S.view === 'stat' ? S.node : '');
+      refreshViewLinks();
+      lastNav = navKey();
     }
     const onNav = () => {
       if (location.hash === lastHash) return;
@@ -1481,18 +1589,35 @@
     };
 
     /* ---------- wiring (runs once, only after the data has loaded and rendered) ---------- */
-    const tabs = [...document.querySelectorAll('.tabs button')];
+    const viewLinks = [...document.querySelectorAll('#navmore [data-view]')];
+    const refreshViewLinks = () => viewLinks.forEach(x => {
+      x.href = browseHref({ v: x.dataset.view });
+      if (x.dataset.view === S.view) x.setAttribute('aria-current', 'page');
+      else x.removeAttribute('aria-current');
+    });
     function leaveHome() {                                   // a filter or a search on the landing page opens the list
       if (S.view !== 'acasa') return;
       S.view = 'list';
-      tabs.forEach(x => x.setAttribute('aria-selected', String(x.dataset.view === 'list')));
+      refreshViewLinks();
     }
     function setView(view) {
-      if (view === 'acasa') clearFilters();                  // the landing page describes the entire dataset
+      if (view === 'acasa') { clearFilters(); S.node = ''; S.id = ''; }
       S.view = view;
-      tabs.forEach(x => x.setAttribute('aria-selected', String(x.dataset.view === view)));
+      refreshViewLinks();
       update();
     }
+    on($('home-link'), 'click', e => {
+      if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault(); closeDialogSilently(); setView('acasa'); window.scrollTo(0, 0);
+    });
+    on($('list-link'), 'click', e => {
+      if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault(); $('navmore').open = false; S.node = ''; setView('list');
+    });
+    on(document, 'click', e => { if (!$('navmore').contains(e.target)) $('navmore').open = false; });
+    on($('navmore'), 'keydown', e => {
+      if (e.key === 'Escape') { $('navmore').open = false; $('navmore').querySelector('summary').focus(); }
+    });
     srcBox.querySelectorAll('[data-mode]').forEach(b => on(b, 'click', () => { leaveHome(); S.srcMode = b.dataset.mode; update(); }));
     on(document, 'click', e => { if (!srcBox.contains(e.target)) srcBox.open = false; });
     on(srcBox, 'toggle', () => {              // right-aligned by default; nudge back inside the viewport
@@ -1510,7 +1635,7 @@
     on(el.fam, 'change', () => { leaveHome(); S.fam = el.fam.value; update(); });
     on(el.county, 'change', () => { leaveHome(); S.county = el.county.value; S.uat = ''; update(); });
     on(el.uat, 'change', () => { leaveHome(); S.uat = el.uat.value; update(); });
-    on(el.web, 'change', () => { leaveHome(); S.web = el.web.checked; update(); });
+    on(el.web, 'change', () => { S.web = el.web.checked; update(); });
     on(el.review, 'change', () => { leaveHome(); S.review = el.review.checked; update(); });
     on(el.noanaf, 'change', () => { leaveHome(); el.noanaf.checked ? S.srcs.add('nocif') : S.srcs.delete('nocif'); update(); });
     on(el.sort, 'change', () => { S.sort = el.sort.value; update(); });
@@ -1519,7 +1644,10 @@
       const open = $('fmore').classList.toggle('open');
       $('ftoggle').setAttribute('aria-expanded', String(open));
     });
-    tabs.forEach(b => on(b, 'click', () => setView(b.dataset.view)));
+    viewLinks.forEach(b => on(b, 'click', e => {
+      if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault(); $('navmore').open = false; setView(b.dataset.view);
+    }));
     on(window, 'popstate', onNav);
     on(window, 'hashchange', onNav);
 
@@ -1527,7 +1655,7 @@
     update();
     wires.forEach(f => f());
     started = true;
-    $('filters').removeAttribute('inert'); $('viewbar').removeAttribute('inert');
+    $('filters').removeAttribute('inert'); $('navmore').removeAttribute('inert');
     $('toolbar').hidden = S.view === 'acasa';
     main.setAttribute('aria-busy', 'false');
     if (S.id) {                                          // a directly loaded record URL: open it, keep this entry as the base

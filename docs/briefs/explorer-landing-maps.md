@@ -1,6 +1,7 @@
 # Implementation brief: landing page, county map and county profiles
 
 Status: built and accepted, 2026-10-25 (v0.6.0). Owner request, same day.
+Navigation rules were replaced on 2026-10-26 by [the landing refactor](explorer-landing-refactor.md).
 Builds on [explorer-quality-v1](explorer-quality-v1.md) (accepted, v0.5.0).
 
 ## Owner request

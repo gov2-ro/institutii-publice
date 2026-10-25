@@ -38,6 +38,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Show source dates and explain that ANI totals count declarations, not institutions or employees.
 
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)
+- [x] Restore the previous landing sections alongside the new directories. Remove the introduction and move “are site” into “Mai multe”.
+- [x] Keep the compact type grid, remove its duplicate, close categories initially, and put view links in the title-row menu.
+- [x] Show SGG, ministries, and Organe de specialitate as peers in the Guvern focus.
+- [ ] Choose whether both the compact state shortcuts and the larger state directory stay. The compact type grid is chosen.
+- [x] Refactor landing navigation: linked crest, compact menu, website default, state and type focus, and result-only search.
+      Owner request: 2026-10-26. Rules: [landing refactor brief](briefs/explorer-landing-refactor.md).
 - [x] Landing view `acasa`, county choropleth, county profile with UAT map and seat/municipii/orașe/comune groups.
 - [ ] 12 ANAF UAT roots have no map shape (e.g. Orasul Victoria, Orasul Balan, Comuna Saniob; Orasul Stei has null
       geometry). București is one polygon, so sectors have no shape. A SIRUTA join would remove the name matching.
