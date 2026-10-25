@@ -243,8 +243,8 @@ class Linker:
 
     def score(self, t1, t2):
         w = lambda t: self.idf.get(t, 4.0)
-        union = sum(w(t) for t in t1 | t2)
-        return sum(w(t) for t in t1 & t2) / union if union else 0.0
+        union = sum(w(t) for t in sorted(t1 | t2))   # sorted: float sums must not depend on the hash seed
+        return sum(w(t) for t in sorted(t1 & t2)) / union if union else 0.0
 
     def link(self, county, name, hint=None):
         name = strip_suffix(name)
@@ -265,7 +265,7 @@ class Linker:
             if self.idf.get(t, 4.0) > 2.0:           # skip very common words when generating candidates
                 cand |= self.tokidx[ck].get(t, set())
         best, best_i = 0.0, None
-        for i in cand:
+        for i in sorted(cand):                       # sorted: ties go to the first ANAF row, whatever the hash seed
             a = self.anaf[i]
             if a["_kind"] != kind:
                 continue

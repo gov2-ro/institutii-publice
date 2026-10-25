@@ -1,5 +1,21 @@
 # Activity log
 
+## 2026-10-25 — Fix: `consolidate.py` output depended on the hash seed
+**Done**
+- Two runs on the same inputs gave different `institutii.csv` files (4–8 changed rows). The cause: the token
+  tier summed IDF weights over a set of strings, and iterated a set of candidate rows whose order follows string
+  insertion. Both depend on `PYTHONHASHSEED`. So ties between equal candidates went to a random row.
+- `Linker.score` now sums in sorted order, and the candidate loop iterates `sorted(cand)`. A tie goes to the
+  first ANAF row. Measured: 3 runs with `PYTHONHASHSEED` 1, 2, 3 give identical CSV and stderr.
+
+**Decided**
+- A tie goes to the first ANAF row, not to "weak". *Why:* this keeps the fix to two lines and keeps the tiers
+  as they are. The cost: a tie still links to an arbitrary row (now a stable one). See the backlog.
+
+**New baseline** (stderr summary): 25,343 records; registrul 6,632 merged / 1,272 weak / 4,771 no candidate;
+declaratii 17,429 names merged onto 9,307 records, tokens tier 2,795; 5,328 records of their own (1,228 weak).
+Before the fix, one random run gave 25,346 records and 9,327 records with declarations.
+
 ## 2026-10-25 — Spec and brief: "Structura statului" view
 **Done**
 - Measured the parent graph in `institutii.json`. The ANAF parent link is one level deep. There are 3,296

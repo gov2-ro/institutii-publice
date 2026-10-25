@@ -24,6 +24,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Re-export the two capped ANI county groups (full tail of rare names). (from README)
 - [ ] Resolve ANI-only records (state companies) to a CUI with the ONRC open data. (from README)
 
+- [ ] Linker ties: when two ANAF rows get the same best token score, the first row wins. Consider "weak"
+      for a tie instead (two equal candidates means the link is ambiguous).
+
 ## Verified limits
 - The ANAF parent link (ordonator principal de credite) is one level deep. It gives no middle level
   (for example, no ISJ between a school and the ministry). A middle level must come from grouping (family,
