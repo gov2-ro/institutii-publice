@@ -516,6 +516,77 @@ FAMILY_HEADS = [  # (label, regex on fold()ed name, only for these categories or
 FAMILY_HEADS = [(label, re.compile(p), cat) for label, p, cat in FAMILY_HEADS]
 FAMILY_ADMIN = set("al a ai ale judetului municipiului orasului comunei sectorului".split())
 
+# ---------------------------------------------------------------- state tree
+# "Structura statului" view (docs/specs/structura-statului.md). The top layer follows the Constitution and is
+# curated by hand, keyed by CIF (stable across ANAF releases). Virtual nodes: (id, label, parent id or None, note).
+# Members: (cif, node id, note); a node lists its members in this order. Local administration (county -> UAT)
+# is built by the page from the ANAF roots, so it has no entry here.
+STATE_NODES = [
+    ("parlament", "Parlamentul", None, "Titlul III, cap. I"),
+    ("presedinte", "Președintele României", None, "Titlul III, cap. II"),
+    ("guvern", "Guvernul", None, "Titlul III, cap. III; cap. V secț. 1"),
+    ("ministere", "Ministere", "guvern", None),
+    ("specialitate", "Organe de specialitate ale administrației centrale", "guvern", None),
+    ("justitie", "Autoritatea judecătorească", None, "Titlul III, cap. VI"),
+    ("ccr", "Curtea Constituțională", None, "Titlul V"),
+    ("curtea-conturi", "Curtea de Conturi", None, "Titlul IV, art. 140"),
+    ("avp", "Avocatul Poporului", None, "Titlul II, cap. IV"),
+    ("ces", "Consiliul Economic și Social", None, "Titlul IV, art. 141"),
+    ("autonome", "Autorități administrative autonome", None, "art. 117 alin. 3; sub control parlamentar"),
+    ("aparare", "Apărare și siguranță națională", None,
+     "art. 118-119; CSAT coordonează. MApN și MAI rămân la Guvern / Ministere"),
+    ("servicii", "Servicii publice autonome", None, "sub control parlamentar"),
+    ("academii", "Academii și instituții publice autonome", None, None),
+]
+STATE_MEMBERS = [
+    ("4265795", "parlament", None), ("4284070", "parlament", None), ("7901650", "parlament", "art. 79"),
+    ("4283732", "presedinte", None),
+    ("4283422", "guvern", None),
+    ("4266863", "ministere", None), ("4267095", "ministere", None), ("4221187", "ministere", None),
+    ("11424532", "ministere", None), ("4192812", "ministere", None), ("26369185", "ministere", None),
+    ("24931499", "ministere", None), ("13729380", "ministere", None), ("43507695", "ministere", None),
+    ("4221306", "ministere", None), ("38918422", "ministere", None), ("4265841", "ministere", None),
+    ("16335444", "ministere", None), ("4266669", "ministere", None), ("4266456", "ministere", None),
+    ("13633330", "ministere", None),
+    ("26288978", "specialitate", None), ("16277408", "specialitate", None), ("11795573", "specialitate", None),
+    ("22464311", "specialitate", None), ("49199357", "specialitate", None),
+    ("10792013", "specialitate", "disputat: Guvern sau autoritate autonomă"),
+    ("11795581", "specialitate", "disputat: coordonare MDLPA"),
+    ("26429279", "specialitate", None), ("4266499", "specialitate", None),
+    ("4340587", "justitie", None), ("4364748", "justitie", None), ("16973795", "justitie", None),
+    ("4265850", "ccr", None), ("4265922", "curtea-conturi", None), ("9766550", "avp", None),
+    ("10464660", "ces", None),
+    ("16460641", "autonome", None), ("4266189", "autonome", None), ("12932750", "autonome", None),
+    ("22838777", "autonome", None), ("8844560", "autonome", None), ("11514848", "autonome", None),
+    ("14751237", "autonome", None), ("31588130", "autonome", None), ("18073706", "autonome", None),
+    ("14818035", "autonome", None), ("50306805", "autonome", None), ("20329980", "autonome", None),
+    ("36401992", "autonome", None),
+    ("4204291", "aparare", None), ("10668016", "aparare", None), ("4267230", "aparare", None),
+    ("4283635", "aparare", None), ("15085226", "aparare", None),
+    ("8296093", "servicii", None), ("8468440", "servicii", None), ("4266448", "servicii", None),
+    ("15726657", "servicii", "disputat: control parlamentar sau MAE"),
+    ("4192472", "academii", None), ("5091859", "academii", None), ("33354101", "academii", None),
+    ("18476245", "academii", "disputat"), ("11697800", "academii", "disputat: autonom sau sub MS"),
+]
+STATE_ATTACH = [("8609468", "4221306"), ("26246549", "4267117")]   # (child root, root it hangs under)
+LOCAL_ROOT_RE = re.compile(r"^(municipiul|oras|orasul|comuna|judetul|sectorul|primaria|municipiului)\b")
+
+
+def state_tree(records):
+    """The `state` block of metadata.json: virtual nodes, CIF -> node mapping, attach rules, and the roots
+    the page cannot place (UATs go to the local-administration branch, the rest to "Neclasificate")."""
+    roots = {r["cif"]: r for r in records if r["cif"] and not r["parents"]}
+    mapped = {c for c, _, _ in STATE_MEMBERS} | {c for c, _ in STATE_ATTACH}
+    is_uat = lambda r: r["category"] == LOCAL or LOCAL_ROOT_RE.match(fold(r["name"]))
+    uat = sorted(c for c, r in roots.items() if c not in mapped and is_uat(r))
+    other = sorted((c for c, r in roots.items() if c not in mapped and not is_uat(r)), key=lambda c: roots[c]["name"])
+    lost = [c for c, _, _ in STATE_MEMBERS if c not in roots] + [c for p in STATE_ATTACH for c in p if c not in roots]
+    if lost:
+        print(f"warning: STATE_TREE CIFs that are not ANAF roots: {lost}", file=sys.stderr)
+    return {"nodes": [{"id": i, "label": l, "parent": p, **({"note": n} if n else {})} for i, l, p, n in STATE_NODES],
+            "members": [[c, n] + ([note] if note else []) for c, n, note in STATE_MEMBERS],
+            "attach": [list(a) for a in STATE_ATTACH], "uat": uat, "unclassified": other}, [roots[c] for c in other]
+
 
 def family_key(rec, county_tokens):
     """Name with county/locality words and numbers removed: 'Casa Corpului Didactic Bihor' -> 'casa corpului didactic'."""
@@ -809,7 +880,8 @@ def write_explorer_data(out_dir, records):
                 continue
             row[k] = v
         rows.append(row)
-    meta = {"categories": cats, "counties": counties, "families": families}
+    state, _ = state_tree(records)
+    meta = {"categories": cats, "counties": counties, "families": families, "state": state}
     (out_dir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
     (out_dir / "rows.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
@@ -838,6 +910,10 @@ def report(records, anaf, links, standalone, declaratii, aggregate):
     own = [r for r in records if r["sources"] == ["declaratii"]]
     print(f"  records of their own: {len(own)} ({sum(1 for r in own if r['possible_duplicate_of'])} weak), "
           f"{sum(r['declaratii_count'] for r in own)} declarations", file=sys.stderr)
+    _, loose = state_tree(records)
+    print(f"\nneclasificate (central roots with no STATE_TREE entry): {len(loose)}", file=sys.stderr)
+    for r in loose:
+        print(f"  {r['cif']} {r['name']}", file=sys.stderr)
     print("\ncategories:", file=sys.stderr)
     for k, v in Counter(r["category"] for r in records).most_common():
         print(f"  {k:40s} {v}", file=sys.stderr)

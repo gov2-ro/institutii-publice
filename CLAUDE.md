@@ -60,6 +60,10 @@ served over HTTP, not opened as file://. Rows use the compact schema from `write
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
 declaratii=8, `f` cif, `p` parent cifs, ...), empty values omitted. Adding a field means changing both
 `write_explorer_data` and the decoding in `index.html`.
+`metadata.json` also carries `state`, the "Structura statului" tree: the curated top layer (`STATE_NODES`,
+`STATE_MEMBERS`, `STATE_ATTACH` in `consolidate.py`, keyed by CIF) plus the UAT and unclassified root CIFs.
+Spec: `docs/specs/structura-statului.md`. In the page console, `explorer.reachableRoots()` must equal
+`explorer.expectedRoots()`.
 
 ## Scope
 ANI-only names (mostly state companies missing from ANAF) belong in the list as candidates to resolve, not

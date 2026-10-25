@@ -3,7 +3,7 @@
 Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the reason).
 
 ## Explorer: "Structura statului" (spec: specs/structura-statului.md)
-- [ ] Version 1: top layer from the Constitution, local administration, focus and breadcrumb, URL hash
+- [x] Version 1: top layer from the Constitution, local administration, focus and breadcrumb, URL hash
       (brief: briefs/structura-statului-v1.md)
 - [ ] Phase 2: give a parent to records with no ANAF match, from their family, when ≥ 90% of the family's ANAF
       members share one parent. Measured 2026-10-25: 3,544 of 11,861 records. Show these parents in a

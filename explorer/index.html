@@ -108,6 +108,10 @@
   .link { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: inherit; }
   .link:hover { text-decoration: underline; }
   .kids { padding-bottom: 2px; }
+  .crumbs { display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: baseline; margin: 0 0 10px; font-size: 14px; }
+  .crumbs .sep { color: var(--muted); }
+  .crumbs .link { color: var(--accent); }
+  .crumbs .here { font-weight: 600; }
   .more.small { margin: 4px 0 4px 36px; padding: 3px 12px; font-size: 13px; }
   /* institutions inside a tree node: compact table */
   .lt-wrap { margin: 4px 0 8px 18px; overflow-x: auto; }
@@ -173,7 +177,7 @@
     <div class="viewbar">
       <div class="tabs" role="tablist">
         <button role="tab" data-view="list" aria-selected="true">Listă</button>
-        <button role="tab" data-view="auth" aria-selected="false">Autoritate → subordonate</button>
+        <button role="tab" data-view="stat" aria-selected="false">Structura statului</button>
         <button role="tab" data-view="fam" aria-selected="false">Tip → instituții</button>
         <button role="tab" data-view="loc" aria-selected="false">Județ → localitate</button>
       </div>
@@ -258,13 +262,68 @@
     subordinates.get(c).push(r);
   }
 
+  /* ---------- state tree (metadata.state; spec: docs/specs/structura-statului.md) ---------- */
+  const ST = D.state || { nodes: [], members: [], attach: [], uat: [], unclassified: [] };
+  const STAT = 'stat';
+  const vnode = new Map();                        // virtual node id -> { id, label, note, parent, recs, nodes }
+  const place = new Map();                        // cif or virtual id -> id of its parent in the state tree
+  const attachOf = new Map();                     // parent cif -> attached root rows (hang under it, no `p` in the data)
+  const addNode = (id, label, parent, note) => {
+    const v = { id, label, note, parent, recs: [], nodes: [] };
+    vnode.set(id, v);
+    if (parent) vnode.get(parent).nodes.push(v);
+    return v;
+  };
+  addNode(STAT, 'Statul', null);
+  for (const n of ST.nodes) if (!n.parent) addNode(n.id, n.label, STAT, n.note);
+  for (const n of ST.nodes) if (n.parent) addNode(n.id, n.label, n.parent, n.note);
+  addNode('local', 'Administrația locală', STAT, 'Titlul III, cap. V secț. 2');
+  addNode('neclasificate', 'Neclasificate', STAT, 'rădăcini ANAF fără loc în STATE_TREE');
+  addNode('fara-anaf', 'Fără corespondent ANAF (ierarhie necunoscută)', STAT);
+  const noCif = rows.filter(r => !r.f);
+  for (const [c, node] of ST.members) { const r = byCif.get(c); if (r) { vnode.get(node).recs.push(r); place.set(c, node); } }
+  for (const [c, par] of ST.attach) {
+    const r = byCif.get(c); if (!r) continue;
+    if (!attachOf.has(par)) attachOf.set(par, []);
+    attachOf.get(par).push(r); place.set(c, par);
+    if (!subordinates.has(par)) subordinates.set(par, []);
+    subordinates.get(par).push(r);
+  }
+  for (const c of ST.unclassified) { const r = byCif.get(c); if (r) { vnode.get('neclasificate').recs.push(r); place.set(c, 'neclasificate'); } }
+  for (const c of ST.uat) {
+    const r = byCif.get(c); if (!r) continue;
+    const id = 'judet:' + (r.county || '(județ necunoscut)');
+    (vnode.get(id) || addNode(id, r.county || '(județ necunoscut)', 'local')).recs.push(r);
+    place.set(c, id);
+  }
+  vnode.get('local').nodes.sort((a, b) => (a.label === 'Bucuresti') - (b.label === 'Bucuresti') || coll.compare(a.label, b.label));
+  for (const r of rows) if (r.f && r.p && !place.has(r.f)) place.set(r.f, r.p[0]);   // a child sits under its first ordonator
+  const up = id => vnode.has(id) ? vnode.get(id).parent : place.get(id);
+  const chain = id => { const out = []; for (let x = id; x; x = up(x)) out.unshift(x); return out; };   // [STAT, ..., id]
+  const labelOf = id => vnode.has(id) ? vnode.get(id).label : byCif.get(id).n;
+  const nodeKnown = id => vnode.has(id) || byCif.has(id);
+  /* every record under a node, unfiltered (a record with two parents counts once) */
+  const subMemo = new Map();
+  function subtree(id) {
+    if (subMemo.has(id)) return subMemo.get(id);
+    const set = new Set();
+    if (vnode.has(id)) {
+      if (id === 'fara-anaf') noCif.forEach(r => set.add(r));
+      const v = vnode.get(id);
+      for (const r of v.recs) { set.add(r); (subordinates.get(r.f) || []).forEach(k => set.add(k)); }
+      for (const n of v.nodes) subtree(n.id).forEach(r => set.add(r));
+    } else { const r = byCif.get(id); set.add(r); (subordinates.get(id) || []).forEach(k => set.add(k)); }
+    subMemo.set(id, set);
+    return set;
+  }
+
   const SOURCES = [['anaf', 'ANAF'], ['roepas', 'ROePAS'], ['reg', 'Registru'], ['decl', 'Declarații ANI'], ['nocif', 'fără ANAF']];
   const srcTest = {
     anaf: r => r.s & 1, roepas: r => r.s & 2, reg: r => r.s & 4, decl: r => r.s & 8, nocif: r => !r.f,
   };
 
   /* ---------- filter state ---------- */
-  const S = { q: '', cat: '', fam: '', county: '', uat: '', srcs: new Set(), srcMode: 'all', web: false, view: 'list', sort: 'n' };
+  const S = { q: '', cat: '', fam: '', county: '', uat: '', srcs: new Set(), srcMode: 'all', web: false, view: 'list', sort: 'n', node: '' };
   let qTokens = [], srcList = [];
   const pass = (r, skip) =>
     (skip === 'cat' || !S.cat || r.cat === S.cat) &&
@@ -360,11 +419,14 @@
   }
 
   /* tree nodes are <details> that fill their children on first open */
-  function branch({ label, meta, ctx, cls, info, kids, open }) {
+  const action = (text, title, fn) => h('button', { class: 'link count', type: 'button', title,
+    onclick: e => { e.preventDefault(); e.stopPropagation(); fn(); } }, text);
+  function branch({ label, meta, note, ctx, cls, info, focus, kids, open }) {
     const d = h('details', { class: [cls, ctx ? 'ctx' : ''].filter(Boolean).join(' ') },
-      h('summary', null, h('span', { class: 'label' }, label), meta ? h('span', { class: 'count' }, meta) : null,
-        info ? h('button', { class: 'link count', type: 'button', title: 'Detalii',
-          onclick: e => { e.preventDefault(); e.stopPropagation(); info(); } }, 'detalii') : null));
+      h('summary', null, h('span', { class: 'label', title: note }, label), meta ? h('span', { class: 'count' }, meta) : null,
+        note ? h('span', { class: 'count' }, '· ' + note) : null,
+        info ? action('detalii', 'Detalii', info) : null,
+        focus ? action('focalizează', 'Arată doar acest nod', focus) : null));
     const box = h('div', { class: 'kids' });
     d.append(box);
     let filled = false;
@@ -414,57 +476,115 @@
 
   /* the contents of one authority node (or a root/unlinked group): type bundles first, then authorities
      that have subordinates of their own (expandable), then every remaining institution in one table */
+  const SPLIT_MIN = 60;                            // a family group bigger than this splits by county
+  function splitByCounty(box, list, ctx) {
+    const m = new Map();
+    for (const r of list) { const k = r.county || '(județ necunoscut)'; if (!m.has(k)) m.set(k, []); m.get(k).push(r); }
+    chunked(box, [...m].sort((a, b) => coll.compare(a[0], b[0])), ([k, l]) => branch({
+      label: k, meta: plural(l.length, 'instituție', 'instituții'), open: ctx.openAll,
+      kids: bx => renderRecords(bx, l, ctx, false) }), 100, true);
+  }
   function renderRecords(box, list, ctx, bundle = true) {
     const hasKids = r => !!(r.f && ctx.kids.get(r.f));
     const items = bundle && list.length > BUNDLE_MIN ? bundleItems(list) : list;
     const rest = items.filter(it => !it.list);
     chunked(box, items.filter(it => it.list), b => branch({
-      label: b.fam, meta: plural(b.list.length, 'instituție', 'instituții'),
-      kids: bx => renderRecords(bx, b.list, ctx, false) }), 100, true);
+      label: b.fam, meta: plural(b.list.length, 'instituție', 'instituții'), open: ctx.openAll,
+      kids: bx => b.list.length > SPLIT_MIN ? splitByCounty(bx, b.list, ctx) : renderRecords(bx, b.list, ctx, false) }), 100, true);
     chunked(box, rest.filter(hasKids), r => recordNode(r, ctx), 100, true);
     const flat = rest.filter(r => !hasKids(r));
     if (flat.length) box.append(leafTable(flat, ctx.matchSet, ctx.cols));
   }
 
-  function recordNode(r, ctx) {
-    const ks = ctx.kids.get(r.f);
-    return branch({ label: r.n, meta: plural(ks.length, 'subordonat', 'subordonate'), ctx: !ctx.matchSet.has(r),
-      info: () => openDetail(r), kids: box => renderRecords(box, ks, ctx) });
+  function recordNode(r, ctx, open) {
+    const ks = ctx.kids.get(r.f), total = (subordinates.get(r.f) || []).length;
+    return branch({ label: ctx.relabel.get(r.f) || r.n,
+      meta: ctx.filtered ? `${fmt(ks.length)} / ${plural(total, 'subordonat', 'subordonate')}` : plural(ks.length, 'subordonat', 'subordonate'),
+      ctx: !ctx.matchSet.has(r), open: open || ctx.openAll, info: () => openDetail(r), focus: open ? null : () => focusNode(r.f),
+      kids: box => renderRecords(box, ks, ctx) });
   }
 
-  function renderAuthTree(items) {
-    const matchSet = new Set(items);
-    const vis = new Set(items);
-    for (const r of items) for (const c of r.p || []) { const p = byCif.get(c); if (p) vis.add(p); }
-    const kids = new Map(), roots = [], unlinked = [];
-    for (const r of vis) {
-      if (!r.f) { unlinked.push(r); continue; }
-      if (!r.p || !r.p.length) roots.push(r);
+  /* ---------- "Structura statului" ---------- */
+  const isFiltered = () => !!(S.q || S.cat || S.fam || S.county || S.uat || S.srcs.size || S.web);
+  const KINDS = [['Municipii', /^municipi/], ['Sectoare', /^sectorul/], ['Orașe', /^oras/], ['Comune', /^comuna/], ['Altele', /./]];
+  const isCountyRec = r => /^judetul\b/.test(fold(r.n));
+
+  /* the contents of a virtual node */
+  function renderVNode(id, box, ctx) {
+    const v = vnode.get(id);
+    const recs = (id === 'fara-anaf' ? ctx.noCif : v.recs).filter(r => ctx.matchSet.has(r) || ctx.kids.has(r.f));
+    if (id.startsWith('judet:')) {
+      const county = recs.filter(isCountyRec), rest = recs.filter(r => !isCountyRec(r));
+      for (const r of county) ctx.relabel.set(r.f, 'Consiliul Județean ' + v.label);
+      if (county.length) renderRecords(box, county, ctx, false);
+      const groups = KINDS.map(([label, re]) => [label, []]);
+      for (const r of rest) groups[KINDS.findIndex(([, re]) => re.test(fold(r.n)))][1].push(r);
+      const used = groups.filter(([, l]) => l.length);
+      for (const [, l] of used) l.sort((a, b) => coll.compare(a.n, b.n));
+      if (used.length === 1) renderRecords(box, used[0][1], ctx, false);
+      else for (const [label, l] of used) box.append(branch({ label, meta: plural(l.length, 'autoritate', 'autorități'),
+        open: ctx.openAll, kids: bx => renderRecords(bx, l, ctx, false) }));
+      return;
+    }
+    if (recs.length) renderRecords(box, recs, ctx, id === 'fara-anaf');
+    for (const n of v.nodes) if (ctx.visible(n.id)) box.append(vBranch(n.id, ctx));
+  }
+  function vBranch(id, ctx, focused) {
+    const v = vnode.get(id), total = subtree(id).size;
+    return branch({ cls: 'grp', label: v.label, note: v.note,
+      meta: ctx.filtered ? `${fmt(ctx.matchN(id))} / ${fmt(total)}` : plural(total, 'instituție', 'instituții'),
+      open: focused || ctx.openAll, focus: focused ? null : () => focusNode(id), kids: box => renderVNode(id, box, ctx) });
+  }
+
+  function focusNode(id) { S.node = id === STAT ? '' : id; update(); window.scrollTo(0, 0); }
+  function crumbs(id) {
+    const ids = chain(id), box = h('nav', { class: 'crumbs', 'aria-label': 'Poziția în structură' });
+    ids.forEach((x, i) => {
+      if (i) box.append(h('span', { class: 'sep' }, '›'));
+      box.append(i === ids.length - 1 ? h('span', { class: 'here' }, labelOf(x))
+        : h('button', { class: 'link', type: 'button', onclick: () => focusNode(x) }, labelOf(x)));
+    });
+    return box;
+  }
+
+  function renderStat(items) {
+    const matchSet = new Set(items), filtered = isFiltered();
+    const kids = new Map(), mm = new Map();
+    for (const r of items) {
       for (const c of r.p || []) { if (!kids.has(c)) kids.set(c, []); kids.get(c).push(r); }
+      for (const [par, l] of attachOf) if (l.includes(r)) { if (!kids.has(par)) kids.set(par, []); kids.get(par).push(r); }
+    }
+    // an attached root with matching children stays visible as context under the root it hangs under
+    for (const [par, l] of attachOf) for (const r of l) if (kids.has(r.f) && !matchSet.has(r)) {
+      if (!kids.has(par)) kids.set(par, []); kids.get(par).push(r);
     }
     for (const list of kids.values()) list.sort((a, b) => coll.compare(a.n, b.n));
-    const groups = new Map();
-    for (const r of roots) { if (!groups.has(r.cat)) groups.set(r.cat, []); groups.get(r.cat).push(r); }
-    const filtered = !!(S.q || S.cat || S.fam || S.county || S.uat || S.srcs.size || S.web);
-    const size = list => list.reduce((n, r) => n + 1 + (kids.get(r.f) || []).length, 0);
-    const ordered = [...groups].sort((a, b) => size(b[1]) - size(a[1]));
-    const ctx = { kids, matchSet, cols: AUTH_COLS };
+    const matchN = id => { if (!mm.has(id)) { let n = 0; for (const r of subtree(id)) if (matchSet.has(r)) n++; mm.set(id, n); } return mm.get(id); };
+    const ctx = { kids, matchSet, cols: AUTH_COLS, filtered, matchN, relabel: new Map(), noCif: items.filter(r => !r.f),
+      openAll: filtered && items.length > 0 && items.length <= 50,
+      visible: id => !filtered || matchN(id) > 0 };
+    if (!items.length) return h('p', { class: 'empty' }, 'Nicio instituție nu corespunde filtrelor.');
     const tree = h('div', { class: 'tree' });
-    for (const [cat, list] of ordered) {
-      list.sort((a, b) => (kids.get(b.f) || []).length - (kids.get(a.f) || []).length || coll.compare(a.n, b.n));
-      tree.append(branch({ cls: 'grp', label: cat, meta: plural(list.length, 'autoritate', 'autorități'), open: filtered && ordered.length <= 6,
-        kids: box => renderRecords(box, list, ctx) }));
+    const focus = S.node && nodeKnown(S.node) ? S.node : '';
+    if (focus) {
+      if (!ctx.visible(focus)) return h('div', null, crumbs(focus), h('p', { class: 'empty' }, 'Nicio potrivire în acest nod.'));
+      if (vnode.has(focus)) tree.append(vBranch(focus, ctx, true));
+      else {
+        const r = byCif.get(focus);
+        if (ctx.kids.has(r.f)) tree.append(recordNode(r, ctx, true));
+        else renderRecords(tree, [r], ctx, false);
+      }
+      return h('div', null, crumbs(focus), tree);
     }
-    if (unlinked.length) {
-      unlinked.sort((a, b) => coll.compare(a.n, b.n));
-      tree.append(branch({ cls: 'grp', label: 'Fără corespondent ANAF (ierarhie necunoscută)',
-        meta: plural(unlinked.length, 'înregistrare', 'înregistrări'),
-        kids: box => renderRecords(box, unlinked, ctx) }));
-    }
-    if (!tree.children.length) return h('p', { class: 'empty' }, 'Nicio instituție nu corespunde filtrelor.');
+    const top = vnode.get(STAT).nodes.filter(n => ctx.visible(n.id));
+    for (const n of top) tree.append(vBranch(n.id, ctx));
+    if (filtered && top.length === 1) tree.firstChild.open = true;
     return h('div', null, h('p', { class: 'sub' },
-      'Fiecare instituție apare sub ordonatorul/ordonatorii principali de credite din lista ANAF; cele cu doi ordonatori apar sub ambii. Instituțiile de același tip se grupează automat. Rândurile estompate sunt doar context (nu corespund filtrelor).'), tree);
+      'Structura statului după Constituție: puterile statului, apoi ierarhia ANAF (fiecare instituție apare sub ordonatorul principal de credite; cele cu doi ordonatori apar sub ambii), apoi administrația locală. Instituțiile de același tip se grupează automat. Rândurile estompate sunt doar context (nu corespund filtrelor).'), tree);
   }
+  /* console check: root CIFs (rows with a CIF and no `p`) reachable from the top of the tree */
+  window.explorer = { reachableRoots: () => [...subtree(STAT)].filter(r => r.f && !(r.p && r.p.length)).length,
+    expectedRoots: () => rows.filter(r => r.f && !(r.p && r.p.length)).length };
 
   function renderFamTree(items) {
     if (!items.length) return h('p', { class: 'empty' }, 'Nicio instituție nu corespunde filtrelor.');
@@ -532,11 +652,25 @@
     const subs = r.f ? subordinates.get(r.f) || [] : [];
     const peer = rr => h('button', { class: 'link', type: 'button', style: 'color:var(--accent)', onclick: () => showDetail(rr) }, rr.n);
     const dup = r.d && byCif.get(r.d);
+    const path = r.f ? chain(r.f) : [STAT, 'fara-anaf'];
+    const stepTo = id => { dlg.close(); S.node = id === STAT ? '' : id; setView('stat'); };
+    const crumb = h('nav', { class: 'crumbs', 'aria-label': 'Poziția în structură' });
+    path.forEach((x, i) => {
+      if (i) crumb.append(h('span', { class: 'sep' }, '›'));
+      const last = r.f && i === path.length - 1;
+      crumb.append(last ? h('span', { class: 'here' }, r.n) : h('button', { class: 'link', type: 'button',
+        onclick: () => vnode.has(x) ? stepTo(x) : showDetail(byCif.get(x)) }, labelOf(x)));
+    });
+    if (!r.f) crumb.append(h('span', { class: 'sep' }, '›'), h('span', { class: 'here' }, r.n));
+    // same family, same ordonator (or same county when it has none)
+    const sibs = !r.fam ? [] : (parents.length ? subordinates.get(parents[0].f) || [] : rows.filter(x => x.county === r.county && !x.p))
+      .filter(x => x !== r && x.fam === r.fam);
     dlg.replaceChildren(
       h('div', { class: 'dh' },
         h('div', null, h('h2', null, r.n), h('span', { class: 'chip' }, r.cat), ' ', srcBadges(r)),
         h('button', { class: 'x', type: 'button', 'aria-label': 'Închide', onclick: () => dlg.close() }, '×')),
       h('div', { class: 'db' },
+        crumb,
         dup ? h('p', { class: 'flag' }, 'Posibil duplicat al: ', peer(dup), ' (potrivire nesigură, nu a fost combinat)') : null,
         h('div', { class: 'sec' }, 'Locație'),
         h('dl', null, pair('Județ', r.county), pair('Localitate (UAT)', r.u), pair('Adresă', r.a),
@@ -561,6 +695,9 @@
         subs.length ? [h('div', { class: 'sec' }, `Subordonate (${fmt(subs.length)})`),
           h('ul', { class: 'plain' }, subs.slice(0, 25).map(s => h('li', null, peer(s))),
             subs.length > 25 ? h('li', { class: 'sub' }, `… și încă ${fmt(subs.length - 25)}`) : null)] : null,
+        sibs.length ? [h('div', { class: 'sec' }, `Alte ${fmt(sibs.length)} de tip „${r.fam}”`),
+          h('ul', { class: 'plain' }, sibs.slice(0, 25).map(s => h('li', null, peer(s))),
+            sibs.length > 25 ? h('li', { class: 'sub' }, `… și încă ${fmt(sibs.length - 25)}`) : null)] : null,
         (r.ru || r.pc != null || r.ou) ? [h('div', { class: 'sec' }, 'ROePAS'),
           h('dl', null, pair('Pagină', r.ru && linkTo(r.ru, 'roepas.ro')),
             pair('Proceduri', r.pc != null ? `${fmt(r.pc)} (${fmt(r.po || 0)} online)` : null),
@@ -620,8 +757,44 @@
     el.sort.closest('.sortby').hidden = S.view !== 'list';
     refreshFacets();
     $('stats').textContent = `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
-    main.replaceChildren({ list: renderList, auth: renderAuthTree, fam: renderFamTree, loc: renderLocTree }[S.view](items));
+    main.replaceChildren({ list: renderList, stat: renderStat, fam: renderFamTree, loc: renderLocTree }[S.view](items));
+    syncHash();
   }
+
+  /* ---------- URL hash: view, focused node, filters (#v=stat&n=4266456&q=spital) ---------- */
+  const HASH_KEYS = { v: 'view', n: 'node', q: 'q', cat: 'cat', fam: 'fam', k: 'county', u: 'uat', sort: 'sort' };
+  let lastHash = '', lastNav = '';
+  function syncHash() {
+    const p = new URLSearchParams();
+    if (S.view !== 'list') p.set('v', S.view);
+    if (S.view === 'stat' && S.node) p.set('n', S.node);
+    for (const [k, f] of Object.entries(HASH_KEYS)) if (k !== 'v' && k !== 'n' && S[f] && !(k === 'sort' && S.sort === 'n')) p.set(k, S[f]);
+    if (S.srcs.size) p.set('s', [...S.srcs].join(','));
+    if (S.srcs.size > 1 && S.srcMode === 'any') p.set('sm', 'any');
+    if (S.web) p.set('web', '1');
+    const hash = p.toString() ? '#' + p : '';
+    if (hash === location.hash) { lastHash = hash; return; }
+    const nav = S.view + '|' + (S.view === 'stat' ? S.node : '');      // a new view or node gets its own history entry
+    try { history[nav !== lastNav && lastNav ? 'pushState' : 'replaceState'](null, '', hash || location.pathname + location.search); } catch (e) {}
+    lastHash = location.hash; lastNav = nav;
+  }
+  function applyHash() {
+    const p = new URLSearchParams(location.hash.slice(1));
+    clearFilters(); S.view = 'list'; S.node = '';
+    for (const [k, f] of Object.entries(HASH_KEYS)) if (p.has(k)) S[f] = p.get(k);
+    if (!['list', 'stat', 'fam', 'loc'].includes(S.view)) S.view = 'list';
+    if (S.node && !nodeKnown(S.node)) S.node = '';
+    if (!['n', 'dc'].includes(S.sort)) S.sort = 'n';
+    for (const k of (p.get('s') || '').split(',')) if (srcTest[k]) S.srcs.add(k);
+    S.srcMode = p.get('sm') === 'any' ? 'any' : 'all';
+    S.web = p.get('web') === '1';
+    el.q.value = S.q; el.web.checked = S.web; el.sort.value = S.sort;
+    tabs.forEach(x => x.setAttribute('aria-selected', String(x.dataset.view === S.view)));
+    lastNav = S.view + '|' + (S.view === 'stat' ? S.node : '');
+  }
+  const onNav = () => { if (location.hash !== lastHash) { applyHash(); update(); } };
+  window.addEventListener('popstate', onNav);
+  window.addEventListener('hashchange', onNav);
 
   let timer;
   el.q.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => { S.q = el.q.value; update(); }, 150); });
@@ -641,6 +814,7 @@
     update();
   }
     tabs.forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+    applyHash();
     update();
   }
 })();
