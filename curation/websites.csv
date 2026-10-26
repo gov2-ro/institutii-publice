@@ -1,0 +1,122 @@
+cif,website,checked_at,evidence
+4192472,https://acad.ro,2026-10-26,HTTP 429 bot check
+4193222,https://www.politiadefrontiera.ro,2026-10-26,title: Politia de Frontiera Romana
+4203644,https://www.iispv.ro,2026-10-26,title: Despre Noi
+4204291,https://www.sri.ro,2026-10-26,title: Serviciul Român de Informații
+4221306,https://mfinante.gov.ro,2026-10-26,title: Despre minister - Acasa - MF
+4265795,https://www.cdep.ro,2026-10-26,title: Camera Deputatilor
+4265850,https://www.ccr.ro,2026-10-26,title: Curtea Constituțională a României
+4265922,https://www.curteadeconturi.ro,2026-10-26,HTTP 403 Cloudflare challenge
+4266189,https://www.cna.ro,2026-10-26,title: CNA
+4266324,https://anp.gov.ro,2026-10-26,title: Acasă - ANP
+4266448,https://www.agerpres.ro,2026-10-26,title: AGERPRES • Actualizează lumea
+4266456,https://www.ms.ro,2026-10-26,title: Ministerul Sănătății - Ministerul Sănătății
+4266499,https://sspr.gov.ro,2026-10-26,web search; title: SECRETARIATUL DE STAT PENTRU RECUNOASTEREA MERITELOR LUPTATORILOR IMPOTRIVA REGIMULUI COMUNIST; contact cabinet@sspr.gov.ro
+4283422,https://sgg.gov.ro,2026-10-26,title: Prima pagina – SGG.GOV.RO - Secretariatul General al Guvernului
+4283635,https://www.spp.ro,2026-10-26,title: SPP - Serviciul de Protecție și Pază
+4283732,https://www.presidency.ro,2026-10-26,title: Președintele României
+4283830,https://cnc.gov.ro,2026-10-26,https://www.cnc.gov.ro failed (tls: HTTPSConnectionPool(host='www.cnc.g...); title: CNC – Centrul Național al Cinematografiei
+4284029,https://www.cnr-unesco.ro,2026-10-26,title: CNR UNESCO
+4284070,https://www.senat.ro,2026-10-26,title: Senatul României
+4316171,https://idah.ro,2026-10-26,web search; TLS fault (unable to get local issuer certificate); http title: IDSA - Institutul de Diagnostic si Sanatate Animala
+4340579,https://www.inemrcm.ro,2026-10-26,title: Institutul Naţional de Expertiză Medicală şi Recuperare a Capacităţii de Muncă – instituţie publică cu personalitate jur
+4340587,https://www.iccj.ro,2026-10-26,title: Înalta Curte de Casație și Justiție a României
+4364233,https://www.inm-lex.ro,2026-10-26,title: Institutul National al Magistraturii – Învață să judeci drept!
+4364748,https://www.mpublic.ro,2026-10-26,title: ACASA
+4420554,https://www.legmed.ro,2026-10-26,title: Institutiile de medicina legala din Romania - ROMANIA -
+4420635,https://www.inec.ro,2026-10-26,title: Inec – Institutul Național de Expertize Criminalistice
+4453144,https://www.politiaromana.ro,2026-10-26,TLS fault (CERTIFICATE_VERIFY_FAILED); registered in stiri
+4611490,https://irdo.ro,2026-10-26,title: IRDO - Institutul Român pentru Drepturile Omului
+4631721,https://www.culturadata.ro,2026-10-26,title: Acasă - Culturadata
+4967064,https://www.adsm.ro,2026-10-26,title: Academia de Ştiinţe Medicale – EXPERIENTIA DOCET
+5091859,https://www.aosr.ro,2026-10-26,title: Pagina Principala - Academia Oamenilor de Știință din România
+6563755,https://arhivelenationale.ro,2026-10-26,redirects to http://arhivelenationale.ro/site/
+7593088,https://insse.ro,2026-10-26,TLS fault (CERTIFICATE_VERIFY_FAILED) on www and apex
+7901650,https://www.clr.ro,2026-10-26,title: Acasa - Consiliul Legislativ
+8236709,https://www.rosa.ro,2026-10-26,TLS fault (CERTIFICATE_VERIFY_FAILED) on www and apex
+8296093,https://www.srr.ro,2026-10-26,title: Radio România
+8313127,https://www.asas.ro,2026-10-26,title: Academia de Stiinte Agricole - Home
+8468440,https://www.tvr.ro,2026-10-26,https connect timeout; http title: TVR.RO
+9766550,https://avp.ro,2026-10-26,title: Instituția Avocatul Poporului - People’s Advocate institution - Office of the Ombudsman
+10464660,https://www.ces.ro,2026-10-26,title: Consiliul Economic și Social
+10668016,https://www.sie.ro,2026-10-26,title: Serviciul de InformaÅ£ii Externe
+11389672,https://www.tvet.ro,2026-10-26,title: tvet.ro; page: Website in mentenanta
+11424532,https://www.mapn.ro,2026-10-26,title: Ministerul Apararii Nationale
+11445659,https://www.aopsnaj.ro,2026-10-26,web search; title: C.A.S.A.O.P.S.N.A.J. site oficial
+11795581,https://www.anl.ro,2026-10-26,title: ANL
+11806010,https://www.onpcsb.ro,2026-10-26,title: O.N.P.C.S.B.
+12178517,https://ier.gov.ro,2026-10-26,title: Institutul European din România – Excelență în afaceri europene
+12708834,https://domeniilestatului.ro,2026-10-26,web search; title: Agentia Domeniile Statului | Ministerul Agriculturii si Dezvoltarii Rurale
+12932750,https://www.cnsas.ro,2026-10-26,TLS fault (CERTIFICATE_VERIFY_FAILED); http title: Consiliul National pentru Studierea Arhivelor Securitatii
+13146912,https://horting.ro,2026-10-26,web search; title: HORTING; header ICDIMPH - HORTING
+13533790,https://www.afir.ro,2026-10-26,title: Acasă - Portalul AFIR - informații PS 2027 și depunere proiecte Online
+14057015,https://cartografie.ro,2026-10-26,"web search; contact: Echipa CNC, office@cartografie.ro; cngcft.ro notice says the domain changed"
+14751237,https://www.ancom.ro,2026-10-26,title: Acasă - ANCOM
+14777032,https://www.iceadr.ro,2026-10-26,title: ICEADR București – Institutul de Cercetare pentru Economia Agriculturii și Dezvoltare Rurală
+14785469,https://www.icdpp.ro,2026-10-26,title: ICDPP
+14838148,https://www.dna.ro,2026-10-26,pna.ro redirects here; title: Direcția Națională Anticorupție
+14935787,https://www.anrsc.ro,2026-10-26,title: A.N.R.S.C
+15085226,https://www.orniss.ro,2026-10-26,TLS fault (CERTIFICATE_VERIFY_FAILED) on www and apex
+15203810,https://cantacuzino.mapn.ro,2026-10-26,title: Acasă - Institutul Național de Cercetare-Dezvoltare Medico-Militară „Cantacuzino”
+15378153,https://www.gnm.ro,2026-10-26,"title: Garda Națională de Mediu – Protejăm natura, construim viitorul!"
+15599677,https://www.cnp.ro,2026-10-26,title: Prima pagina - Comisia Nationala de Strategie si Prognoza
+15726657,https://www.icr.ro,2026-10-26,title: Institutul Cultural Român
+15785599,https://cncr.gov.ro,2026-10-26,web search; title: Centrul Național de Cultură a Romilor - Romano Kher
+16583598,https://once.mapn.ro,2026-10-26,"web search; title: HomePage - OFICIUL NAȚIONAL PENTRU CULTUL EROILOR; curl timed out, WebFetch worked"
+16973795,https://www.csm1909.ro,2026-10-26,title: Consiliul Superior al Magistraturii - pagina principală
+16998986,https://www.anr.gov.ro,2026-10-26,TLS fault (TLSV1_ALERT_INTERNAL_ERROR); http title: Agentia Nationala pentru Romi
+17093748,https://institutulrevolutiei.ro,2026-10-26,web search; title: Institutul Revoluției Române din Decembrie 1989
+17686532,https://dgpci.mai.gov.ro,2026-10-26,drpciv.ro redirects here; title: Direcția Generală Permise de Conducere și Înmatriculări
+17966770,https://www.afcn.ro,2026-10-26,title: Administraţia Fondului Cultural Naţional
+17984679,https://www.idr.ro,2026-10-26,title: Institutul Diplomatic Român
+18098352,https://www.inshr-ew.ro,2026-10-26,title: INSHR – Institutul Naţional pentru Studierea Holocaustului din România
+18207646,https://rowater.ro,2026-10-26,https://www.rowater.ro failed (tls: HTTPSConnectionPool(host='www.rowat...); title: Home - Administrația Națională Apele Române
+18268520,https://www.mai-dga.ro,2026-10-26,"title: Direcția Generală Anticorupție – ""Integritate pentru credibilitate"" Call Center: 0800.806.806"
+18276140,https://www.hidro.ro,2026-10-26,inhga.ro redirects here; title: I. N. H. G. A.
+18389505,https://www.transplant.ro,2026-10-26,title: Agenția Națională de Transplant » Transplantul înseamnă viață! » Transplant.ro
+20606479,https://www.diicot.ro,2026-10-26,title: Direcţia de Investigare a Infracţiunilor de Criminalitate Organizată şi Terorism - DIICOT
+22464311,https://www.anrp.gov.ro,2026-10-26,TLS fault (TLSV1_ALERT_INTERNAL_ERROR); http title: Acasă
+22838777,https://integritate.eu,2026-10-26,title: Agenția Națională de Integritate – Site oficial – Agenția Națională de Integritate
+24367374,https://aviatie.mai.gov.ro,2026-10-26,web search; title: Inspectoratul General de Aviatie
+24930183,https://www.roedu.net,2026-10-26,title: Acasa - Romanian Educational Network
+25722890,https://www.astr.ro,2026-10-26,title: Academia de Stiințe Tehnice din România
+26282150,https://www.iiccmer.ro,2026-10-26,title: IICCMER – Institutul de Investigare a Crimelor Comunismului și Memoria Exilului Românesc
+26288978,https://www.anrsps.gov.ro,2026-10-26,title: A.N.R.S.P.S.
+26318890,https://www.onvpv.ro,2026-10-26,title: Acasă | Oficiul National al Viei si Produselor Vitivinicole
+26328134,https://www.inmss.ro,2026-10-26,title: Institutul Național de Management al Serviciilor de Sănătate
+26328223,https://www.andr.ro,2026-10-26,title: Agenția Nucleară și pentru Deșeuri Radioactive
+26362870,https://dgep.mai.gov.ro,2026-10-26,title: DGEP
+26429279,https://culte.gov.ro,2026-10-26,https://www.culte.gov.ro failed (tls: HTTPSConnectionPool(host='www.culte...); title: Secretariatul de Stat pentru Culte
+27690298,https://www.aias.gov.ro,2026-10-26,title: AIAS – Autoritatea de Investigații și Analiză pentru Siguranța Aviației Civile
+28484059,https://antifrauda.gov.ro,2026-10-26,https://www.antifrauda.gov.ro failed (tls: HTTPSConnectionPool(host='www.antif...); title: Departamentul pentru lupta antifrauda - DLAF
+28502147,https://www.rndvcsh.ro,2026-10-26,web search; title: Acasă - RNDVCSH
+28598894,https://www.dnsc.ro,2026-10-26,HTTP 403 Cloudflare challenge
+28703167,https://anitp.mai.gov.ro,2026-10-26,title: Agenţia Naţională Împotriva Traficului de Persoane – MINISTERUL AFACERILOR INTERNE
+30246121,https://inspectiajudiciara.ro,2026-10-26,https://www.inspectiajudiciara.ro failed (tls: HTTPSConnectionPool(host='www.inspe...); title: Inspectia Judiciara
+32967779,https://probatiune.just.ro,2026-10-26,https://www.probatiune.just.ro failed (ConnectionError: HTTPSConnectionPool(hos...); title: Direcția Națională de Probațiune – probatiune
+34138203,https://www.asnacp.eu,2026-10-26,web search; title: A.A.S.N.A.C.P. – Ministerul Agriculturii și Dezvoltării Rurale
+34988646,https://www.agifer.ro,2026-10-26,title: Agenția de investigare feroviară română - Agifer
+36401992,https://www.consiliuldemonitorizare.ro,2026-10-26,title: Consiliul de Monitorizare - Autoritate autonomă sub control parlamentar
+36461480,https://anabi.just.ro,2026-10-26,title: Agenția Națională de Administrare a Bunurilor Indisponibilizate
+37314940,https://arf.gov.ro,2026-10-26,https://www.arf.gov.ro failed (tls: HTTPSConnectionPool(host='www.arf.g...); title: ARF.GOV.RO - AUTORITATEA PENTRU REFORMA FEROVIARA
+37589690,https://ina.gov.ro,2026-10-26,title: Acasă - Institutul Național de Administrație
+38280684,https://www.roaid.ro,2026-10-26,title: RoAid – Agenția de Cooperare Internațională Pentru Dezvoltare – RoAiD
+38327078,https://institutlevant.ro,2026-10-26,web search; title: Institut Levant; JSON-LD names the Institutul de Studii Avansate pentru Cultura și Civilizația Levantului
+38918422,https://mfe.gov.ro,2026-10-26,title: Ministerul Investițiilor și Proiectelor Europene
+39983313,https://onac.gov.ro,2026-10-26,https://www.onac.gov.ro failed (ConnectionError: HTTPSConnectionPool(hos...); title: Oficiul Național pentru Achiziții Centralizate
+44523621,https://drrm.gov.ro,2026-10-26,https://www.drrm.gov.ro failed (tls: HTTPSConnectionPool(host='www.drrm....); title: Departamentul pentru Relatia cu Republica Moldova
+44575167,https://dprp.gov.ro,2026-10-26,https://www.dprp.gov.ro failed (tls: HTTPSConnectionPool(host='www.dprp....); title: Departamentul pentru Romanii de Pretutindeni
+44649418,https://e-arc.ro,2026-10-26,web search; title: Centrul Euro-Atlantic pentru Reziliență - E-ARC
+45718117,https://anpd.gov.ro,2026-10-26,title: Autoritatea Nationala pentru Persoanele cu Dizabilitati
+45789320,https://www.customs.ro,2026-10-26,HTTP 403 Cloudflare challenge
+46414469,https://gov.ro,2026-10-26,title: Guvernul României
+46481999,https://andis.gov.ro,2026-10-26,https://www.andis.gov.ro failed (ConnectionError: HTTPSConnectionPool(hos...); title: AgenÈia NaÈionalÄ pentru Dezvoltarea Infrastructurii Ã®n SÄnÄtate
+47687238,https://genomica.gov.ro,2026-10-26,icdg.ro redirects here; title: Institutul de Cercetare-Dezvoltare în Genomică (ICDG)
+47716490,https://gfn.gov.ro,2026-10-26,web search; title: Garda Forestieră Națională
+48008564,https://sigurantaferoviara.ro,2026-10-26,web search; title: ASFR; cited as ASFR's website in its report on era.europa.eu
+48659287,https://www.ofic.ro,2026-10-26,title: OFIC – Oficiul de Film și Investiții Culturale – Instituție publică de importanță națională subordonată Ministerului Cul
+49199357,https://amepip.gov.ro,2026-10-26,title: AGENȚIA PENTRU MONITORIZAREA ȘI EVALUAREA PERFORMANȚELOR ÎNTREPRINDERILOR PUBLICE
+51440863,https://www.research.gov.ro,2026-10-26,web search; title: Autoritatea Națională pentru Cercetare; certificate chain fails with certifi (CN=www.mcid.gov.ro)
+51456053,https://ana.gov.ro,2026-10-26,title: Site is undergoing maintenance
+51623216,https://www.anmap.gov.ro,2026-10-26,title: ANMAP – Agenția Națională pentru Mediu și Arii Protejate – Agenția Națională pentru Mediu și Arii Protejate
+51671728,https://rocnee.eu,2026-10-26,web search; title: Centrul Național pentru Curriculum și Evaluare; linked from edu.ro/structuri-subordonate

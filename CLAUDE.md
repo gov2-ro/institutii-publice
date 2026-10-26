@@ -32,6 +32,9 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
 - **ANI declarații de integritate** `data/declaratii-integritate/Lens Visualization*.csv` (Kibana exports,
   `NAME|COUNTY` + count). Merged into `declaratii.csv` as a side effect. Standalone id `D<sha1[:8]>`.
   Exports cap at 10,000 rows; the script warns when a file hits the cap. Overlapping exports are deduped by max.
+- **Curated websites** `curation/websites.csv` (tracked): `cif, website, checked_at, evidence`, checked by hand.
+  A row fills or replaces the ROePAS website of the ANAF record with that CIF. CSV column `website_source`
+  is `curation` or `roepas`. The script stops on a duplicate CIF or a value that is not a website.
 
 Outputs: `institutii.json`, `institutii.csv` (the only consolidated file tracked in git), and the explorer's
 `metadata.json` + `rows.json`. `explorer/metadata.json` and `explorer/rows.json` are symlinks into

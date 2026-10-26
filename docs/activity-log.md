@@ -1,5 +1,29 @@
 # Activity log
 
+## 2026-10-26 — Curated websites for central bodies
+
+**Done**
+- New tracked input `curation/websites.csv` (`cif, website, checked_at, evidence`). `consolidate.py` applies it to
+  ANAF records after linking (`load_curated_websites`, `apply_curated_websites`). New CSV column `website_source`.
+- 121 websites for central bodies that had none: 37 of the 64 `STATE_MEMBERS` and 84 of their direct children
+  seated in București (agencies, authorities, offices, national institutes; not hospitals, schools, territorial
+  units or academy research institutes). The selection script and the checks live in gov2-ro/stiri `data/central-2/`.
+- Two tests (`CuratedWebsites`); 33 tests pass. `tests/determinism.sh` passes.
+
+**Measured**
+- Websites usable for stiri: 2,180 → 2,301 (`website_source`: 2,180 roepas, 121 curation). Rows: 25,106 (unchanged).
+- Compared with the build before the change, only `website`/`website_url` differ, on 121 rows, plus the new column.
+- Evidence: one GET per website with TLS verification on. 17 sites have a TLS fault, a bot wall, a timeout or a
+  maintenance page (for example insse.ro, cnsas.ro, orniss.ro, curteadeconturi.ro); they keep their https URL
+  and the fault is in `evidence`.
+
+**Decided**
+- A separate websites file now, instead of waiting for the general overrides spec. Cost: one later migration of
+  121 rows into `overrides.csv`. The CIF key is stable across ANAF releases, so the file needs no id mapping.
+- A curated website replaces a ROePAS one. ROePAS websites of central bodies are free text and sometimes wrong.
+  This round replaced none.
+- A section of a parent's site (UFIP on edu.ro, ITA on sri.ro) is not recorded as the body's website.
+
 ## 2026-10-26 — Landing cleanup, text tabs for types, labelled county maps
 
 **Done**

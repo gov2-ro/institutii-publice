@@ -73,6 +73,13 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       `rows.json` adds about 6 MB to `main` history per regeneration.
 
 ## Curation (owner request, 2026-10-25)
+- [x] Curated websites for central bodies (2026-10-26, for gov2-ro/stiri's second central round):
+      `curation/websites.csv`, keyed by CIF, applied by `consolidate.py`; provenance in `website_source`.
+      121 websites filled: state-tree members and their national-level children in București with no ROePAS website.
+- [ ] 7 central bodies still have no website: ASSN (assn.ro parked), Institutul Național de Cercetare pentru Sport,
+      ARICE, ARCTIS (predecessor ocats.gov.ro under construction), ICDI Politehnica; UFIP and ITA exist only as
+      sections of edu.ro and sri.ro (not recorded: a parent's section is not the body's own website).
+- [ ] Fold `curation/websites.csv` into the general overrides file below when that spec exists (`set_website`).
 - [ ] A method to flag duplicates and make other manual edits. Proposal, not yet a spec:
       a tracked overrides file (for example `curation/overrides.csv`: `id, action, value, note, author, date`)
       that `consolidate.py` applies last, with actions such as `merge_into`, `not_duplicate_of`, `set_uat`,

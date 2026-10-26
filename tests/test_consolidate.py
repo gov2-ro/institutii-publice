@@ -270,6 +270,43 @@ class PrefixTier(unittest.TestCase):
         self.assertEqual(L.link("Alba", "Agentia Nationala Pentru Plati", prefix=True)[0], None)   # other county
 
 
+class CuratedWebsites(unittest.TestCase):
+    def rec(self, cif, url=None):
+        return {"cif": cif, "website": url, "website_url": url}
+
+    def test_fill_replace_same_and_provenance(self):
+        recs = [self.rec("1"), self.rec("2", "https://old.ro"), self.rec("3", "https://same.ro"),
+                self.rec("4", "https://keep.ro"), self.rec(None, "https://roepas-only.ro")]
+        curated = {"1": "https://new.ro", "2": "https://fixed.ro", "3": "https://same.ro", "9": "https://x.ro"}
+        stats, unknown = c.apply_curated_websites(recs, curated)
+        self.assertEqual(dict(stats), {"filled": 1, "replaced": 1, "same": 1})
+        self.assertEqual(unknown, ["9"])
+        self.assertEqual([r["website_url"] for r in recs],
+                         ["https://new.ro", "https://fixed.ro", "https://same.ro", "https://keep.ro",
+                          "https://roepas-only.ro"])
+        self.assertEqual([r.get("website_source") for r in recs],
+                         ["curation", "curation", "curation", "roepas", "roepas"])
+
+    def test_file_is_validated(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "websites.csv"
+            self.assertEqual(c.load_curated_websites(path), {})            # no file, no curation
+            path.write_text("cif,website,checked_at,evidence\n5,https://www.Ex.ro/,2026-10-26,title\n")
+            root, c.ROOT = c.ROOT, Path(d)                                  # record_input wants a path under ROOT
+            try:
+                self.assertEqual(c.load_curated_websites(path), {"5": "https://www.ex.ro"})
+                path.write_text("cif,website\n5,https://a.ro\n5,https://b.ro\n")
+                with self.assertRaises(SystemExit):
+                    c.load_curated_websites(path)
+                path.write_text("cif,website\n6,not a site\n")
+                with self.assertRaises(SystemExit):
+                    c.load_curated_websites(path)
+            finally:
+                c.ROOT = root
+                c.PROVENANCE.clear()
+
+
 class Provenance(unittest.TestCase):
     def test_kibana_export_time(self):
         name = "Lens Visualization [2026-10-19T20_26_13.348+03_00] 3.csv"

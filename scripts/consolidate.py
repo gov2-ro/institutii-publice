@@ -30,6 +30,9 @@ Source-only records (ROePAS, Registrul, ANI with no ANAF match) that share a nam
 different sources are combined into one record (link `same_name`, absorbed ids in `merged_ids`). In Bucuresti,
 a record with no UAT gets its sector from the name (`uat_source` = "name"); sector labels are unified.
 
+Curated websites (curation/websites.csv, keyed by CIF) fill or replace the ROePAS website of an ANAF record;
+`website_source` is "curation" or "roepas".
+
 Outputs (data/consolidated/): institutii.json (`match_candidates` is omitted when empty), institutii.csv
 (`match_candidate_cifs`, " | " joined), and metadata.json + rows.json, the compact copy that
 explorer/index.html loads. metadata.json carries `dataset`: generation time plus path, size, SHA-256,
@@ -56,6 +59,7 @@ ROEPAS_JSON = ROOT / "data/roepas/institutii.json"
 DECLARATII_DIR = ROOT / "data/declaratii-integritate"
 DECLARATII_MERGED = DECLARATII_DIR / "declaratii.csv"
 OUT_DIR = ROOT / "data/consolidated"
+CURATED_WEBSITES = ROOT / "curation/websites.csv"
 
 # ---------------------------------------------------------------- text helpers
 
@@ -168,6 +172,43 @@ def load_roepas():
             r["email"] = squash(raw)
     record_input("roepas", ROEPAS_JSON, len(rows))
     return rows
+
+
+def load_curated_websites(path=None):
+    """Hand-checked websites keyed by CIF (curation/websites.csv: cif, website, checked_at, evidence).
+    They fill or correct the ROePAS website of an ANAF record. A missing file means no curation."""
+    path = path or CURATED_WEBSITES
+    if not path.exists():
+        return {}
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = [r for r in csv.DictReader(fh) if (r.get("cif") or "").strip()]
+    out = {}
+    for r in rows:
+        cif, url = r["cif"].strip(), clean_website(r["website"])
+        if not url:
+            raise SystemExit(f"{path}: CIF {cif}: not a website: {r['website']!r}")
+        if cif in out:
+            raise SystemExit(f"{path}: CIF {cif} is listed twice")
+        out[cif] = url
+    record_input("curation", path, len(rows))
+    return out
+
+
+def apply_curated_websites(records, curated):
+    """A curated website replaces the ROePAS one of the record with that CIF. `website_source` says where
+    each website comes from. Returns the counts and the curated CIFs that match no record."""
+    stats, used = Counter(), set()
+    for rec in records:
+        if rec.get("website_url"):
+            rec["website_source"] = "roepas"
+        url = curated.get(rec["cif"]) if rec["cif"] else None
+        if not url:
+            continue
+        used.add(rec["cif"])
+        prev = rec.get("website_url")
+        stats["same" if prev == url else "replaced" if prev else "filled"] += 1
+        rec.update({"website": url, "website_url": url, "website_source": "curation"})
+    return stats, sorted(set(curated) - used)
 
 
 def load_declaratii():
@@ -992,6 +1033,7 @@ TIER_RANK = {"exact": 0, "canonical": 1, "unit": 1, "tokens": 2, "prefix": 2, "n
 def main():
     PROVENANCE.clear()
     anaf, registrul, roepas, declaratii = load_anaf(), load_registrul(), load_roepas(), load_declaratii()
+    curated = load_curated_websites()
     print(f"sources: anaf={len(anaf)} registrul={len(registrul)} roepas={len(roepas)} "
           f"declaratii={len(declaratii)}", file=sys.stderr)
     linker = Linker(anaf)
@@ -1110,6 +1152,7 @@ def main():
             "declaratii_count": r["count"], "declaratii_group": group and group.upper(),
             "declaratii_by_county": r.get("by_county")})
 
+    curation_stats = apply_curated_websites(records, curated)
     merge_stats = merge_same_name(records)
     sector_stats = infer_sectors(records)
     sector_stats["unified"] += unified[True]
@@ -1120,14 +1163,14 @@ def main():
     (OUT_DIR / "institutii.json").write_text(json.dumps(records, ensure_ascii=False), encoding="utf-8")
     write_csv(OUT_DIR / "institutii.csv", records)
     write_explorer_data(OUT_DIR, records)
-    report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats)
+    report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats, curation_stats)
 
 
 CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif", "cif_tva", "parent_cifs",
             "parent_names", "website", "website_url", "email", "phone", "fax", "lat", "lon", "sources",
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
-            "declaratii_count", "declaratii_group", "uat_source", "merged_ids"]
+            "declaratii_count", "declaratii_group", "uat_source", "merged_ids", "website_source"]
 
 
 def write_csv(path, records):
@@ -1191,7 +1234,7 @@ def write_explorer_data(out_dir, records):
     (out_dir / "rows.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
-def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats):
+def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats, curation_stats):
     n = Counter(tuple(r["sources"]) for r in records)
     print(f"\nconsolidated records: {len(records)}", file=sys.stderr)
     for k, v in sorted(n.items(), key=lambda kv: -kv[1]):
@@ -1230,6 +1273,9 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
           file=sys.stderr)
     print(f"sectors: {sector_stats['unified']} labels unified, {sector_stats['inferred']} inferred from the name, "
           f"{sector_stats['ambiguous']} names state several sectors (left blank)", file=sys.stderr)
+    cs, unknown = curation_stats
+    print(f"curated websites: {cs['filled']} filled, {cs['replaced']} replaced, {cs['same']} same as ROePAS; "
+          f"{len(unknown)} CIFs match no record {unknown}", file=sys.stderr)
     _, loose = state_tree(records)
     print(f"\nneclasificate (central roots with no STATE_TREE entry): {len(loose)}", file=sys.stderr)
     for r in loose:
