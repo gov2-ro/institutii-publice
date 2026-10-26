@@ -23,6 +23,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       CNCAN's disputed-placement note is present in metadata but absent from its dialog.
 
 ## Explorer: usability and data presentation
+- [x] The default "are site" filter hid most of the state structure: MADR showed 7 of 232 subordinates, with no hint
+      that more exist (owner report, 2026-10-26). Each filtered node now ends with "+ arată și N subordonate fără
+      site" (or "care nu corespund filtrelor"), which shows the rest dimmed. Records with subordinates always expand.
 - [x] Fix filter overflow between the 900 px breakpoint and the grid's minimum width. Measured:
       a 901 px viewport has 1,042 px of document width; a 1,024 px viewport also overflows.
 - [x] Reduce the sticky filter area on phones. It occupies 349 px at 390 px width and 380 px at 320 px width.

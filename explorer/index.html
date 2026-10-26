@@ -209,6 +209,7 @@
   .count { color: var(--muted); font-size: 12px; flex: none; }
   .count.note { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
   .ctx > summary .label { color: var(--muted); }
+  .reveal { display: block; margin: 4px 0 6px 24px; padding: 3px 0; font-size: 13px; }
   .link { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: inherit; }
   .link:hover { text-decoration: underline; }
   .link.acc { color: var(--accent); }
@@ -679,7 +680,7 @@
         kids: bx => renderRecords(bx, l, ctx, false) }), 100, true);
     }
     function renderRecords(box, list, ctx, bundle = true) {
-      const hasKids = r => !!(r.f && ctx.kids.get(r.f));
+      const hasKids = r => !!(r.f && (ctx.kids.get(r.f) || ctx.filtered && subordinates.has(r.f)));
       const items = bundle && list.length > BUNDLE_MIN ? bundleItems(list) : list;
       const rest = items.filter(it => !it.list);
       chunked(box, items.filter(it => it.list), b => branch({
@@ -699,7 +700,26 @@
       return branch({ label: ctx.relabel.get(r.f) || r.n, note: noteOf.get(r.f),
         meta: ctx.filtered ? `${fmt(m)} / ${total}` : total, attrs: { 'data-cif': r.f },
         ctx: !ctx.matchSet.has(r), open: open || ctx.openAll, info: () => openRecord(r), focus: open ? null : () => focusNode(r.f),
-        kids: box => ks.length ? renderRecords(box, ks, ctx) : box.append(leafTable([r], ctx.matchSet, ctx.cols)) });
+        kids: box => {
+          if (ks.length) renderRecords(box, ks, ctx); else box.append(leafTable([r], ctx.matchSet, ctx.cols));
+          revealHidden(box, subordinates.get(r.f) || [], ctx);
+        } });
+    }
+    /* a filter hides the non-matching subordinates of a node; this row shows them on request, dimmed, so the
+       structure stays complete. Their own subordinates open the same way. */
+    function revealHidden(box, list, ctx) {
+      if (!ctx.filtered) return;
+      const hidden = [...new Set(list)].filter(r => !ctx.matchSet.has(r) && !(r.f && ctx.kids.has(r.f)));
+      if (!hidden.length) return;
+      const onlyWeb = S.web && !(S.q || S.cat || S.fam || S.county || S.uat || S.srcs.size || S.review);
+      const text = onlyWeb ? plural(hidden.length, 'subordonată fără site', 'subordonate fără site')
+        : plural(hidden.length, 'subordonată care nu corespunde filtrelor', 'subordonate care nu corespund filtrelor');
+      const btn = h('button', { class: 'link acc reveal', type: 'button', 'aria-expanded': 'false', onclick: () => {
+        const bx = h('div', { class: 'revealed' });
+        renderRecords(bx, hidden.sort((a, b) => coll.compare(a.n, b.n)), ctx);
+        btn.replaceWith(bx);
+      } }, '+ arată și ' + text);
+      box.append(btn);
     }
 
     /* ---------- "Structura statului" ---------- */
@@ -716,6 +736,7 @@
         const ministries = (vnode.get('ministere')?.recs || []).filter(r => ctx.matchSet.has(r) || ctx.kids.has(r.f));
         for (const r of [...recs, ...ministries.slice().sort((a, b) => coll.compare(a.n, b.n))]) box.append(recordNode(r, ctx));
         for (const n of v.nodes) if (n.id !== 'ministere' && ctx.visible(n.id)) box.append(vBranch(n.id, ctx));
+        revealHidden(box, [...v.recs, ...(vnode.get('ministere')?.recs || [])], ctx);
         return;
       }
       if (id.startsWith('judet:')) {
@@ -729,10 +750,12 @@
         if (used.length === 1) renderRecords(box, used[0][1], ctx, false);
         else for (const [label, l] of used) box.append(branch({ label, meta: plural(l.length, 'autoritate', 'autorități'),
           open: ctx.openAll, kids: bx => renderRecords(bx, l, ctx, false) }));
+        revealHidden(box, v.recs, ctx);
         return;
       }
       if (recs.length) renderRecords(box, recs, ctx, id === 'fara-anaf');
       for (const n of v.nodes) if (ctx.visible(n.id)) box.append(vBranch(n.id, ctx));
+      if (id !== 'fara-anaf') revealHidden(box, v.recs, ctx);
     }
     /* a virtual group counts every unique record below it, descendants included; it is a group, not an institution */
     function vBranch(id, ctx, focused) {

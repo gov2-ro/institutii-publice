@@ -1,5 +1,26 @@
 # Activity log
 
+## 2026-10-26 — Filtered-out subordinates stay reachable in "Structura statului"
+
+**Done**
+- A filtered tree node ends with a link that reveals its hidden subordinates, dimmed, under the same family bundles.
+  The revealed records open their own hidden subordinates the same way. Virtual nodes (Guvernul, county UAT
+  lists) get the same link; "Fără corespondent ANAF" does not, because it holds thousands of records.
+- A record with subordinates always expands under a filter, also when none of them match.
+
+**Hard**
+- The owner's report showed MAE at 0 / 4: the live data predated the curated websites (`3c4136e`). Locally MAE is
+  4 / 4. The underlying problem was real elsewhere: MADR 15 / 232, with 217 subordinates hidden and no way to see them.
+
+**Measured**
+- MADR with the default filter: 15 matching; the link reveals 217 more (48 rows and 5 family bundles at the first
+  level). `reachableRoots()` = `expectedRoots()`; `descendantVisibility()`: 8 checked, 0 failures.
+
+**Decided**
+- Keep "are site" on by default and reveal on request, instead of switching the filter off in the state view.
+  Switching it off per view makes the same URL filter differ between views; the reveal keeps the filter meaning
+  and the counts ("15 / 232") unchanged.
+
 ## 2026-10-26 — Explorer live at https://org.gov2.ro
 
 **Done**
