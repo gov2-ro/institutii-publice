@@ -40,6 +40,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Offer a filtered CSV download and filters for unresolved records and duplicate candidates.
       Show source dates and explain that ANI totals count declarations, not institutions or employees.
 
+- [x] Styling round (owner request, 2026-10-26): align with civtech.gov2.ro (tokens, self-hosted fonts, dark palette),
+      remove the "Surse" column from the list and the tree tables, denser rows.
+- [ ] Card view (postponed by the owner, 2026-10-26): a card layout of the list, possibly without the address.
+      A first version (phones: name, kind, site; no location line) was built and then removed before the commit.
+- [ ] Add a light/dark toggle like civtech's footer control. The page follows only `prefers-color-scheme` now.
+
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)
 - [x] Restore the previous landing sections alongside the new directories. Remove the introduction and move “are site” into “Mai multe”.
 - [x] Keep the compact type grid, remove its duplicate, close categories initially, and put view links in the title-row menu.

@@ -70,7 +70,8 @@ Git: `.gitignore` excludes `data/*` except `data/consolidated/institutii.csv`, s
 
 ## Explorer (explorer/index.html)
 Single self-contained vanilla-JS page (no build, no deps) that fetches `metadata.json` + `rows.json`; it must be
-served over HTTP, not opened as file://. Rows use the compact schema from `write_explorer_data`: short keys
+served over HTTP, not opened as file://. Its look follows civtech.gov2.ro (same colour tokens; fonts
+self-hosted in `explorer/assets/fonts/`). Rows use the compact schema from `write_explorer_data`: short keys
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
 declaratii=8, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
 candidates, `us` 1 = sector inferred from the name (`uat_source`), `mi` ids absorbed by a same-name merge, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both

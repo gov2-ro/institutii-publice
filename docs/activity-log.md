@@ -1,5 +1,28 @@
 # Activity log
 
+## 2026-10-26 — Styling round: civtech look, compact list
+
+**Done**
+- `explorer/index.html` uses the civtech.gov2.ro tokens: white/ink palette, blue accent, 5 px radius, and the
+  Monokai dark palette. Fonts (IBM Plex Sans, Instrument Sans, JetBrains Mono; SIL OFL 1.1) are copied from
+  gov2-ro/awesome-civtech-ro `site/fonts/` to `explorer/assets/fonts/`. The title carries civtech's tricolour sweep
+  (static under `prefers-reduced-motion`).
+- The "Surse" column is gone from the list and from the tree tables. Source badges stay in the record dialog and
+  the source filter. Flags ("posibil duplicat", "potrivire neclară") sit after the name. The ANI count shows in the
+  meta line only when the list is sorted by declarations.
+- List rows: no box, hairlines, mono column heads, contact in two lines (site; email · phone). Tree tables show the
+  category as plain text, not a chip.
+- Phones (≤ 760 px) keep the one-column table: name, kind and location; the contact column stays hidden.
+
+**Measured**
+- Headless Chromium screenshots, Cluj filter (73 records), 1,280 px: about 53 px per row, before about 76 px.
+- No horizontal overflow at 1,280 px and 390 px. `reachableRoots()` = `expectedRoots()`. No page errors.
+
+**Decided**
+- Card view postponed (owner). A phone card layout without the location line was built, shown, and removed before
+  the commit; it is in the backlog.
+- Fonts are self-hosted, not from Google Fonts: the page keeps no third-party requests. Cost: 150 KB of woff2.
+
 ## 2026-10-26 — Filtered-out subordinates stay reachable in "Structura statului"
 
 **Done**
