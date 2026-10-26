@@ -9,16 +9,17 @@ answer of 2026-10-26 (activity log).
 - **Fonts:** use the DS fonts (Inter, Fragment Mono). No local exception. Remove IBM Plex Sans, Instrument Sans
   and JetBrains Mono from `explorer/assets/fonts/`.
 - **Text and control sizes:** use the DS type scale and control sizes. No local compact variant.
-- **Dark mode:** keep it. The DS has none yet; the owner asked the DS to prepare one
-  ([DS #1](https://github.com/gov2-ro/gov2ro-design-system/issues/1)).
+- **Dark mode:** keep it. The DS has none yet; the owner approved a shared dark scheme
+  ([DS #1](https://github.com/gov2-ro/gov2ro-design-system/issues/1)). If the release has it, use it.
 - **Tricolour title:** the local sweep goes. The owner requested a shared title treatment
   ([DS #2](https://github.com/gov2-ro/gov2ro-design-system/issues/2)). Until it exists, use `.g2-wordmark` and
-  `.g2-ro-corner`.
+  `.g2-ro-corner`. The owner accepts a WCAG 2.2.2 deviation for the sweep: it loops with no pause control,
+  because it is slow and small. Do not report it as a checklist failure.
 
 ## Preconditions
 
-- The owner announced the release `vX.Y.Z`, and the tag is on GitHub (`git ls-remote --tags origin` in the DS).
-  On 2026-10-26, GitHub had tags up to v0.6.0 only.
+- The owner announced the release `vX.Y.Z`. A local tag in `~/devbox/gov2/gov2ro-design-system` is enough:
+  the owner develops the DS locally and pushes now and then (owner, 2026-10-26).
 - Prefer a release that includes ADR 0005 (self-hosted DS fonts, no Google Fonts `@import`). With the `@import`,
   the page makes third-party requests again; the 2026-10-26 styling round removed them on purpose.
   If the release still has the `@import`, stop and ask the owner.

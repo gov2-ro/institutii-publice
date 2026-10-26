@@ -23,6 +23,9 @@
 - Owner: keep dark mode; the DS prepares a shared scheme (#1). Until then, local `--g2-*` overrides in `@layer app`.
 - Owner: the tricolour title goes; the DS decides on a shared treatment (#2). It conflicts with the DS rule
   "tricolour is never text".
+- Owner: the title sweep keeps looping with no pause control. This is a deliberate deviation from WCAG 2.2.2
+  (level A): the animation is slow and small. `prefers-reduced-motion` stays the only stop. Recorded on DS #2.
+- Owner: approved the DS dark scheme (DS #1). A local DS tag is enough for adoption; GitHub tags lag on purpose.
 - Wait for a DS release with ADR 0005 (self-hosted fonts). With the Google Fonts `@import`, the page makes
   third-party requests again. Cost of not waiting: we undo the no-third-party rule of the styling round.
 
