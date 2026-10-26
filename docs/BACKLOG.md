@@ -63,11 +63,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       and ANI sub-units ("ANAF … ACTIVITATE ECONOMICA") remain separate, under "de verificat".
 
 ## Publishing
-- [~] Publish the explorer on GitHub Pages at https://org.gov2.ro (owner decision, 2026-10-26).
+- [x] Publish the explorer on GitHub Pages at https://org.gov2.ro (owner decision, live 2026-10-26).
       - `scripts/publish_pages.sh` builds the site from the committed `explorer/` of HEAD plus the generated
         `metadata.json` and `rows.json`, and force-pushes it as one orphan commit to `gh-pages`, with `CNAME`.
       - The owner publishes from this machine. CI cannot rebuild the data: the inputs stay out of git by design.
-      - Remaining: first publish, Cloudflare DNS record, Pages settings (branch `gh-pages`, custom domain, HTTPS).
+      - Set-up: repo made public (Pages needs a public repo on the Free plan), Cloudflare `CNAME org ->
+        gov2-ro.github.io` as DNS only, `gov2.ro` verified for the org, HTTPS enforced.
 - [-] Track the explorer data in `explorer/` and deploy with a GitHub Actions workflow. Dropped 2026-10-26: CI
       cannot rebuild the data, so the workflow would only copy files that one machine generated anyway. Tracking
       `rows.json` adds about 6 MB to `main` history per regeneration.

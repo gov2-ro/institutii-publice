@@ -1,5 +1,24 @@
 # Activity log
 
+## 2026-10-26 — Explorer live at https://org.gov2.ro
+
+**Done**
+- First publish with `scripts/publish_pages.sh` to `gh-pages`. The owner made the repo public, added the Cloudflare
+  record, verified `gov2.ro` for the org and enforced HTTPS.
+
+**Hard**
+- The `gov2-ro` org is on the Free plan, so Pages needed a public repo. The repo was private.
+- Cloudflare flags the DNS-only record as exposing an origin IP. Ignored: the target is GitHub's public Pages hosts,
+  and the GitHub certificate needs DNS only.
+
+**Measured**
+- Certificate: Let's Encrypt for `org.gov2.ro`, valid to 2027-01-23. HTTP redirects (301) to HTTPS.
+- `rows.json`: 6.06 MB, 1.22 MB with gzip. Site: 10 MB, 100 files.
+- Live page in headless Chrome: Cluj profile loads with 58 labels; `reachableRoots()` = `expectedRoots()`.
+
+**Decided**
+- Keep the record as DNS only. A proxied record needs SSL mode "Full", and it can block GitHub's certificate renewal.
+
 ## 2026-10-26 — Curated websites for central bodies
 
 **Done**
