@@ -107,7 +107,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 
 ## Data quality
 - [x] Cross-source duplicates reported by stiri (2026-10-27): sector-relaxed same-name key, nationwide pass for
-      Bucuresti bodies, `curation/merges.csv`, sector suffix removed from source-only names. Tag v0.10.0.
+      Bucuresti bodies, `curation/merges.csv`, sector suffix removed from source-only names. Tag v0.15.0.
 - [x] Alias master `curation/aliases.csv` (105 rows from stiri, ids checked against each build).
 - [ ] More duplicates that differ by an ANAF typo or an old name remain undetected. Review the weak candidates
       (`possible_duplicate_of`) of source-only Bucuresti records and add rows to `curation/merges.csv`.
