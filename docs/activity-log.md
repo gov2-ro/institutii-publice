@@ -26,6 +26,9 @@
 - Owner: the title sweep keeps looping with no pause control. This is a deliberate deviation from WCAG 2.2.2
   (level A): the animation is slow and small. `prefers-reduced-motion` stays the only stop. Recorded on DS #2.
 - Owner: approved the DS dark scheme (DS #1). A local DS tag is enough for adoption; GitHub tags lag on purpose.
+- DS answer: dark scheme = DS ADR 0009 (opt-in, `data-g2-scheme="auto"`); title = DS ADR 0010, sweep on the text
+  with two recorded deviations (WCAG 2.2.2, 1.4.3), so org needs an accessibility statement. DS order: brief 03
+  (local fonts), 05 (dark), 06 (sweep). Every project installs the DS local fonts. The brief follows these.
 - Wait for a DS release with ADR 0005 (self-hosted fonts). With the Google Fonts `@import`, the page makes
   third-party requests again. Cost of not waiting: we undo the no-third-party rule of the styling round.
 

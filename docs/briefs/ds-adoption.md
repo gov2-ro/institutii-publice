@@ -6,15 +6,18 @@ answer of 2026-10-26 (activity log).
 
 ## Owner decisions (2026-10-26)
 
-- **Fonts:** use the DS fonts (Inter, Fragment Mono). No local exception. Remove IBM Plex Sans, Instrument Sans
-  and JetBrains Mono from `explorer/assets/fonts/`.
+- **Fonts:** use the DS fonts (Inter, Fragment Mono). No local exception. Install the DS local fonts
+  (`fonts.css` + `fonts/`), a standard step for every project (DS ADR 0005 amendment). Remove IBM Plex Sans,
+  Instrument Sans and JetBrains Mono from `explorer/assets/fonts/`.
 - **Text and control sizes:** use the DS type scale and control sizes. No local compact variant.
-- **Dark mode:** keep it. The DS has none yet; the owner approved a shared dark scheme
-  ([DS #1](https://github.com/gov2-ro/gov2ro-design-system/issues/1)). If the release has it, use it.
-- **Tricolour title:** the local sweep goes. The owner requested a shared title treatment
-  ([DS #2](https://github.com/gov2-ro/gov2ro-design-system/issues/2)). Until it exists, use `.g2-wordmark` and
-  `.g2-ro-corner`. The owner accepts a WCAG 2.2.2 deviation for the sweep: it loops with no pause control,
-  because it is slow and small. Do not report it as a checklist failure.
+- **Dark mode:** keep it, with the DS dark scheme ([DS #1](https://github.com/gov2-ro/gov2ro-design-system/issues/1),
+  DS ADR 0009, brief 05). Set `<html lang="ro" data-g2-scheme="auto">` and remove the local dark overrides.
+  If the release has no dark scheme yet, keep local `--g2-*` overrides in `@layer app` until it does.
+- **Tricolour title:** use the DS sweep ([DS #2](https://github.com/gov2-ro/gov2ro-design-system/issues/2),
+  DS ADR 0010, brief 06): `<a class="g2-wordmark" href="#"><span class="g2-ro-sweep">Instituții publice</span></a>`.
+  Remove the local sweep. If the release has no `.g2-ro-sweep` yet, use the plain wordmark until it does.
+  The owner accepts two deviations: WCAG 2.2.2 (it loops with no pause control) and WCAG 1.4.3 (glyphs under
+  the band fall below 4.5:1). Do not report them as checklist failures. List both in the accessibility statement.
 
 ## Preconditions
 
@@ -41,8 +44,8 @@ The DS is at ~/devbox/gov2/gov2ro-design-system. Read docs/briefs/ds-adoption.md
 3. Copy gov2.css from the DS tag vX.Y.Z into explorer/assets/gov2.css:
    git -C ~/devbox/gov2/gov2ro-design-system show vX.Y.Z:gov2.css > explorer/assets/gov2.css
    If the release has self-hosted font files, copy them as the DS documents. Do not edit the copies.
-4. Apply the owner decisions in docs/briefs/ds-adoption.md: DS fonts, DS sizes, dark mode kept as
-   --g2-* overrides in @layer app (link DS issue #1), tricolour title removed (link DS issue #2).
+4. Apply the owner decisions in docs/briefs/ds-adoption.md: DS fonts, DS sizes, the DS dark scheme
+   (data-g2-scheme="auto"), the DS title sweep, and an accessibility statement.
 5. Use a DS component where one fits. Where the DS has no component, build a local version
    with the class prefix org- and open a ds-proposal issue, as the block says.
 6. Make a screenshot of each view: #, #v=list, #v=stat, #v=fam, #v=loc&k=CJ, and the record dialog.
@@ -60,7 +63,9 @@ The DS is at ~/devbox/gov2/gov2ro-design-system. Read docs/briefs/ds-adoption.md
 - Remove the local `:focus-visible` rule. Test focus on `.seg`, `.cat-tab`, list rows, map regions and dialogs.
 - Replace the local tokens with `--g2-*` (RGB channels). Radius 0. No decorative shadows.
   Keep the map ramp (`--m0`…`--m5`) local; rename it with the `org-` prefix.
-- Header: `.g2-header`, `.g2-wordmark`, `.g2-ro-corner`. Keep the sticky header and the `--top-h` measurement.
+- Accessibility statement: add a short "Accesibilitate" section to the "Despre date" dialog. It lists the
+  two title deviations (WCAG 2.2.2, 1.4.3). Link it from the footer.
+- Header: `.g2-header`, `.g2-wordmark` with `.g2-ro-sweep`, `.g2-ro-corner`. Keep the sticky header and the `--top-h` measurement.
 - Add a `.g2-footer`. Content: source repo, data generation time, licence. Ask the owner if unsure.
 - Buttons and fields: `.g2-btn`, `.g2-btn.g2-secondary`, `.g2-input`. Flags: `.g2-tag` with `data-tone=warning`.
 - Links: use the DS link roles (`.g2-link-quiet`, `.g2-chip`) where GUIDELINES.md permits no underline.
