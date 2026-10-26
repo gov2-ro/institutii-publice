@@ -1,5 +1,31 @@
 # Activity log
 
+## 2026-10-26 — gov2 design system: compatibility report, owner decisions, adoption brief
+
+**Done**
+- Compatibility report for DS v0.8.0 sent to the DS session `g2-ds`. The DS recorded it in its
+  `docs/compat-analysis.md`. Read only: no project file changed for the report.
+- DS proposals opened: dark colour scheme (gov2-ro/gov2ro-design-system#1), tricolour title (#2).
+- Brief `docs/briefs/ds-adoption.md`: owner decisions, the filled-in adoption prompt, work items, acceptance.
+
+**Measured**
+- Live page = `gh-pages:index.html` = `main:explorer/index.html` (same SHA-1). Served by GitHub Pages;
+  Cloudflare is DNS only. One worktree.
+- Project CSS: one inline `<style>`, no `@layer`, 0 `--g2-`/`.g2-` names. Unlayered rules outrank every DS
+  layer, the DS focus included.
+- Tricolour contrast: #e0a800 on white 2.15:1, DS #fcd116 on white 1.47:1, DS #002b7f on #0b0c0c 1.54:1.
+  The title sweep fails WCAG 1.4.3 for part of each cycle.
+- DS tags on GitHub: up to v0.6.0. v0.7.0 and v0.8.0 are local only.
+
+**Decided**
+- Owner: DS fonts and DS sizes, with no local exception. This reverses the compact list of the styling round:
+  rows get taller (baseline about 53 px at 1,280 px).
+- Owner: keep dark mode; the DS prepares a shared scheme (#1). Until then, local `--g2-*` overrides in `@layer app`.
+- Owner: the tricolour title goes; the DS decides on a shared treatment (#2). It conflicts with the DS rule
+  "tricolour is never text".
+- Wait for a DS release with ADR 0005 (self-hosted fonts). With the Google Fonts `@import`, the page makes
+  third-party requests again. Cost of not waiting: we undo the no-third-party rule of the styling round.
+
 ## 2026-10-26 — Styling round: civtech look, compact list
 
 **Done**

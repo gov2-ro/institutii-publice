@@ -8,6 +8,11 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Includes conservative matching, confirmed category fixes, tree visibility, dense responsive filters, record links,
       review filters, CSV export, loading feedback, minimal dataset provenance and compact overview navigation.
       This is the bounded next release. The spec lists deferred research and data-enrichment work explicitly.
+- [ ] Adopt the gov2 design system (DS): [brief](briefs/ds-adoption.md), brief ready 2026-10-26.
+      Blocked until the owner announces a DS release. Owner decisions: DS fonts and sizes, dark mode kept,
+      tricolour title removed. DS proposals: dark scheme
+      ([#1](https://github.com/gov2-ro/gov2ro-design-system/issues/1)), tricolour title
+      ([#2](https://github.com/gov2-ro/gov2ro-design-system/issues/2)).
 
 ## Explorer: "Structura statului" (spec: specs/structura-statului.md)
 - [x] Version 1: top layer from the Constitution, local administration, focus and breadcrumb, URL hash
