@@ -1,0 +1,5 @@
+id,kind,target_id,checked_at,evidence
+R11067969,merge,A4193222,2026-10-27,"Same body: Inspectoratul General al Politiei de Frontiera. ANAF name has the typo PLITIE, so no tier matches."
+R11046889,merge,A4250638,2026-10-27,"Same body: ITPF Timisoara. The ROePAS name carries the parent name as a prefix."
+R11040459,merge,A38918422,2026-10-27,"Ministerul Fondurilor Europene is the later name of Ministerul Investitiilor si Proiectelor Europene (ANAF keeps the old name)."
+R11050733,parent,A4453144,2026-10-27,"Directia de Investigare a Criminalitatii Economice is a directorate of IGPR. A sub-unit, not a duplicate."

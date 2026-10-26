@@ -60,6 +60,8 @@ DECLARATII_DIR = ROOT / "data/declaratii-integritate"
 DECLARATII_MERGED = DECLARATII_DIR / "declaratii.csv"
 OUT_DIR = ROOT / "data/consolidated"
 CURATED_WEBSITES = ROOT / "curation/websites.csv"
+CURATED_MERGES = ROOT / "curation/merges.csv"
+CURATED_ALIASES = ROOT / "curation/aliases.csv"
 
 # ---------------------------------------------------------------- text helpers
 
@@ -209,6 +211,108 @@ def apply_curated_websites(records, curated):
         stats["same" if prev == url else "replaced" if prev else "filled"] += 1
         rec.update({"website": url, "website_url": url, "website_source": "curation"})
     return stats, sorted(set(curated) - used)
+
+
+def load_curated_merges(path=None):
+    """Hand-checked record links (curation/merges.csv: id, kind, target_id, checked_at, evidence).
+    kind `merge`: record `id` is the same body as `target_id` and is absorbed into it.
+    kind `parent`: record `id` is a sub-unit of ANAF record `target_id`. A missing file means no curation."""
+    path = path or CURATED_MERGES
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = [{k: (v or "").strip() for k, v in r.items()} for r in csv.DictReader(fh) if (r.get("id") or "").strip()]
+    seen = set()
+    for r in rows:
+        if r["kind"] not in ("merge", "parent") or not r["target_id"]:
+            raise SystemExit(f"{path}: {r['id']}: kind must be merge or parent, with a target_id")
+        if r["id"] in seen:
+            raise SystemExit(f"{path}: id {r['id']} is listed twice")
+        seen.add(r["id"])
+    return rows
+
+
+def absorb(keep, rec, how):
+    """Fold the source data of `rec` into `keep`. The id of `rec` goes to `keep["merged_ids"]`."""
+    for src in rec["sources"]:
+        if src not in keep["sources"]:
+            keep["sources"].append(src)
+        keep["link"].setdefault(src, how)
+    if "roepas" in rec["sources"]:
+        for k in ("website", "website_url", "email", "phone", "fax", "lat", "lon", "roepas_url",
+                  "procedures_count", "online_procedures_count", "org_units"):
+            if keep.get(k) in (None, "", []):
+                keep[k] = rec.get(k)
+        keep["roepas_ids"] = sorted({*keep.get("roepas_ids", []), *rec.get("roepas_ids", [])})
+    if "registrul" in rec["sources"]:
+        keep["registrul_nums"] = sorted({*keep.get("registrul_nums", []), *rec.get("registrul_nums", [])})
+    if "declaratii" in rec["sources"]:
+        for k in ("declaratii_count", "declaratii_group", "declaratii_by_county"):
+            if keep.get(k) in (None, "", []):
+                keep[k] = rec.get(k)
+    if keep["category"] == OTHER and rec["category"] != OTHER:
+        keep["category"] = rec["category"]
+    if fold(rec["name"]) != fold(keep["name"]):
+        keep["aliases"] = sorted({*keep.get("aliases", []), squash(rec["name"])})
+    keep["sources"].sort(key=SRC_ORDER.index)
+    keep["merged_ids"] = list(dict.fromkeys([*keep.get("merged_ids", []), rec["id"], *rec.get("merged_ids", [])]))
+
+
+def apply_curated_merges(records, curated):
+    """Apply curation/merges.csv. Stops on an unknown id. -> stats."""
+    by_id = {r["id"]: r for r in records}
+    stats, drop = Counter(), set()
+    for c in curated:
+        rec, target = by_id.get(c["id"]), by_id.get(c["target_id"])
+        if not rec or not target:
+            raise SystemExit(f"{CURATED_MERGES}: {c['id']} or {c['target_id']} matches no record")
+        if c["kind"] == "merge":
+            absorb(target, rec, "curation")
+            drop.add(rec["id"])
+        else:
+            if not target["cif"]:
+                raise SystemExit(f"{CURATED_MERGES}: parent {c['target_id']} has no CIF")
+            rec["parents"] = [{"cif": target["cif"], "name": target["name"]}]
+            rec["possible_duplicate_of"] = None
+            rec.pop("match_candidates", None)
+        stats[c["kind"]] += 1
+    records[:] = [r for r in records if r["id"] not in drop]
+    return stats
+
+
+def check_aliases(records, path=None):
+    """curation/aliases.csv (institution_id, alias, kind, basis, status) is a master for other projects.
+    Every institution_id must be a record id of this build, or the build stops: an id that a merge absorbed
+    must be replaced by its survivor (see `merged_ids`)."""
+    path = path or CURATED_ALIASES
+    if not path.exists():
+        return
+    ids = {r["id"] for r in records}
+    with path.open(encoding="utf-8", newline="") as fh:
+        missing = sorted({r["institution_id"] for r in csv.DictReader(fh)} - ids)
+    if missing:
+        raise SystemExit(f"{path}: ids match no record: {missing}")
+
+
+SECTOR_SUFFIX_RE = re.compile(r"\s*-\s*sector(?:ul)?\s*\d$", re.I)
+
+
+def strip_sector_suffix(records):
+    """ROePAS adds " - Sector N" to Bucuresti names. Drop it from the display name of a source-only record,
+    unless another record would then share its county and name (two sector bodies). The old name stays
+    in `aliases`. -> number of names changed."""
+    key = lambda r, name: (fold(r["county"]), fold(name))
+    stripped = {r["id"]: SECTOR_SUFFIX_RE.sub("", squash(r["name"])) for r in records
+                if not r["cif"] and SECTOR_SUFFIX_RE.search(squash(r["name"]))}
+    taken = Counter(key(r, stripped.get(r["id"], r["name"])) for r in records)
+    n = 0
+    for r in records:
+        new = stripped.get(r["id"])
+        if new and fold(new) and taken[key(r, new)] == 1:
+            r["aliases"] = sorted({*r.get("aliases", []), squash(r["name"])})
+            r["name"] = new
+            n += 1
+    return n
 
 
 def load_declaratii():
@@ -952,49 +1056,49 @@ def generic_name(f):
 
 
 def same_name_key(rec):
-    f = fold(strip_suffix(rec["name"]))
-    sectors = sorted(set(SECTOR_NAME_RE.findall(fold(rec["name"]))))       # strip_suffix drops "- Sector 2": keep it
-    return (fold(rec["county"]), f, tuple(sectors))
+    return (fold(rec["county"]), fold(strip_suffix(rec["name"])))
 
 
-def merge_same_name(records):
+def explicit_sectors(rec):
+    return set(SECTOR_NAME_RE.findall(fold(rec["name"])))
+
+
+def merge_same_name(records, nationwide=False):
     """Combine source-only records (ROePAS, Registrul, ANI) with the same folded name and county across
     different sources. Skipped: village-level kinds (SAME_NAME_NEVER), generic names, a group where any source holds the name more than once,
-    and a county-less record. The surviving id follows ROePAS > Registrul > ANI. Mutates `records`; -> stats."""
+    a group whose names state different sectors, and a county-less record. A name with a sector ("- Sector 2") matches the
+    same name without one. The surviving id follows ROePAS > Registrul > ANI.
+    `nationwide`: second pass, the county is ignored but one record must be in Bucuresti (the sources file
+    a national body under its seat or under a wrong county). Mutates `records`; -> stats."""
     groups = defaultdict(list)
     for rec in records:
         if rec["sources"] in (["roepas"], ["registrul"], ["declaratii"]) and rec["county"]:
-            groups[same_name_key(rec)].append(rec)
-    stats = {"groups": Counter(), "ids": 0, "dup_source": 0, "generic": 0}
+            k = same_name_key(rec)
+            groups[k[1] if nationwide else k].append(rec)
+    stats = {"groups": Counter(), "ids": 0, "dup_source": 0, "generic": 0, "sectors": 0}
     drop = set()
     for key, grp in sorted(groups.items()):
         if len({r["sources"][0] for r in grp}) < 2:
             continue
-        if SAME_NAME_NEVER.search(key[1]) or generic_name(key[1]):
+        name = key if nationwide else key[1]
+        if SAME_NAME_NEVER.search(name) or generic_name(name):
             stats["generic"] += 1
             continue
         if any(n > 1 for n in Counter(r["sources"][0] for r in grp).values()):
             stats["dup_source"] += 1
             continue
-        grp.sort(key=lambda r: SRC_PRIORITY[r["sources"][0]])
+        if len(set().union(*map(explicit_sectors, grp))) > 1:
+            stats["sectors"] += 1
+            continue
+        if nationwide and not any(fold(r["county"]) == "bucuresti" for r in grp):
+            continue
+        grp.sort(key=lambda r: (fold(r["county"]) != "bucuresti", SRC_PRIORITY[r["sources"][0]])
+                 if nationwide else SRC_PRIORITY[r["sources"][0]])
         keep, rest = grp[0], grp[1:]
         cands = union_candidates(r["_cands"] for r in grp)
         for r in rest:
-            src = r["sources"][0]
-            keep["sources"].append(src)
-            keep["link"][src] = "same_name"
-            if src == "registrul":
-                keep["registrul_nums"] = r["registrul_nums"]
-            else:
-                for k in ("declaratii_count", "declaratii_group", "declaratii_by_county"):
-                    keep[k] = r.get(k)
-            if keep["category"] == OTHER and r["category"] != OTHER:
-                keep["category"] = r["category"]
-            if fold(r["name"]) != fold(keep["name"]):
-                keep["aliases"] = sorted({*keep.get("aliases", []), squash(r["name"])})
+            absorb(keep, r, "same_name")
             drop.add(r["id"])
-        keep["sources"].sort(key=SRC_ORDER.index)
-        keep["merged_ids"] = [r["id"] for r in rest]
         keep["possible_duplicate_of"], multi = candidate_fields(cands)
         keep["_cands"] = cands
         keep.pop("match_candidates", None)
@@ -1154,6 +1258,14 @@ def main():
 
     curation_stats = apply_curated_websites(records, curated)
     merge_stats = merge_same_name(records)
+    national_stats = merge_same_name(records, nationwide=True)
+    for k in ("ids", "dup_source", "generic", "sectors"):
+        merge_stats[k] += national_stats[k]
+    merge_stats["groups"].update(national_stats["groups"])
+    merge_stats["national"] = sum(national_stats["groups"].values())
+    merge_stats["curated"] = apply_curated_merges(records, load_curated_merges())
+    merge_stats["sector_names"] = strip_sector_suffix(records)
+    check_aliases(records)
     sector_stats = infer_sectors(records)
     sector_stats["unified"] += unified[True]
     for rec in records:
@@ -1264,7 +1376,10 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
     mg = merge_stats
     print(f"\nsame-name merges (source-only records of different sources): {sum(mg['groups'].values())} groups, "
           f"{mg['ids']} ids absorbed; skipped: {mg['generic']} generic or village-level names, "
-          f"{mg['dup_source']} groups with a repeated name inside one source", file=sys.stderr)
+          f"{mg['dup_source']} groups with a repeated name inside one source, {mg['sectors']} with different sectors",
+          file=sys.stderr)
+    print(f"  of which nationwide (county ignored): {mg['national']} groups; curated: {dict(mg['curated'])}; "
+          f"sector suffix removed from {mg['sector_names']} names", file=sys.stderr)
     for k, v in sorted(mg["groups"].items(), key=lambda kv: -kv[1]):
         print(f"  {k:28s} {v}", file=sys.stderr)
     prefix = sum(1 for v in links["declaratii"].values() for t, _ in v if t == "prefix")

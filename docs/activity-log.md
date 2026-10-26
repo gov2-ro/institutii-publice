@@ -1,5 +1,32 @@
 # Activity log
 
+## 2026-10-27 — Cross-source duplicates and alias master (request of the stiri session)
+
+**Done**
+- `same_name_key` ignores the sector, so "X - Sector 3" (ROePAS) merges with "X" (Registrul, ANI). Groups that
+  state two different sectors stay separate. A second pass (`merge_same_name(nationwide=True)`) ignores the
+  county when one record is in Bucuresti. Survivor: the Bucuresti record, then ROePAS > Registrul > ANI.
+- `curation/merges.csv` (`id, kind, target_id, checked_at, evidence`): 3 merges (Frontiera IGPF, ITPF Timisoara,
+  MFE = old MIPE) and 1 parent link (IGPR DICE). The build stops on an unknown id.
+- All 109 "- Sector N" names lose the suffix (kept in `aliases`); none collides with another record.
+- `curation/aliases.csv`: 105 rows. 4 ids were absorbed by merges (G10525, G10074, G10154, G10529) and were
+  replaced by their survivors. The build stops when an alias id matches no record.
+- Tests: 4 new (sector relaxed, nationwide, suffix collision, curated merge/parent). Determinism check passes.
+
+**Measured**
+- Records 25,106 -> 25,081 (-25). Same-name groups 323 -> 342, nationwide 5. No id vanished without a
+  `merged_ids`/`roepas_ids` trail (checked against the previous CSV).
+
+**Hard**
+- stiri paired R11046889 (ITPF Timisoara) with the IGPF record A4193222. The weak candidate A4250638 (ITPF
+  Timisoara) is the true match; merged there.
+- G01302 "Registrul Auto Roman" (county Alba) stays separate: the name appears twice in Registrul (G10798 is the
+  Bucuresti record that merged), so G01302 is probably a regional unit.
+
+**Decided**
+- Curated file for typo and old-name cases: a fuzzy rule would risk wrong merges of distinct bodies; the cost is
+  manual rows (see BACKLOG).
+
 ## 2026-10-26 — gov2 design system: compatibility report, owner decisions, adoption brief
 
 **Done**

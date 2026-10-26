@@ -106,6 +106,14 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       442 records stay under "Sector necunoscut" (mostly schools and kindergartens). Overrides could place the rest.
 
 ## Data quality
+- [x] Cross-source duplicates reported by stiri (2026-10-27): sector-relaxed same-name key, nationwide pass for
+      Bucuresti bodies, `curation/merges.csv`, sector suffix removed from source-only names. Tag v0.10.0.
+- [x] Alias master `curation/aliases.csv` (105 rows from stiri, ids checked against each build).
+- [ ] More duplicates that differ by an ANAF typo or an old name remain undetected. Review the weak candidates
+      (`possible_duplicate_of`) of source-only Bucuresti records and add rows to `curation/merges.csv`.
+- [ ] No ANAF or registrul record exists for Inspectoratul General al Jandarmeriei Romane. Only the ANI record
+      D81c99b86 carries it (its weak candidate 4453144, IGPR, is wrong). The registrul extraction G14228 is damaged.
+- [ ] ANAF-linked ROePAS ids appear in `roepas_ids`, not in `merged_ids`. Consumers must read both to redirect.
 - [ ] Companii de stat: 937 of 954 are in "(fără tip comun)". 719 of them come only from ANI. Ideas:
       curated group heads (Electrica, CNAIR/DRDP, CFR, Romsilva, Transelectrica, ROMARM, Hidroelectrica);
       local utilities (apă-canal, termie, domeniul public, parcuri industriale, drumuri și poduri) placed

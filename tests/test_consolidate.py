@@ -236,6 +236,40 @@ class SameName(unittest.TestCase):
         self.assertEqual(len(recs), 2)
 
 
+class SectorAndNationwide(unittest.TestCase):
+
+    def test_sector_suffix_matches_name_without_sector(self):
+        recs = [source_rec("R1", "Banca Nationala - Sector 3", "Bucuresti"), source_rec("G1", "Banca Nationala", "Bucuresti")]
+        c.merge_same_name(recs)
+        self.assertEqual([(r["id"], r["merged_ids"]) for r in recs], [("R1", ["G1"])])
+
+    def test_nationwide_needs_bucuresti_and_unique_name(self):
+        recs = [source_rec("R1", "Registrul Auto Roman", "Bucuresti"), source_rec("G1", "Registrul Auto Roman", "Alba")]
+        c.merge_same_name(recs, nationwide=True)
+        self.assertEqual([(r["id"], r["merged_ids"]) for r in recs], [("R1", ["G1"])])
+        recs = [source_rec("G1", "Biroul X", "Alba"), source_rec("D1", "Biroul X", "Dolj")]
+        c.merge_same_name(recs, nationwide=True)
+        self.assertEqual(len(recs), 2)
+
+    def test_strip_sector_suffix_keeps_collisions(self):
+        recs = [source_rec("R1", "Banca - Sector 3", "Bucuresti"), source_rec("R2", "Directia - Sector 1", "Bucuresti"),
+                source_rec("R3", "Directia - Sector 2", "Bucuresti")]
+        c.strip_sector_suffix(recs)
+        self.assertEqual([r["name"] for r in recs], ["Banca", "Directia - Sector 1", "Directia - Sector 2"])
+        self.assertEqual(recs[0]["aliases"], ["Banca - Sector 3"])
+
+    def test_curated_merge_and_parent(self):
+        anaf = {**source_rec("R9", "MINISTERUL X"), "id": "A1", "cif": "1", "sources": ["anaf"], "parents": []}
+        gone, sub = source_rec("R1", "Ministerul Y"), source_rec("R2", "Directia Z")
+        recs = [anaf, gone, sub]
+        stats = c.apply_curated_merges(recs, [
+            {"id": "R1", "kind": "merge", "target_id": "A1"}, {"id": "R2", "kind": "parent", "target_id": "A1"}])
+        self.assertEqual([r["id"] for r in recs], ["A1", "R2"])
+        self.assertEqual((anaf["merged_ids"], anaf["sources"], anaf["aliases"]), (["R1"], ["anaf", "roepas"], ["Ministerul Y"]))
+        self.assertEqual(sub["parents"][0]["cif"], "1")
+        self.assertEqual(dict(stats), {"merge": 1, "parent": 1})
+
+
 class PrefixTier(unittest.TestCase):
     ANAF = "AGENTIA NATIONALA A MEDICAMENTULUI SI A DISPOZITIVELOR MEDICALE DIN ROMANIA"
 
