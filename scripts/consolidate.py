@@ -217,7 +217,9 @@ def apply_curated_websites(records, curated):
 def load_curated_merges(path=None):
     """Hand-checked record links (curation/merges.csv: id, kind, target_id, checked_at, evidence).
     kind `merge`: record `id` is the same body as `target_id` and is absorbed into it.
-    kind `parent`: record `id` is a sub-unit of ANAF record `target_id`. A missing file means no curation."""
+    kind `parent`: record `id` is a sub-unit of ANAF record `target_id`.
+    kind `rename`: record `id` gets the display name `new_name`; the old name goes to `aliases`.
+    A missing file means no curation."""
     path = path or CURATED_MERGES
     if not path.exists():
         return []
@@ -225,8 +227,8 @@ def load_curated_merges(path=None):
         rows = [{k: (v or "").strip() for k, v in r.items()} for r in csv.DictReader(fh) if (r.get("id") or "").strip()]
     seen = set()
     for r in rows:
-        if r["kind"] not in ("merge", "parent") or not r["target_id"]:
-            raise SystemExit(f"{path}: {r['id']}: kind must be merge or parent, with a target_id")
+        if r["kind"] not in ("merge", "parent", "rename") or not (r["new_name"] if r["kind"] == "rename" else r["target_id"]):
+            raise SystemExit(f"{path}: {r['id']}: kind must be merge or parent (with a target_id) or rename (with a new_name)")
         if r["id"] in seen:
             raise SystemExit(f"{path}: id {r['id']} is listed twice")
         seen.add(r["id"])
@@ -263,8 +265,15 @@ def apply_curated_merges(records, curated):
     """Apply curation/merges.csv. Stops on an unknown id. -> stats."""
     by_id = {r["id"]: r for r in records}
     stats, drop = Counter(), set()
-    for c in curated:
+    for c in sorted(curated, key=lambda c: c["kind"] == "rename"):         # renames last: merged records may be renamed
         rec, target = by_id.get(c["id"]), by_id.get(c["target_id"])
+        if c["kind"] == "rename":
+            if not rec:
+                raise SystemExit(f"{CURATED_MERGES}: {c['id']} matches no record")
+            rec["aliases"] = sorted({*rec.get("aliases", []), squash(rec["name"])})
+            rec["name"] = squash(c["new_name"])
+            stats["rename"] += 1
+            continue
         if not rec or not target:
             raise SystemExit(f"{CURATED_MERGES}: {c['id']} or {c['target_id']} matches no record")
         if c["kind"] == "merge":
@@ -1361,7 +1370,7 @@ CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif
             "parent_names", "website", "website_url", "email", "phone", "fax", "lat", "lon", "sources",
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
-            "declaratii_count", "declaratii_group", "uat_source", "merged_ids", "website_source", "same_body_as"]
+            "declaratii_count", "declaratii_group", "uat_source", "merged_ids", "website_source", "same_body_as", "aliases"]
 
 
 def write_csv(path, records):

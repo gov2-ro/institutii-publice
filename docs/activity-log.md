@@ -1,5 +1,21 @@
 # Activity log
 
+## 2026-10-27 — stiri requests after the v0.28.0 re-pin
+
+**Done**
+- New CSV column `aliases` (last): names of absorbed records and other-source names, pipe-joined. 6,088 records have
+  it. Chosen over rows in `curation/aliases.csv`, which stays the operator-reviewed master. stiri asked for aliases.csv.
+- `curation/merges.csv` has a new kind `rename` (column `new_name`) and 5 new rows: UMF Targu Mures (3 ANI spellings
+  merged into G29409, which gets the place in its name), G01302 renamed "Registrul Auto Roman - Reprezentanta Alba",
+  Teatrul National Caragiale (D806d2010 into D9b5f549f), CNPEE (D4dbb2462 into D90878a91). 24,988 -> 24,985 records.
+- Not merged, two bodies each: DGEP Arges / DGEP Bucuresti (two ANAF CIFs, different parents); ANRSPS A4278663 is a
+  sub-unit of A26288978 (parent already set). Curtea de Conturi G18067 (registrul, Dolj) vs D646519bd: unknown; the
+  Dolj entry is probably the regional chamber, left unchanged.
+
+**Hard**
+- G01302 as the Alba unit is an inference from the naming pattern of the other Registrul entries, not from a source.
+- CNPEE in Galati: assumed ANI county error, no unit is known.
+
 ## 2026-10-27 — Owner decisions: landing v2 and "Cum e organizat statul"
 
 **Decided**
