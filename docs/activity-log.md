@@ -1,5 +1,17 @@
 # Activity log
 
+## 2026-10-27 — Same-name review list (read-only)
+
+**Done**
+- `docs/reports/2026-10-27-same-name-review.md`: 89 groups of one county and one folded name, outside courts, with no
+  two ANAF CIFs and no local kind. No record changed.
+
+**Measured**
+- Dropped: 89 groups with two ANAF CIFs, 70 local-kind or generic names. Largest source combination: registrul-only (31).
+
+**Hard**
+- ADR Vest: in no source (ROePAS, Registrul, ANAF list). A curated record needs a new id scheme; not built, no CIF known.
+
 ## 2026-10-27 — Court link: Curtea de Apel Galati
 
 **Done**
