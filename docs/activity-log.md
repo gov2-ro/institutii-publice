@@ -1,5 +1,22 @@
 # Activity log
 
+## 2026-10-27 — DS v0.15.0: the select control
+
+**Done**
+- Updated `explorer/assets/gov2/gov2.css` to DS tag v0.15.0 (DS issue #10, brief 08). No **Breaking** item.
+- The five selects (four filters, sort) use `class="g2-input"`. Deleted the local copy of the input style,
+  the local disabled style and the local select focus rule. `.org-select` is gone.
+- The disclosure filters (`.multi > summary`: "Orice sursă", "Opțiuni") draw the same CSS arrow as the DS select,
+  with 2.5rem of right padding. In forced colours they show "▾", because forced colours drop gradients.
+
+**Measured** (headless Chrome)
+- Selects and the search field are 40 px tall, with a 40 px right padding on the selects. The disabled UAT select
+  has the muted text and border. Focus: yellow outline and inner ring, arrow kept, in light and dark.
+- 5 views × light/dark × 1280/375: no errors, no overflow, roots OK, 0 contrast failures. Rows 69/121 px, as in 0.14.0.
+
+**Decided**
+- The disclosure arrow copies the DS select arrow. The cost: a local rule to remove if the DS adds a disclosure control.
+
 ## 2026-10-27 — DS v0.14.0: breadcrumbs, tables, summary list, skip link
 
 **Done**

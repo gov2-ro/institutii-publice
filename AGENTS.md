@@ -144,7 +144,7 @@ Do this without asking, and say when you did.
 
 ## Design system (gov2 DS)
 
-This project uses the gov2 design system (DS), version 0.14.0.
+This project uses the gov2 design system (DS), version 0.15.0.
 DS repo: gov2-ro/gov2ro-design-system (local copy: ~/devbox/gov2/gov2ro-design-system).
 
 - Read `COMPONENTS.md` in the DS before you build UI. Use a DS component when one fits.

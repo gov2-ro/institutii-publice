@@ -1,4 +1,4 @@
-/* gov2 — stilul comun pentru proiectele gov2.ro · v0.14.0 · 27.10.2026
+/* gov2 — stilul comun pentru proiectele gov2.ro · v0.15.0 · 27.10.2026
 
    Shared stylesheet for gov2.ro projects.
    Inspired by igov.ro's GOV.UK-derived theme (brand.css, 2026-10): Inter + Fragment Mono,
@@ -382,6 +382,11 @@ mark{background:rgb(var(--g2-color-highlight-bg));color:rgb(var(--g2-color-text)
 
 /* ---- Fields ---- */
 .g2-input{min-height:40px;padding:5px 8px;border:var(--g2-border-width-control) solid rgb(var(--g2-color-control-border));border-radius:var(--g2-radius);font:var(--g2-font-size-body) var(--g2-font-sans);background:rgb(var(--g2-color-control-bg));color:rgb(var(--g2-color-text))}
+/* Select: .g2-input on a native <select>. A drop-down (no multiple, size absent or 1) drops the native look, leaves room for the arrow and clips a long option with an ellipsis. multiple and size>1 keep the native list. */
+select.g2-input:not([multiple],[size]:not([size="1"])){appearance:none;max-width:100%;padding-right:2.5rem;text-overflow:ellipsis}
+select.g2-input:is([multiple],[size]:not([size="1"])){max-width:100%}
+/* Forced colours remove gradient backgrounds, so the CSS arrow would vanish: give the native arrow back, in system colours. */
+@media(forced-colors:active){select.g2-input:not([multiple],[size]:not([size="1"])){appearance:auto}}
 /* Field: label, hint, error message and input stacked. The form sets the space between fields.
    The 12rem scroll margin keeps the label, hint and error in view when a recovery link (href="#id") jumps to the input. */
 .g2-field{display:grid;gap:var(--g2-space-1);justify-items:start;min-width:0;overflow-wrap:anywhere}
@@ -454,6 +459,10 @@ mark{background:rgb(var(--g2-color-highlight-bg));color:rgb(var(--g2-color-text)
 .g2-btn:disabled{opacity:.5;cursor:not-allowed}
 .g2-input:disabled{background:rgb(var(--g2-color-surface-sunken));border-color:rgb(var(--g2-color-text-muted));color:rgb(var(--g2-color-text-muted));cursor:not-allowed}
 .g2-field-error .g2-input{border-color:rgb(var(--g2-color-danger-solid))}
+/* Select arrow: two gradient halves of a triangle in the text colour (muted when disabled). Forced colours drop gradients; the components layer gives the native arrow back there. Their selectors outrank the focus rules, which reset the background shorthand. */
+select.g2-input:not([multiple],[size]:not([size="1"])){background-image:linear-gradient(45deg,transparent 50%,rgb(var(--g2-color-text)) 50%),linear-gradient(135deg,rgb(var(--g2-color-text)) 50%,transparent 50%);background-position:right calc(1rem + .45em) center,right 1rem center;background-size:.45em .45em;background-repeat:no-repeat}
+select.g2-input:disabled{opacity:1}
+select.g2-input:disabled:not([multiple],[size]:not([size="1"])){background-image:linear-gradient(45deg,transparent 50%,rgb(var(--g2-color-text-muted)) 50%),linear-gradient(135deg,rgb(var(--g2-color-text-muted)) 50%,transparent 50%)}
 /* Forced colours give every chip the same border: show the selected chip with the system selection colours. */
 @media(forced-colors:active){.g2-chip:where([aria-current]:not([aria-current=false],[aria-current=""]),[aria-pressed=true]){background:Highlight;color:HighlightText}
 .g2-chip:where([aria-current]:not([aria-current=false],[aria-current=""]),[aria-pressed=true]) .g2-chip-count{color:HighlightText}}

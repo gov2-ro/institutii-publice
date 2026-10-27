@@ -66,17 +66,17 @@
   .fmore > .multi { flex: 1 1 150px; }
   #ftoggle { display: none; }
   #reset { order: 2; }
-  /* select has no DS class yet (COMPONENTS.md, "Not in the DS yet"): it copies .g2-input */
-  .filters select, .org-select { width: 100%; min-height: 40px; padding: 5px 8px; border: var(--g2-border-width-control) solid rgb(var(--g2-color-control-border));
-    border-radius: var(--g2-radius); background: rgb(var(--g2-color-control-bg)); color: var(--text); font-size: var(--g2-font-size-body); }
   .filters .g2-input { width: 100%; }
   .filters input[type=search]::placeholder { color: var(--muted); opacity: 1; }
-  .filters select:disabled { border-color: var(--muted); color: var(--muted); background: var(--sunken); }
   .multi { position: relative; }
-  .multi > summary { min-height: 40px; padding: 0 30px 0 8px; border: var(--g2-border-width-control) solid rgb(var(--g2-color-control-border));
+  .multi > summary { min-height: 40px; padding: 0 2.5rem 0 8px; border: var(--g2-border-width-control) solid rgb(var(--g2-color-control-border));
     background: rgb(var(--g2-color-control-bg)); display: flex; align-items: center; cursor: pointer; list-style: none; position: relative; }
   .multi > summary::-webkit-details-marker { display: none; }
-  .multi > summary::after { content: "▾"; position: absolute; right: 10px; }
+  /* the arrow of the DS select (select.g2-input), so that the disclosure filters match the selects */
+  .multi > summary::after { content: ""; position: absolute; right: 1rem; top: 50%; width: .9em; height: .45em; margin-top: -.225em;
+    background: linear-gradient(45deg, transparent 50%, currentColor 50%) left / .45em .45em no-repeat,
+                linear-gradient(135deg, currentColor 50%, transparent 50%) right / .45em .45em no-repeat; }
+  @media (forced-colors: active) { .multi > summary::after { content: "▾"; width: auto; height: auto; margin-top: -.6em; background: none; } }
   .multi > summary span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .multi .panel { position: absolute; right: 0; top: calc(100% + 4px); z-index: 10; width: 300px; max-width: calc(100vw - 16px); padding: var(--g2-space-2) var(--g2-space-3);
     background: var(--page); border: var(--g2-border-width-control) solid rgb(var(--g2-color-control-border)); }
@@ -255,7 +255,6 @@
     box-shadow: 0 -2px rgb(var(--g2-color-focus)), 0 4px rgb(var(--g2-color-on-focus)); text-decoration: none; }
   :is(a, button, summary):not(.g2-btn):focus-visible :is(.count, .label, .sub, .arrow, .menu-status, #stats) { color: inherit; }
   .multi > summary:focus-visible { outline: 3px solid rgb(var(--g2-color-focus)); outline-offset: 0; box-shadow: inset 0 0 0 2px rgb(var(--g2-color-text)); }
-  .filters select:focus-visible, .org-select:focus-visible { outline: 3px solid rgb(var(--g2-color-focus)); outline-offset: 0; box-shadow: inset 0 0 0 2px rgb(var(--g2-color-text)); }
   tbody tr:focus-visible { outline: 3px solid rgb(var(--g2-color-focus)); outline-offset: -3px; }
 
   @media (max-width: 760px) {
@@ -309,10 +308,10 @@
       <button id="ftoggle" class="g2-btn g2-secondary" type="button" aria-expanded="false" aria-controls="fmore">Filtre<span class="fbadge" id="fcount"></span></button>
       <button id="reset" class="g2-btn g2-secondary" type="button">Resetează</button>
       <div class="fmore" id="fmore">
-        <select id="cat" aria-label="Categorie"></select>
-        <select id="fam" aria-label="Tip instituție"></select>
-        <select id="county" aria-label="Județ"></select>
-        <select id="uat" aria-label="Localitate (UAT)"></select>
+        <select id="cat" class="g2-input" aria-label="Categorie"></select>
+        <select id="fam" class="g2-input" aria-label="Tip instituție"></select>
+        <select id="county" class="g2-input" aria-label="Județ"></select>
+        <select id="uat" class="g2-input" aria-label="Localitate (UAT)"></select>
         <details id="src" class="multi">
           <summary aria-label="Sursă"><span id="src-label">Orice sursă</span></summary>
           <div class="panel">
@@ -331,7 +330,7 @@
 <main id="main" class="g2-container" tabindex="-1" aria-busy="true">
   <div class="toolbar" id="toolbar" hidden>
     <label class="sortby">Ordonare
-      <select id="sort" class="org-select">
+      <select id="sort" class="g2-input">
         <option value="n">A–Z</option>
         <option value="dc">nr. declarații ANI</option>
       </select>
