@@ -1,5 +1,35 @@
 # Activity log
 
+## 2026-10-28 — Limited preview polish (brief limited-preview)
+
+**Done**
+- All three pages: Open Graph and Twitter meta (title, description, type, absolute url, image 1,200 × 630 with alt, locale,
+  site name, card `summary_large_image`) and a Romanian description (107 to 158 characters); the `favicon.svg` link is removed;
+  the header logo is `g2-0-64.png` on a light rounded tile (`.g2-wordmark .g2-logo`, colour token `--g2-color-on-header`).
+- Header: the nav links are gone (the views stay, reached from the landing and the footer); the counter reads "2.299 din 24.981"
+  (`role="status"`); the "Opțiuni" summary has no border and keeps the 44 px target and the DS focus.
+- Landing: the stats line under the search is removed (the examples stay); "Sari la" is bold and ends with "Lista completă"
+  (opens `#v=list`).
+- Footer, all pages: one row at 1,440 px (text, links, "un proiect gov2.ro", GitHub icon on one centre line); links
+  Structura statului, Domenii, Lista completă, Cum e organizat statul, Despre. On the landing the view links keep their
+  handlers and scroll to the top. The old `list-link` code is removed.
+- Disclaimer: DS notice bar on every page ("Acesta nu este un proiect oficial al Guvernului României."), close button
+  (`aria-label="Închide"`, 44 px), `localStorage` key `org-disclaimer-closed` in try/catch; it does not move focus.
+- `despre.html`: the ANI source links to https://monitorul.ai/integritate; new section "Contact" (GitHub issues, mailto link).
+
+**Measured**
+- Disclaimer: shows, closes, stays closed after a reload (also on the two other pages: same origin); with storage blocked it
+  closes for the session and shows again after a reload; Tab (twice from the top) reaches the close button.
+- No horizontal scroll at 320, 390, 768, 1,024 and 1,440 px, both schemes, three pages. No target under 44 px (the wordmark,
+  the footer text links and the menu link were raised to 44 px). Landing heights: 390 px 3,211 px; 1,440 px 4,075 px.
+- Footer at 390 px wraps in three rows; at 1,024 px in two; at 1,440 px in one.
+- 44 tests pass; syntax check passes on the three pages; roots check true; legacy hashes `#v=stat`, `#v=fam`, `#v=list`,
+  `#v=loc&k=Cluj`, `#id=…` and the empty hash behave as before; no console errors.
+
+**Decided**
+- The footer text "Date din surse publice" is now "Surse", so that the row fits at 1,440 px.
+- The "Despre" link stays in the header (the brief removes only the three view links).
+
 ## 2026-10-27 — Landing top row: no headings or labels, one row on desktop (Opus, small change)
 
 **Done**

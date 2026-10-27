@@ -4,9 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Despre date &middot; org.gov2.ro</title>
-<meta name="description" content="Despre datele din org.gov2.ro: sursele, data generării, fișierele sursă și exportul CSV.">
+<meta name="description" content="Despre datele din org.gov2.ro: sursele, data generării, fișierele sursă, exportul CSV și datele de contact.">
+<meta property="og:title" content="Despre date · org.gov2.ro">
+<meta property="og:description" content="Despre datele din org.gov2.ro: sursele, data generării, fișierele sursă, exportul CSV și datele de contact.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://org.gov2.ro/despre.html">
+<meta property="og:image" content="https://org.gov2.ro/assets/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Clădirea unei instituții publice cu drapelul României, legată de puncte albastre, galbene și roșii. Textul: Instituții publice, org.gov2.ro.">
+<meta property="og:locale" content="ro_RO">
+<meta property="og:site_name" content="org.gov2.ro">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Despre date · org.gov2.ro">
+<meta name="twitter:description" content="Despre datele din org.gov2.ro: sursele, data generării, fișierele sursă, exportul CSV și datele de contact.">
+<meta name="twitter:image" content="https://org.gov2.ro/assets/img/og.png">
+<meta name="twitter:image:alt" content="Clădirea unei instituții publice cu drapelul României, legată de puncte albastre, galbene și roșii. Textul: Instituții publice, org.gov2.ro.">
 <link rel="icon" type="image/png" href="assets/favicon/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg" />
 <link rel="shortcut icon" href="assets/favicon/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-title" content="org.gov2.ro" />
@@ -21,6 +35,17 @@
     --text: rgb(var(--g2-color-text)); --muted: rgb(var(--g2-color-text-muted)); --line: rgb(var(--g2-color-line)); --page: rgb(var(--g2-color-page));
     --link: rgb(var(--g2-color-link)); --sunken: rgb(var(--g2-color-surface-sunken));
   }
+  /* limited preview: logo tile, notice bar, one-row footer */
+  .g2-wordmark .g2-logo { box-sizing: content-box; width: 28px; height: 28px; padding: 3px; border-radius: 6px; background: rgb(var(--g2-color-on-header)); }
+  .g2-notice-bar > button { height: 44px; }
+  .g2-header .g2-wordmark { min-height: 44px; }
+  .org-foot .org-credit a:not(.org-gh) { display: inline-flex; align-items: center; min-height: 44px; }
+  .g2-footer-in.org-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--g2-space-1) var(--g2-space-4); padding-block: var(--g2-space-3); }
+  .org-foot p, .org-foot ul { margin: 0; }
+  .org-foot ul { display: flex; flex-wrap: wrap; gap: 0 var(--g2-space-3); padding: 0; list-style: none; }
+  .org-foot ul a { display: inline-flex; align-items: center; min-height: 44px; }
+  .org-foot .org-credit { margin-left: auto; }
+
   * { box-sizing: border-box; }
   html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
   h1, h2, h3 { line-height: var(--g2-line-height-heading); }
@@ -94,7 +119,7 @@
   .g2-footer { margin-top: var(--g2-space-6); font-size: var(--g2-font-size-meta); }
 
   /* focus: the app layer wins over gov2.states, so these rules write the DS treatment again (see index.html) */
-  :is(a, summary):not(.g2-btn, .org-box):focus-visible { outline: 3px solid transparent; background: rgb(var(--g2-color-focus)); color: rgb(var(--g2-color-on-focus));
+  :is(a, button, summary):not(.g2-btn, .org-box):focus-visible { outline: 3px solid transparent; background: rgb(var(--g2-color-focus)); color: rgb(var(--g2-color-on-focus));
     box-shadow: 0 -2px rgb(var(--g2-color-focus)), 0 4px rgb(var(--g2-color-on-focus)); text-decoration: none; }
   @media (max-width: 760px) {
     .org-frame { padding: var(--g2-space-3); }
@@ -105,16 +130,21 @@
 </head>
 <body>
 <a class="g2-skip-link" href="#main">Sari la conținut</a>
+<div class="g2-notice-bar" id="org-disclaimer" role="region" aria-label="Anunț">
+  <p>Acesta nu este un proiect oficial al Guvernului României.</p>
+  <button type="button" aria-label="Închide">×</button>
+</div>
+<script>
+(() => {
+  const bar = document.getElementById('org-disclaimer');
+  try { if (localStorage.getItem('org-disclaimer-closed') === '1') bar.hidden = true; } catch (e) {}
+  bar.querySelector('button').addEventListener('click', () => { bar.hidden = true; try { localStorage.setItem('org-disclaimer-closed', '1'); } catch (e) {} });
+})();
+</script>
 <header class="g2-header">
   <span class="g2-ro-corner" aria-hidden="true"></span>
   <div class="g2-header-in g2-container title">
-    <a class="g2-wordmark" href="index.html" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/gx00.png" width="28" height="28" alt=""><span class="g2-ro-sweep org-wm">Instituții publice</span></a>
-    <nav class="g2-nav" aria-label="Principal">
-      <a href="index.html#v=stat">Structura statului</a>
-      <a href="index.html#v=fam">Domenii</a>
-      <a href="index.html#v=list">Listă</a>
-      <a href="organizare.html">Cum e organizat statul</a>
-    </nav>
+    <a class="g2-wordmark" href="index.html" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/g2-0-64.png" width="28" height="28" alt=""><span class="g2-ro-sweep org-wm">Instituții publice</span></a>
     <span class="grow"></span>
     <a class="txtbtn" href="despre.html" aria-current="page">Despre<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></a>
   </div>
@@ -125,15 +155,18 @@
 <p class="sub">Numerele sunt înregistrări din surse, nu entități juridice verificate. Prezența într-o sursă nu arată dacă o instituție este activă sau dacă site-ul ei funcționează.</p>
 <p class="sub">Numărul din ANI numără declarații depuse, nu angajați și nu instituții distincte.</p>
 <div id="ds"><p class="sub" role="status">Se încarcă informațiile despre fișiere…</p></div>
+<h2 id="contact">Contact</h2>
+<p>Ai găsit o problemă sau ai o sugestie? Scrie-ne ca <a href="https://github.com/gov2-ro/institutii-publice/issues">problemă pe GitHub</a> sau trimite un e-mail la <a href="mailto:cancelarie@gov2.ro">cancelarie@gov2.ro</a>.</p>
 <h2>Export CSV</h2>
 <p class="sub">Butonul „Descarcă CSV” exportă selecția curentă (toate înregistrările care corespund filtrelor, nu doar pagina afișată). Fișierul este UTF-8 cu BOM. O celulă cu mai multe valori le separă prin „ | ”. Un zero rămâne 0; o valoare necunoscută rămâne goală. Textele care încep cu = + - @ primesc în față un apostrof, ca să nu fie interpretate drept formule în Excel.</p>
 <p><a href="index.html">← Înapoi la explorator</a></p>
 </div>
 </main>
 <footer class="g2-footer">
-  <div class="g2-footer-in g2-container">
-    <p>Date din surse publice: ANAF, ROePAS, Registrul Național, ANI. <a href="index.html">Explorator</a> · <a href="despre.html">Despre</a></p>
-    <p class="org-credit">un proiect <a href="https://gov2.ro">gov2.ro</a> <a class="org-gh" href="https://github.com/gov2-ro/institutii-publice" aria-label="Cod sursă pe GitHub"><svg width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a></p>
+  <div class="g2-footer-in g2-container org-foot">
+    <p>Surse: ANAF, ROePAS, Registrul Național, ANI.</p>
+    <ul aria-label="Pagini"><li><a href="index.html#v=stat">Structura statului</a></li><li><a href="index.html#v=fam">Domenii</a></li><li><a href="index.html#v=list">Lista completă</a></li><li><a href="organizare.html">Cum e organizat statul</a></li><li><a href="despre.html">Despre</a></li></ul>
+    <p class="org-credit">un proiect <a href="https://gov2.ro">gov2.ro</a> <a class="org-gh" href="https://github.com/gov2-ro/institutii-publice" aria-label="Cod sursă pe GitHub"><svg class="org-icon-fill" width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a></p>
   </div>
 </footer>
 <script>
@@ -159,7 +192,7 @@
       capped.length ? h('p', { class: 'flag' }, `Atenție: ${capped.length === 1 ? 'un export ANI a atins' : capped.length + ' exporturi ANI au atins'} limita de 10.000 de rânduri. Datele pot fi incomplete.`) : null,
       h('h2', null, 'Fișiere sursă'),
       h('ul', { class: 'plain' }, inputs.map(i => h('li', null,
-        h('strong', null, srcLabel[i.source] || i.source || 'sursă'), ' ', h('code', null, i.path || ''),
+        (i.source === 'ani' || i.source === 'declaratii') ? h('strong', null, h('a', { href: 'https://monitorul.ai/integritate' }, srcLabel[i.source])) : h('strong', null, srcLabel[i.source] || i.source || 'sursă'), ' ', h('code', null, i.path || ''),
         h('div', { class: 'sub' }, [
           i.bytes != null ? kb(i.bytes) : null,
           i.rows != null ? plural(i.rows, 'rând', 'rânduri') : null,

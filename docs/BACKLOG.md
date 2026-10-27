@@ -60,6 +60,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       A first version (phones: name, kind, site; no location line) was built and then removed before the commit.
 - [ ] Add a light/dark toggle like civtech's footer control. The page follows only `prefers-color-scheme` now.
 
+- [x] Limited preview polish (brief limited-preview): meta tags, logo tile, header, footer, disclaimer, Contact. Built 2026-10-28, not published.
+
 ## Explorer: landing v2 and "Cum e organizat statul" (spec: specs/landing-v2-organizare.md)
 - [x] Owner: answer the five decisions in spec section 4 (landing search, headings, state row, remembered
       county, separate page). All five accepted, 2026-10-27.

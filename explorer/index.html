@@ -4,8 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Instituții publice &middot; org.gov2.ro</title>
+<meta name="description" content="Instituțiile publice și companiile de stat din România: site, contact, domeniu și locul în structura statului. Surse: ANAF, ROePAS, ANI.">
+<meta property="og:title" content="Instituții publice · org.gov2.ro">
+<meta property="og:description" content="Instituțiile publice și companiile de stat din România: site, contact, domeniu și locul în structura statului. Surse: ANAF, ROePAS, ANI.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://org.gov2.ro/">
+<meta property="og:image" content="https://org.gov2.ro/assets/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Clădirea unei instituții publice cu drapelul României, legată de puncte albastre, galbene și roșii. Textul: Instituții publice, org.gov2.ro.">
+<meta property="og:locale" content="ro_RO">
+<meta property="og:site_name" content="org.gov2.ro">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Instituții publice · org.gov2.ro">
+<meta name="twitter:description" content="Instituțiile publice și companiile de stat din România: site, contact, domeniu și locul în structura statului. Surse: ANAF, ROePAS, ANI.">
+<meta name="twitter:image" content="https://org.gov2.ro/assets/img/og.png">
+<meta name="twitter:image:alt" content="Clădirea unei instituții publice cu drapelul României, legată de puncte albastre, galbene și roșii. Textul: Instituții publice, org.gov2.ro.">
 <link rel="icon" type="image/png" href="assets/favicon/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg" />
 <link rel="shortcut icon" href="assets/favicon/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-title" content="org.gov2.ro" />
@@ -30,6 +45,17 @@
   @media (prefers-color-scheme: dark) {
     :root[data-g2-scheme=auto] { --org-map-0: #2b3033; --org-map-1: #17314f; --org-map-2: #1d5a96; --org-map-3: #4f94d8; --org-map-4: #9cc3f6; --org-map-5: #d0e5fb; }
   }
+  /* limited preview: logo tile, notice bar, one-row footer */
+  .g2-wordmark .g2-logo { box-sizing: content-box; width: 28px; height: 28px; padding: 3px; border-radius: 6px; background: rgb(var(--g2-color-on-header)); }
+  .g2-notice-bar > button { height: 44px; }
+  .g2-header .g2-wordmark { min-height: 44px; }
+  .org-foot .org-credit a:not(.org-gh) { display: inline-flex; align-items: center; min-height: 44px; }
+  .g2-footer-in.org-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--g2-space-1) var(--g2-space-4); padding-block: var(--g2-space-3); }
+  .org-foot p, .org-foot ul { margin: 0; }
+  .org-foot ul { display: flex; flex-wrap: wrap; gap: 0 var(--g2-space-3); padding: 0; list-style: none; }
+  .org-foot ul a { display: inline-flex; align-items: center; min-height: 44px; }
+  .org-foot .org-credit { margin-left: auto; }
+
   * { box-sizing: border-box; }
   html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
   h1, h2, h3 { line-height: var(--g2-line-height-heading); }
@@ -44,7 +70,7 @@
   .txtbtn { min-height: 44px; padding: 0 var(--g2-space-2); border: 0; background: none; cursor: pointer;
             color: rgb(var(--g2-color-on-header)); font-size: var(--g2-font-size-meta); font-weight: 600; }
   .txtbtn:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
-  .g2-header .navmore > summary { min-height: 44px; border-color: rgb(var(--g2-color-on-header-muted)); background: none; color: rgb(var(--g2-color-on-header));
+  .g2-header .navmore > summary { min-height: 44px; border: 0; background: none; color: rgb(var(--g2-color-on-header));
                        font-size: var(--g2-font-size-meta); font-weight: 600; }
   .navmore .panel { width: 290px; color: var(--text); }
   .navmore .chk { white-space: normal; }
@@ -91,7 +117,7 @@
   .fbadge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
             background: var(--text); color: var(--page); font: var(--g2-font-size-label)/1 var(--g2-font-mono); }
   .fbadge:empty { display: none; }
-  .menu-link { display: block; width: 100%; min-height: 40px; padding: var(--g2-space-2) 0; }
+  .menu-link { display: flex; align-items: center; width: 100%; min-height: 44px; padding: var(--g2-space-2) 0; }
 
   main { padding-block: var(--g2-space-4) var(--g2-space-6); }
   .empty, .notice { padding: var(--g2-space-6) var(--g2-space-3); text-align: center; color: var(--muted); }
@@ -288,7 +314,8 @@
   .org-dom-more .g2-btn { min-height: 44px; }
   .org-tt .count { margin-left: auto; font-weight: 400; }
   .org-jump { margin: 0 0 var(--g2-space-5); }
-  .org-jump .link { min-height: 44px; padding: 0 var(--g2-space-1); }
+  .org-jump { font-weight: 700; }
+  .org-jump .link { min-height: 44px; padding: 0 var(--g2-space-1); font-weight: 700; }
   .org-top { display: block; }
   .org-mapsel { display: flex; flex-wrap: wrap; gap: var(--g2-space-3); margin-bottom: var(--g2-space-2); }
   .org-mapsel .g2-field { flex: 1 1 220px; max-width: 360px; min-width: 0; }
@@ -347,15 +374,21 @@
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="i-health" viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></symbol><symbol id="i-school" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.5 3 3 6 3s6-1.500 6-3v-4.500"/><path d="M22 9v6"/></symbol><symbol id="i-docs" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h7"/></symbol><symbol id="i-tax" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9.500c-.5-1-1.600-1.500-3-1.500-1.700 0-3 .8-3 2s1.300 1.700 3 2 3 .8 3 2-1.300 2-3 2c-1.400 0-2.500-.5-3-1.500M12 6v2M12 16v2"/></symbol><symbol id="i-work" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13"/><path d="M9 7V4h6v3M3 13h18"/></symbol><symbol id="i-safety" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.500-3.500 7.500-8 9-4.500-1.500-8-4.500-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol><symbol id="i-courts" viewBox="0 0 24 24"><path d="M12 3v17M5 20h14M4 7h16"/><path d="M4 7l-2 6h4zM20 7l-2 6h4z"/></symbol><symbol id="i-agri" viewBox="0 0 24 24"><path d="M12 21v-9"/><path d="M12 12c0-4 2-7 7-8 0 5-3 8-7 8zM12 15c0-3-2-5-6-5 0 4 2 5 6 5z"/></symbol><symbol id="i-culture" viewBox="0 0 24 24"><path d="M3 9l9-5 9 5zM5 9v9M9.500 9v9M14.500 9v9M19 9v9M3 21h18"/></symbol><symbol id="i-consumer" viewBox="0 0 24 24"><path d="M5 7h14l-1 13H6z"/><path d="M9 10V6a3 3 0 016 0v4"/></symbol><symbol id="i-legislativ" viewBox="0 0 24 24"><path d="M3 20h18M5 20v-8M19 20v-8M3 12c0-5 4-8 9-8s9 3 9 8z"/><path d="M9 20v-8M15 20v-8"/></symbol><symbol id="i-guvern" viewBox="0 0 24 24"><path d="M3 21h18M5 21V10M19 21V10M9 21V10M15 21V10M2 10l10-6 10 6z"/></symbol><symbol id="i-justitie" viewBox="0 0 24 24"><path d="M12 3v17M7 20h10M5 6h14"/><path d="M5 6l-3 7a3.500 3.500 0 006 0zM19 6l-3 7a3.500 3.500 0 006 0z"/></symbol><symbol id="i-control" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M16 16l5 5M8.500 11l2 2 3-3.500"/></symbol><symbol id="i-local" viewBox="0 0 24 24"><path d="M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.500"/></symbol><symbol id="i-companii" viewBox="0 0 24 24"><rect x="4" y="3" width="10" height="18"/><path d="M14 9h6v12h-6M7 7h4M7 11h4M7 15h4"/></symbol></svg>
 <a class="g2-skip-link" href="#main">Sari la conținut</a>
+<div class="g2-notice-bar" id="org-disclaimer" role="region" aria-label="Anunț">
+  <p>Acesta nu este un proiect oficial al Guvernului României.</p>
+  <button type="button" aria-label="Închide">×</button>
+</div>
+<script>
+(() => {
+  const bar = document.getElementById('org-disclaimer');
+  try { if (localStorage.getItem('org-disclaimer-closed') === '1') bar.hidden = true; } catch (e) {}
+  bar.querySelector('button').addEventListener('click', () => { bar.hidden = true; try { localStorage.setItem('org-disclaimer-closed', '1'); } catch (e) {} });
+})();
+</script>
 <header class="g2-header">
   <span class="g2-ro-corner" aria-hidden="true"></span>
   <div class="g2-header-in g2-container title">
-    <a class="g2-wordmark" id="home-link" href="#" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/gx00.png" width="28" height="28" alt=""><h1><span class="g2-ro-sweep">Instituții publice</span></h1></a>
-    <nav class="g2-nav" aria-label="Principal">
-      <a href="#v=stat" data-view="stat">Structura statului</a>
-      <a href="#v=fam" data-view="fam">Domenii</a>
-      <a href="#v=list" id="list-link">Listă</a>
-    </nav>
+    <a class="g2-wordmark" id="home-link" href="#" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/g2-0-64.png" width="28" height="28" alt=""><h1><span class="g2-ro-sweep">Instituții publice</span></h1></a>
     <span class="grow"></span>
     <span id="stats" role="status">Se încarcă datele…</span>
     <a id="about-btn" class="txtbtn" href="despre.html">Despre<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></a>
@@ -412,8 +445,9 @@
   <div id="results" tabindex="-1"></div>
 </main>
 <footer class="g2-footer">
-  <div class="g2-footer-in g2-container">
-    <p>Date din surse publice: ANAF, ROePAS, Registrul Național, ANI. <a href="despre.html">Despre</a></p>
+  <div class="g2-footer-in g2-container org-foot">
+    <p>Surse: ANAF, ROePAS, Registrul Național, ANI.</p>
+    <ul aria-label="Pagini"><li><a href="#v=stat" data-view="stat">Structura statului</a></li><li><a href="#v=fam" data-view="fam">Domenii</a></li><li><a href="#v=list" data-view="list">Lista completă</a></li><li><a href="organizare.html">Cum e organizat statul</a></li><li><a href="despre.html">Despre</a></li></ul>
     <p class="org-credit">un proiect <a href="https://gov2.ro">gov2.ro</a> <a class="org-gh" href="https://github.com/gov2-ro/institutii-publice" aria-label="Cod sursă pe GitHub"><svg class="org-icon-fill" width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a></p>
   </div>
 </footer>
@@ -1417,10 +1451,7 @@
         h('form', { class: 'org-searchform', role: 'search', onsubmit: e => { e.preventDefault(); go(qIn.value); } }, qIn,
           h('button', { class: 'g2-btn', type: 'submit' }, 'Caută')),
         h('p', { class: 'sub', id: 'home-q-hint' }, 'De exemplu: ', HOME_EXAMPLES.flatMap((q, i) => [i ? ', ' : '',
-          browseLink(q, browseHref({ v: 'list', q }), () => go(q), 'link acc')]), '.'),
-        h('p', { class: 'sub' }, `${fmt(rows.length)} de instituții · surse: ANAF, ROePAS, Registrul Național, ANI`
-          + (DS && DS.generated_at ? ` · date din ${new Date(DS.generated_at).toLocaleDateString('ro-RO', { dateStyle: 'long' })}` : '') + ' · ',
-          h('a', { class: 'link acc', href: 'despre.html' }, 'Despre')));
+          browseLink(q, browseHref({ v: 'list', q }), () => go(q), 'link acc')]), '.'));
 
       /* 2. place */
       const cSel = h('select', { class: 'g2-input', id: 'home-county', 'aria-label': 'Județ' }, h('option', { value: '' }, 'Alege județul'),
@@ -1640,7 +1671,8 @@
       /* top row and jump links */
       const jump = id => () => { const t = $(id); t.scrollIntoView({ block: 'start' }); t.focus({ preventScroll: true }); };
       const jumpRow = h('p', { class: 'org-jump' }, 'Sari la: ', h('button', { class: 'link acc', type: 'button', onclick: jump('h-dom') }, 'Domenii'), ' · ',
-        h('button', { class: 'link acc', type: 'button', onclick: jump('h-state') }, 'Structura statului'));
+        h('button', { class: 'link acc', type: 'button', onclick: jump('h-state') }, 'Structura statului'), ' · ',
+        browseLink('Lista completă', browseHref({ v: 'list' }), () => { S.node = ''; setView('list'); window.scrollTo(0, 0); }, 'link acc'));
       return h('div', null, h('div', { class: 'org-top' }, searchSec, placeSec), jumpRow, tasksSec, domSec, stateSec, sec3);
     }
 
@@ -1870,16 +1902,13 @@
       const nAct = !!S.cat + !!S.fam + !!S.county + !!S.uat + (S.srcs.size ? 1 : 0) + S.web + S.review;
       $('fcount').textContent = nAct || '';
       $('ftoggle').setAttribute('aria-label', nAct ? `Filtre, ${nAct} active` : 'Filtre');
-      $('stats').textContent = fmt(items.length);
+      $('stats').textContent = `${fmt(items.length)} din ${fmt(rows.length)}`;
       $('stats').title = `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
       $('csv-msg').textContent = '';
       $('toolbar').hidden = S.view === 'acasa';
       $('filters').hidden = S.view === 'acasa';
       $('home-link').toggleAttribute('aria-current', S.view === 'acasa');
       if (S.view === 'acasa') $('home-link').setAttribute('aria-current', 'page');
-      $('list-link').toggleAttribute('aria-current', S.view === 'list');
-      if (S.view === 'list') $('list-link').setAttribute('aria-current', 'page');
-      $('list-link').href = browseHref({ v: 'list' });
       refreshViewLinks();
       $('menu-status').textContent = S.web || S.review || S.srcs.has('nocif') ? ' •' : '';
       results.replaceChildren({ acasa: renderHome, list: renderList, stat: renderStat, fam: renderFamTree, loc: renderLocTree }[S.view](items));
@@ -1946,7 +1975,7 @@
     };
 
     /* ---------- wiring (runs once, only after the data has loaded and rendered) ---------- */
-    const viewLinks = [...document.querySelectorAll('.g2-nav [data-view]')];
+    const viewLinks = [...document.querySelectorAll('.g2-footer [data-view]')];
     const refreshViewLinks = () => viewLinks.forEach(x => {
       x.href = browseHref({ v: x.dataset.view });
       if (x.dataset.view === S.view) x.setAttribute('aria-current', 'page');
@@ -1969,10 +1998,6 @@
     });
     // the skip link moves focus without a hash change, because the hash holds the view state
     on(document.querySelector('.g2-skip-link'), 'click', e => { e.preventDefault(); $('main').focus(); });
-    on($('list-link'), 'click', e => {
-      if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      e.preventDefault(); $('navmore').open = false; S.node = ''; setView('list');
-    });
     on(document, 'click', e => { if (!$('navmore').contains(e.target)) $('navmore').open = false; });
     on($('navmore'), 'keydown', e => {
       if (e.key === 'Escape') { $('navmore').open = false; $('navmore').querySelector('summary').focus(); }
@@ -2005,7 +2030,7 @@
     });
     viewLinks.forEach(b => on(b, 'click', e => {
       if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      e.preventDefault(); $('navmore').open = false; setView(b.dataset.view);
+      e.preventDefault(); $('navmore').open = false; setView(b.dataset.view); window.scrollTo(0, 0);
     }));
     on(window, 'popstate', onNav);
     on(window, 'hashchange', onNav);
