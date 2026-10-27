@@ -1,5 +1,17 @@
 # Activity log
 
+## 2026-10-27 — `aliases_unique` and county council alias rows
+
+**Done**
+- CSV column `aliases_unique` (last): aliases that no other record uses (name or alias, folded), that differ from the
+  record's own name, and that are not a bare kind of body. 5,239 records have it (6,088 have `aliases`).
+- 41 rows "Consiliul Județean X" in `curation/aliases.csv`, kind `full_name`, status `proposed` (one per
+  "JUDETUL X" ANAF record); the operator reviews them. 166 data rows in all.
+
+**Hard**
+- A4469183 (generic IPJ record) holds 16 aliases of other counties' IPJs: a linker defect, not a sharing problem.
+  `aliases_unique` does not remove it. In the backlog.
+
 ## 2026-10-27 — Fix: ids absorbed twice came back (v0.31.0 defect, found by stiri)
 
 **Done**

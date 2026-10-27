@@ -368,6 +368,23 @@ def check_absorbed_ids(records, released=None):
                          f"ids of {released[-1][0]} with no record and no trail {lost[:20]}")
 
 
+def unique_aliases(records):
+    """Set `aliases_unique` on each record: the aliases whose folded text is not the name or alias of any other
+    record, not the record's own name, and not a bare kind of body ("Inspectoratul de Jandarmi"). -> number of
+    records with at least one."""
+    owners = Counter()
+    for r in records:
+        for f in {fold(r["name"]), *map(fold, r.get("aliases", []))}:
+            owners[f] += 1
+    n = 0
+    for r in records:
+        keep = [a for a in r.get("aliases", [])
+                if fold(a) and fold(a) != fold(r["name"]) and owners[fold(a)] == 1 and not generic_name(fold(a))]
+        r["aliases_unique"] = keep
+        n += bool(keep)
+    return n
+
+
 def check_aliases(records, path=None):
     """curation/aliases.csv (institution_id, alias, kind, basis, status) is a master for other projects.
     Every institution_id must be a record id of this build, or the build stops: an id that a merge absorbed
@@ -1420,6 +1437,7 @@ def main():
     for rec in records:
         rec.pop("_cands", None)
     assign_families(records)
+    merge_stats["alias_unique"] = unique_aliases(records)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / "institutii.json").write_text(json.dumps(records, ensure_ascii=False), encoding="utf-8")
     write_csv(OUT_DIR / "institutii.csv", records)
@@ -1431,7 +1449,7 @@ CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif
             "parent_names", "website", "website_url", "email", "phone", "fax", "lat", "lon", "sources",
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
-            "declaratii_count", "declaratii_group", "uat_source", "merged_ids", "website_source", "same_body_as", "aliases"]
+            "declaratii_count", "declaratii_group", "uat_source", "merged_ids", "website_source", "same_body_as", "aliases", "aliases_unique"]
 
 
 def write_csv(path, records):
@@ -1528,7 +1546,7 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
           f"{mg['dup_source']} groups with a repeated name inside one source, {mg['sectors']} with different sectors",
           file=sys.stderr)
     print(f"  of which nationwide (county ignored): {mg['national']} groups; curated: {dict(mg['curated'])}; "
-          f"sector suffix removed from {mg['sector_names']} names; same_body_as links: {mg['same_body']}", file=sys.stderr)
+          f"sector suffix removed from {mg['sector_names']} names; same_body_as links: {mg['same_body']}; records with aliases_unique: {mg['alias_unique']}", file=sys.stderr)
     print(f"  loose-name merges: {mg['loose']['groups']} groups, {mg['loose']['ids']} ids absorbed; skipped: "
           f"{mg['loose']['anaf']} with two ANAF CIFs, {mg['loose']['local']} local or generic names", file=sys.stderr)
     for k, v in sorted(mg["groups"].items(), key=lambda kv: -kv[1]):

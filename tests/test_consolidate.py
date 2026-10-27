@@ -328,6 +328,16 @@ class AbsorbedIds(unittest.TestCase):
         self.assertEqual((len(recs), keep["merged_ids"]), (1, ["G5", "R1"]))
 
 
+class UniqueAliases(unittest.TestCase):
+
+    def test_shared_generic_and_own_name_are_dropped(self):
+        a = {"id": "A1", "name": "JUDETUL ALBA", "aliases": ["Consiliul Judetean", "Consiliul Judetean Alba", "Judetul Alba"]}
+        b = {"id": "A2", "name": "JUDETUL ARAD", "aliases": ["Consiliul Judetean", "Consiliul Judetean Arad"]}
+        n = c.unique_aliases([a, b])
+        self.assertEqual((a["aliases_unique"], b["aliases_unique"], n),
+                         (["Consiliul Judetean Alba"], ["Consiliul Judetean Arad"], 2))
+
+
 class PrefixTier(unittest.TestCase):
     ANAF = "AGENTIA NATIONALA A MEDICAMENTULUI SI A DISPOZITIVELOR MEDICALE DIN ROMANIA"
 
