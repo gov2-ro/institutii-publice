@@ -1,5 +1,53 @@
 # Activity log
 
+## 2026-10-27 — gov2 design system v0.13.0 adopted in the explorer
+
+**Done**
+- `explorer/assets/gov2/`: `gov2.css`, `fonts.css` and `fonts/` from DS tag v0.13.0, unedited
+  (`git archive v0.13.0 gov2.css fonts.css fonts`). The old fonts (`explorer/assets/fonts/`, IBM Plex Sans,
+  Instrument Sans, JetBrains Mono) are removed.
+- `explorer/index.html`: all project CSS in `@layer app`. Local tokens now read `--g2-*`; radius 0; no shadows.
+  `<html data-g2-scheme="auto">` uses the DS dark scheme; the local Monokai palette is gone. The county map keeps
+  a local 5-class ramp (`--org-map-0`…`5`), with dark values on the same selectors as the DS scheme.
+- Header: `.g2-header`, `.g2-ro-corner`, `.g2-wordmark` with `.g2-ro-sweep` (the title keeps an `h1`).
+  The three views are a visible `.g2-nav`; "Mai multe" became "Opțiuni" and holds only the three checkboxes.
+- Filters moved to a sticky bar below the header (`.org-filterbar`); the header scrolls away. On phones the
+  bar is one row (search, Filtre); "Resetează" shows with the open disclosure.
+- DS components: `.g2-btn`/`.g2-secondary` for every button, `.g2-input` for search and the link box,
+  `.g2-tag` (warning tone) for the row flags, `.g2-tag` for the category in the dialog, `.g2-footer`.
+  Selects copy `.g2-input` locally (no DS select yet).
+- Footer: sources, "Despre date", "Accesibilitate", source code, gov2.ro. The "Despre date" dialog has an
+  "Accesibilitate" section with the two WCAG deviations of the title sweep (DS ADR 0010 wording, in Romanian).
+- CLAUDE.md and AGENTS.md carry the DS project block (version 0.13.0, path, prefix `org-`).
+
+**Measured** (headless Chromium 1248; Cluj list filter; light and dark; 1,280 and 375 px)
+- Five views × 2 schemes × 2 widths: no page errors, no horizontal overflow, `reachableRoots()` = `expectedRoots()`,
+  font Inter, no request to another host.
+- Text contrast in the first screen (every visible text node against its computed background, sweep excluded):
+  0 below 4.5:1 (3:1 for large text) after the fixes. Before the fixes: the header summary had white on white
+  (1.00) in light.
+- List row height: 73 px at 1,280 px (was 53), 125 px at 375 px (was 75). Sticky area: 61 px at both widths
+  (was 89 px at 1,280 and 111 px at 375), because only the filter bar is sticky now.
+- Keyboard focus, 14 tab stops from the top, both schemes: every stop shows the DS treatment (yellow fill with
+  ink text on links and buttons, yellow outline on fields and selects).
+- `python3 -m unittest discover -s tests`: 37 tests OK.
+
+**Hard**
+- App-layer rules beat `gov2.states`, so local colour rules hid the DS focus. The app layer now writes the DS
+  focus treatment again, last. A reset `button, select, input { font: inherit; color: inherit }` in `app` also
+  overrode `.g2-btn` focus: light text on yellow in dark. It now uses `:where()` and skips `.g2-btn`/`.g2-input`.
+- Assumed, not checked: forced colours, 200% zoom, a screen reader. The contrast check covers only the first
+  900 px of each view.
+
+**Decided**
+- Only the filter bar is sticky. The black header with the wrapping nav is 190 px tall on phones; keeping it
+  sticky would cost more than the old 111 px. Cost: the view links scroll away; the footer and the wordmark
+  still reach every view.
+- The existing local class names stay; new ones use `org-`. Renaming all of them touches the view code with
+  no visual gain. Backlog item added.
+- No new ds-proposal issues yet: breadcrumbs, table and summary list are already DS #3, #5, #6 (brief 07).
+  The other candidates wait for a second project, as the DS promotion rule says.
+
 ## 2026-10-27 — Cross-source duplicates and alias master (request of the stiri session)
 
 **Done**

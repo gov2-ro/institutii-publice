@@ -1,6 +1,6 @@
 # Implementation brief: adopt the gov2 design system (DS)
 
-Status: brief ready, 2026-10-26. Blocked until the owner announces a DS release.
+Status: built 2026-10-27 with DS v0.13.0 (Opus did the build, at the owner's request). Not yet published.
 Inputs: the compatibility report in the DS repo (`docs/compat-analysis.md`, section org.gov2.ro), and the DS
 answer of 2026-10-26 (activity log).
 

@@ -70,8 +70,8 @@ Git: `.gitignore` excludes `data/*` except `data/consolidated/institutii.csv`, s
 
 ## Explorer (explorer/index.html)
 Single self-contained vanilla-JS page (no build, no deps) that fetches `metadata.json` + `rows.json`; it must be
-served over HTTP, not opened as file://. Its look follows civtech.gov2.ro (same colour tokens; fonts
-self-hosted in `explorer/assets/fonts/`). Rows use the compact schema from `write_explorer_data`: short keys
+served over HTTP, not opened as file://. Its look is the gov2 design system (see the next section): `assets/gov2/`
+holds `gov2.css` and the local Inter and Fragment Mono; `<html data-g2-scheme="auto">` turns on the DS dark scheme. Rows use the compact schema from `write_explorer_data`: short keys
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
 declaratii=8, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
 candidates, `us` 1 = sector inferred from the name (`uat_source`), `mi` ids absorbed by a same-name merge, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
@@ -87,6 +87,24 @@ the county profile from `uat/<COD>.json` (one file per county with labels and SI
 coats of arms are `explorer/assets/steme-judete/<COD>_<Name>.png`. County seats are the `SEATS` constant.
 Spec: `docs/specs/structura-statului.md`. In the page console, `explorer.reachableRoots()` must equal
 `explorer.expectedRoots()`.
+
+## Design system (gov2 DS)
+
+This project uses the gov2 design system (DS), version 0.13.0.
+DS repo: gov2-ro/gov2ro-design-system (local copy: ~/devbox/gov2/gov2ro-design-system).
+
+- Read `COMPONENTS.md` in the DS before you build UI. Use a DS component when one fits.
+- Do not edit the copy of the DS in this project: `explorer/assets/gov2/` (`gov2.css`, `fonts.css`, `fonts/`).
+- To update the DS, copy `gov2.css` from a DS tag. Then set the version above.
+- Before you update, read `CHANGELOG.md` in the DS back to the version above. The DS is 0.x, so a minor version can break. Look for **Breaking**.
+- Put the project styles in `explorer/index.html` (the inline `<style>`, in `@layer app`), with the class prefix `org-`. Use the DS tokens (`--g2-*`). Keep consumer adapters here, not in the DS. Prefer DS defaults; document useful local variations and preserve accessible behaviour.
+- Declare `@layer reset, gov2, utilities, app;` before every other stylesheet that creates layers. Put the reset in `reset`, utility classes in `utilities` and the project styles in `app`. A rule outside a layer outranks the DS. Do not add an activation attribute. See `docs/migration-from-0.6.0.md` in the DS.
+- When the project needs a component, a variant or a token that other projects can use, open an issue in the DS:
+  `gh issue create -R gov2-ro/gov2ro-design-system --label ds-proposal --title "[proposal] …" --body-file <file>`.
+  Use the sections of `.github/ISSUE_TEMPLATE/ds-proposal.md`.
+- Open an issue for a DS defect too, with the type "fix".
+- Do not wait for the DS. Build a local version with the project prefix, and put the issue URL in a comment next to it.
+- When the DS has the component, replace the local version.
 
 ## Scope
 ANI-only names (mostly state companies missing from ANAF) belong in the list as candidates to resolve, not

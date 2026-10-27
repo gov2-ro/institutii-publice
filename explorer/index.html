@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ro">
+<html lang="ro" data-g2-scheme="auto">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,331 +10,313 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-title" content="org.gov2.ro" />
 <link rel="manifest" href="assets/favicon/site.webmanifest" />
-<link rel="preload" href="assets/fonts/ibm-plex-sans-latin-f66677.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/gov2/gov2.css">
+<link rel="stylesheet" href="assets/gov2/fonts.css">
 
 <style>
-  /* Look and type follow civtech.gov2.ro (gov2-ro/awesome-civtech-ro, site/style.css): same tokens, fonts and dark palette. */
+@layer app {
+  /* Project styles on the gov2 design system (DS), v0.13.0: assets/gov2/ is an unedited copy (see CLAUDE.md).
+     Local components keep their own short names; new ones take the prefix org-. Colours come from the --g2-* tokens,
+     so the DS dark scheme (data-g2-scheme="auto" on <html>) also covers this page. */
   :root {
-    --bg: #fff; --surface: #f6f6f4; --surface-2: #ececea; --text: #111113; --ink-2: #3a3a40; --muted: #66666f;
-    --line: #e4e4e7; --line-strong: #cfcdca;
-    --accent: #1d4ed8; --accent-soft: #eef2fd; --chip: #f6f6f4; --warn: #9b5a00; --warn-soft: #fbf1df;
-    --anaf: #1d4ed8; --roepas: #137a4b; --reg: #9b5a00; --decl: #7e22ce;
-    --tri-b: #0b3aa8; --tri-y: #e0a800; --tri-r: #ce1126;
-    --shadow: 0 8px 28px rgb(0 0 0 / .12); --shadow-lg: 0 24px 64px rgb(0 0 0 / .18);
-    --font-head: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
-    --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    --radius: 5px;
-    /* map: one blue ramp, 5 quantile classes light -> dark (more records = darker); m0 = no records */
-    --m0: #ececea; --m1: #cde2fb; --m2: #86b6ef; --m3: #3987e5; --m4: #1c5cab; --m5: #0d366b; --edge: #fff;
-    color-scheme: light;
+    --muted: rgb(var(--g2-color-text-muted)); --line: rgb(var(--g2-color-line)); --text: rgb(var(--g2-color-text));
+    --sunken: rgb(var(--g2-color-surface-sunken)); --page: rgb(var(--g2-color-page)); --link: rgb(var(--g2-color-link));
+    /* county map: a sequential blue ramp, 5 quantile classes light -> dark (more records = darker); m0 = no records.
+       The DS chart ramp has 4 categorical steps, so the map keeps its own. */
+    --org-map-0: #e5e6e7; --org-map-1: #d2e2f1; --org-map-2: #8fb8e0; --org-map-3: #1d70b8; --org-map-4: #0b3d91; --org-map-5: #06224f;
   }
+  /* dark: fewer records recede toward the page; more records = lighter. Same selectors as the DS dark scheme. */
+  :root[data-g2-scheme=dark] { --org-map-0: #2b3033; --org-map-1: #17314f; --org-map-2: #1d5a96; --org-map-3: #4f94d8; --org-map-4: #9cc3f6; --org-map-5: #d0e5fb; }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #272822; --surface: #1d1e19; --surface-2: #3b3c35; --text: #fdfff1; --ink-2: #c0c1b5; --muted: #919288;
-      --line: #3b3c35; --line-strong: #57584f;
-      --accent: #66d9ef; --accent-soft: #33362f; --chip: #33342d; --warn: #fd971f; --warn-soft: #3a3020;
-      --anaf: #66d9ef; --roepas: #a6e22e; --reg: #fd971f; --decl: #ae81ff;
-      --tri-b: #66d9ef; --tri-y: #e6db74; --tri-r: #f92672;
-      --shadow: 0 8px 28px rgb(0 0 0 / .5); --shadow-lg: 0 24px 64px rgb(0 0 0 / .6);
-      /* dark: fewer records recede toward the background; more records = lighter */
-      --m0: #3b3c35; --m1: #184f95; --m2: #256abf; --m3: #3987e5; --m4: #6da7ec; --m5: #b7d3f6; --edge: #272822;
-      color-scheme: dark;
-    }
+    :root[data-g2-scheme=auto] { --org-map-0: #2b3033; --org-map-1: #17314f; --org-map-2: #1d5a96; --org-map-3: #4f94d8; --org-map-4: #9cc3f6; --org-map-5: #d0e5fb; }
   }
   * { box-sizing: border-box; }
   html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-         font: 400 15px/1.45 var(--font-body); -webkit-font-smoothing: antialiased; }
-  h1, h2, h3 { font-family: var(--font-head); letter-spacing: -.015em; line-height: 1.15; }
-  button, select, input { font: inherit; color: inherit; }
-  a { color: var(--accent); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+  h1, h2, h3 { line-height: var(--g2-line-height-heading); }
+  code { font-family: var(--g2-font-mono); font-size: .9em; }
+  :where(button, select, input):not(.g2-btn, .g2-input) { font: inherit; color: inherit; }
 
-  .top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 94%, transparent);
-         backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding: 8px 16px; }
-  .wrap { max-width: 1180px; margin: 0 auto; }
-  .title { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: "brand stats about menu";
-    align-items: center; gap: 4px 14px; margin-bottom: 8px; }
-  .brand { grid-area: brand; display: inline-flex; align-items: center; gap: 10px; min-width: 0; color: var(--text); text-decoration: none; }
-  .brand img { width: 30px; height: 30px; object-fit: contain; }
-  /* the civtech title: a tricolour band sweeps across the ink-coloured text */
-  h1 { margin: 0; font: 600 18px/1.3 var(--font-head); letter-spacing: -.01em; white-space: nowrap;
-       background: linear-gradient(100deg, var(--text) 0 34%, var(--tri-b) 42%, var(--tri-y) 50%, var(--tri-r) 58%, var(--text) 66% 100%);
-       background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sweep 9s linear infinite; }
-  @keyframes sweep { from { background-position: 100% 0; } to { background-position: 0 0; } }
-  @media (prefers-reduced-motion: reduce) { h1 { animation: none; background-position: 100% 0; } }
-  #stats { grid-area: stats; font: 500 13px/1 var(--font-mono); color: var(--muted); }
-  #about-btn { grid-area: about; }
-  .txtbtn { margin-left: auto; border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 14px;
-            padding: 2px 0; text-decoration: none; }
-  .txtbtn:hover { color: var(--text); }
+  /* header: the DS black bar. The filters sit below it, on the page surface, and only they stay on screen. */
+  .g2-header .title { gap: var(--g2-space-2) var(--g2-space-4); }
+  .g2-header h1 { margin: 0; font: inherit; }
+  #stats { font: var(--g2-font-size-label)/1.3 var(--g2-font-mono); color: rgb(var(--g2-color-on-header-muted)); }
+  .g2-header .grow { flex: 1; }
+  .txtbtn { min-height: 44px; padding: 0 var(--g2-space-2); border: 0; background: none; cursor: pointer;
+            color: rgb(var(--g2-color-on-header)); font-size: var(--g2-font-size-meta); font-weight: 600; }
+  .txtbtn:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+  .g2-header .navmore > summary { min-height: 44px; border-color: rgb(var(--g2-color-on-header-muted)); background: none; color: rgb(var(--g2-color-on-header));
+                       font-size: var(--g2-font-size-meta); font-weight: 600; }
+  .navmore .panel { width: 290px; color: var(--text); }
+  .navmore .chk { white-space: normal; }
+  .menu-status { color: rgb(var(--g2-color-header-accent)); font-weight: 600; }
+
+  .org-filterbar { position: sticky; top: 0; z-index: 5; background: var(--page); border-bottom: 1px solid var(--line);
+                   padding-block: var(--g2-space-2); }
+  .org-filterbar:has(> .g2-container > .filters[hidden]) { display: none; }
 
   /* controls: one wrapping row on desktop (.fmore dissolves into it), disclosure on phones */
-  .filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .filters { display: flex; flex-wrap: wrap; gap: var(--g2-space-2); align-items: center; }
   .filters[hidden] { display: none; }
   .filters[inert] { opacity: .55; }
   .filters > * { min-width: 0; }
-  #q { flex: 2 1 220px; order: 0; }
+  #q { flex: 2 1 260px; order: 0; }
   .fmore { display: contents; }
   .fmore > * { order: 1; }
-  .fmore > select { flex: 1 1 130px; }
-  .fmore > .multi { flex: 1 1 130px; }
+  .fmore > select { flex: 1 1 150px; }
+  .fmore > .multi { flex: 1 1 150px; }
   #ftoggle { display: none; }
   #reset { order: 2; }
-  .filters input[type=search], .filters select {
-    width: 100%; height: 34px; padding: 0 8px; border: 1px solid var(--line-strong); border-radius: var(--radius);
-    background: var(--bg); font-size: 14px; transition: border-color .15s, box-shadow .15s; }
-  .filters input[type=search] { padding: 0 10px; font-size: 15px; }
-  .filters input[type=search]::placeholder { color: var(--muted); }
-  .filters input[type=search]:focus { outline: 0; border-color: var(--text); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
-  .filters select:hover { border-color: var(--text); }
-  .filters select:disabled { opacity: .5; }
+  /* select has no DS class yet (COMPONENTS.md, "Not in the DS yet"): it copies .g2-input */
+  .filters select, .org-select { width: 100%; min-height: 40px; padding: 5px 8px; border: var(--g2-border-width-control) solid rgb(var(--g2-color-control-border));
+    border-radius: var(--g2-radius); background: rgb(var(--g2-color-control-bg)); color: var(--text); font-size: var(--g2-font-size-body); }
+  .filters .g2-input { width: 100%; }
+  .filters input[type=search]::placeholder { color: var(--muted); opacity: 1; }
+  .filters select:disabled { border-color: var(--muted); color: var(--muted); background: var(--sunken); }
   .multi { position: relative; }
-  .multi > summary { height: 34px; padding: 0 26px 0 8px; border: 1px solid var(--line-strong); border-radius: var(--radius);
-    background: var(--bg); display: flex; align-items: center; cursor: pointer; list-style: none; position: relative; font-size: 14px; }
-  .multi > summary:hover { border-color: var(--text); }
+  .multi > summary { min-height: 40px; padding: 0 30px 0 8px; border: var(--g2-border-width-control) solid rgb(var(--g2-color-control-border));
+    background: rgb(var(--g2-color-control-bg)); display: flex; align-items: center; cursor: pointer; list-style: none; position: relative; }
   .multi > summary::-webkit-details-marker { display: none; }
-  .multi > summary::after { content: "▾"; position: absolute; right: 9px; color: var(--muted); }
+  .multi > summary::after { content: "▾"; position: absolute; right: 10px; }
   .multi > summary span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .multi.active > summary { border-color: var(--text); }
-  .multi .panel { position: absolute; right: 0; top: calc(100% + 4px); z-index: 10; width: 270px; max-width: calc(100vw - 16px); padding: 8px 12px;
-    background: var(--bg); border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: var(--shadow); }
-  .multi .opt { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; font-size: 14px; }
+  .multi .panel { position: absolute; right: 0; top: calc(100% + 4px); z-index: 10; width: 300px; max-width: calc(100vw - 16px); padding: var(--g2-space-2) var(--g2-space-3);
+    background: var(--page); border: var(--g2-border-width-control) solid rgb(var(--g2-color-control-border)); }
+  .multi .opt { display: flex; align-items: center; gap: var(--g2-space-2); min-height: 32px; cursor: pointer; font-size: var(--g2-font-size-meta); }
   .multi .opt .count { margin-left: auto; }
-  input[type=checkbox] { accent-color: var(--text); }
-  .seg { display: flex; margin-top: 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; }
-  .seg button { flex: 1; padding: 5px 8px; border: 0; background: none; cursor: pointer; font-size: 13px; color: var(--muted); }
-  .seg button[aria-pressed=true] { background: var(--text); color: var(--bg); font-weight: 500; }
-  .multi .hint { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
-  .chk { display: flex; gap: 6px; align-items: center; white-space: nowrap; font-size: 14px; flex: none; min-height: 32px; }
-  #reset, #ftoggle, .btn { height: 34px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius);
-           background: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: border-color .15s; }
-  #reset:hover, #ftoggle:hover, .btn:hover { border-color: var(--text); }
-  .btn.sm { height: 28px; padding: 0 10px; font-size: 13px; }
-  .fbadge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 9px;
-            background: var(--accent); color: var(--bg); font: 500 11px/1 var(--font-mono); }
+  input[type=checkbox] { width: 20px; height: 20px; margin: 0; accent-color: var(--text); }
+  .seg { display: flex; margin-top: var(--g2-space-2); border: var(--g2-border-width-control) solid rgb(var(--g2-color-control-border)); }
+  .seg button { flex: 1; min-height: 40px; padding: 4px 8px; border: 0; background: none; cursor: pointer; font-size: var(--g2-font-size-meta); }
+  .seg button[aria-pressed=true] { background: var(--text); color: var(--page); font-weight: 600; }
+  .multi .hint { margin: var(--g2-space-2) 0 0; font-size: var(--g2-font-size-label); color: var(--muted); }
+  .chk { display: flex; gap: var(--g2-space-2); align-items: center; font-size: var(--g2-font-size-meta); flex: none; min-height: 40px; }
+  .fbadge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
+            background: var(--text); color: var(--page); font: var(--g2-font-size-label)/1 var(--g2-font-mono); }
   .fbadge:empty { display: none; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .navmore { grid-area: menu; font-size: 14px; }
-  .navmore > summary { height: 30px; border-color: var(--line); }
-  .navmore .panel { width: 270px; }
-  .navmore .chk { white-space: normal; }
-  .menu-link { display: block; width: 100%; padding: 5px 0; color: var(--text); text-decoration: none; }
-  .menu-link:hover { text-decoration: underline; }
-  .menu-link[aria-current=page] { font-weight: 600; }
-  .menu-status { color: var(--accent); font-weight: 600; }
+  .menu-link { display: block; width: 100%; min-height: 40px; padding: var(--g2-space-2) 0; }
 
-  main { max-width: 1180px; margin: 0 auto; padding: 10px 16px 32px; }
-  .empty, .notice { padding: 32px 12px; text-align: center; color: var(--muted); }
-  .notice .btn { margin-top: 10px; color: var(--text); }
-  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+  main { padding-block: var(--g2-space-4) var(--g2-space-6); }
+  .empty, .notice { padding: var(--g2-space-6) var(--g2-space-3); text-align: center; color: var(--muted); }
+  .notice .g2-btn { margin-top: var(--g2-space-3); }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--g2-space-2) var(--g2-space-3); margin: 0 0 var(--g2-space-3);
+             font-size: var(--g2-font-size-meta); color: var(--muted); }
   .toolbar[hidden] { display: none; }
-  .sortby { display: flex; gap: 6px; align-items: center; }
+  .sortby { display: flex; gap: var(--g2-space-2); align-items: center; }
   .sortby[hidden] { display: none; }
-  .sortby select { height: 28px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--bg);
-                   color: var(--text); padding: 0 6px; font-size: 13px; }
+  .sortby select { width: auto; }
   .toolbar .grow { margin-left: auto; }
 
   /* landing page */
-  .home-sec { margin: 0 0 24px; }
-  .home-sec > h2 { font-size: 17px; margin: 0 0 8px; }
-  .ov-body { font-size: 14px; }
-  .ov-g { display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: baseline; margin: 6px 0; }
+  .home-sec { margin: 0 0 var(--g2-space-6); }
+  .home-sec > h2 { font-size: var(--g2-font-size-heading-section); margin: 0 0 var(--g2-space-3); }
+  .ov-g { display: flex; flex-wrap: wrap; gap: var(--g2-space-1) var(--g2-space-4); align-items: baseline; margin: var(--g2-space-2) 0; }
   .ov-g > span { min-width: 0; max-width: 100%; }
   .ov-g a { overflow-wrap: anywhere; }
-  .ov-g .count { margin-left: 3px; }
-  .cat-tabs { display: flex; flex-wrap: wrap; gap: 2px 16px; border-bottom: 1px solid var(--line); }
-  .cat-tab { display: inline-flex; gap: 5px; align-items: baseline; padding: 4px 0 7px; margin-bottom: -1px; border: 0;
-             border-bottom: 2px solid transparent; background: none; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; }
-  .cat-tab:hover { color: var(--text); }
-  .cat-tab[aria-expanded=true] { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
-  .cat-panel { padding-top: 10px; }
+  .ov-g .count { margin-left: 4px; }
+  .cat-tabs { display: flex; flex-wrap: wrap; gap: 0 var(--g2-space-4); border-bottom: 1px solid var(--line); }
+  .cat-tab { display: inline-flex; gap: 6px; align-items: baseline; min-height: 44px; padding: 10px 0 8px; margin-bottom: -1px; border: 0;
+             border-bottom: 4px solid transparent; background: none; color: var(--link); font: inherit; font-size: var(--g2-font-size-meta); cursor: pointer;
+             text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .15em; }
+  .cat-tab:hover { text-decoration-thickness: 3px; }
+  .cat-tab[aria-expanded=true] { color: var(--text); border-bottom-color: var(--text); font-weight: 600; text-decoration: none; }
+  .cat-panel { padding-top: var(--g2-space-3); }
   .cat-panel[hidden] { display: none; }
   .cat-panel .famgrid { margin: 0; }
-  .famgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1px 16px; margin: 2px 0 8px 18px; font-size: 14px; }
-  .famgrid .it { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+  .famgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--g2-space-1) var(--g2-space-4); margin: var(--g2-space-1) 0 var(--g2-space-2) 18px; font-size: var(--g2-font-size-meta); }
+  .famgrid .it { display: flex; gap: var(--g2-space-2); align-items: baseline; min-width: 0; }
   .famgrid .link { min-width: 0; overflow-wrap: anywhere; }
   .directory { margin: 0; padding: 0; list-style: none; }
   .directory li { border-bottom: 1px solid var(--line); }
-  .directory a { display: flex; gap: 12px; align-items: baseline; padding: 6px 4px; color: var(--text); text-decoration: none; }
-  .directory a:hover { background: var(--surface); }
+  .directory a { display: flex; gap: var(--g2-space-3); align-items: baseline; min-height: 44px; padding: 10px 4px; color: var(--text); text-decoration: none; }
+  .directory a:hover { text-decoration: underline; text-decoration-thickness: 3px; }
   .directory .label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .directory .arrow { color: var(--muted); }
 
   /* maps */
-  .maprow { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-start; }
+  .maprow { display: flex; flex-wrap: wrap; gap: var(--g2-space-4) var(--g2-space-5); align-items: flex-start; }
   .mapcol { flex: 1 1 360px; min-width: 0; max-width: 640px; }
   .mapside { flex: 1 1 260px; min-width: 0; }
   svg.map { display: block; width: 100%; height: auto; max-height: 70vh; }
-  svg.map path { stroke: var(--edge); stroke-width: .8; stroke-linejoin: round; fill: var(--m0); vector-effect: non-scaling-stroke; }
-  svg.map path.q1 { fill: var(--m1); } svg.map path.q2 { fill: var(--m2); } svg.map path.q3 { fill: var(--m3); }
-  svg.map path.q4 { fill: var(--m4); } svg.map path.q5 { fill: var(--m5); }
+  svg.map path { stroke: var(--page); stroke-width: .8; stroke-linejoin: round; fill: var(--org-map-0); vector-effect: non-scaling-stroke; }
+  svg.map path.q1 { fill: var(--org-map-1); } svg.map path.q2 { fill: var(--org-map-2); } svg.map path.q3 { fill: var(--org-map-3); }
+  svg.map path.q4 { fill: var(--org-map-4); } svg.map path.q5 { fill: var(--org-map-5); }
   svg.map path[tabindex] { cursor: pointer; }
   svg.map path[tabindex]:hover { stroke: var(--text); stroke-width: 1.6; }
   svg.map path:focus { outline: none; }
-  svg.map path:focus-visible, svg.map path.sel { stroke: var(--text); stroke-width: 2.4; }
-  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 0 2px; font: 400 11.5px/1.4 var(--font-mono); color: var(--muted); align-items: center; }
-  .legend .lg { display: inline-flex; gap: 5px; align-items: center; }
-  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; border: 1px solid var(--line); flex: none; }
-  .sw.q0 { background: var(--m0); } .sw.q1 { background: var(--m1); } .sw.q2 { background: var(--m2); }
-  .sw.q3 { background: var(--m3); } .sw.q4 { background: var(--m4); } .sw.q5 { background: var(--m5); }
-  .cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0 12px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
-  .cgrid li { display: flex; gap: 6px; align-items: center; min-width: 0; }
-  .cgrid .link { min-width: 0; overflow-wrap: anywhere; padding: 2px 0; }
+  svg.map path:focus-visible { stroke: rgb(var(--g2-color-focus)); stroke-width: 4; }
+  svg.map path.sel { stroke: var(--text); stroke-width: 2.4; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--g2-space-1) var(--g2-space-4); margin: var(--g2-space-2) 0 2px; font: var(--g2-font-size-label)/1.4 var(--g2-font-mono); color: var(--muted); align-items: center; }
+  .legend .lg { display: inline-flex; gap: 6px; align-items: center; }
+  .sw { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--line); flex: none; }
+  .sw.q0 { background: var(--org-map-0); } .sw.q1 { background: var(--org-map-1); } .sw.q2 { background: var(--org-map-2); }
+  .sw.q3 { background: var(--org-map-3); } .sw.q4 { background: var(--org-map-4); } .sw.q5 { background: var(--org-map-5); }
+  .cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0 var(--g2-space-3); margin: 0; padding: 0; list-style: none; font-size: var(--g2-font-size-meta); }
+  .cgrid li { display: flex; gap: var(--g2-space-2); align-items: center; min-width: 0; }
+  .cgrid .link { min-width: 0; overflow-wrap: anywhere; padding: 4px 0; }
   .cprof { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 420px); grid-template-rows: auto 1fr;
-           grid-template-areas: "head map" "tree map"; gap: 0 32px; align-items: start; }
+           grid-template-areas: "head map" "tree map"; gap: 0 var(--g2-space-6); align-items: start; }
   .cprof > .prof { grid-area: head; }
   .cprof-tree { grid-area: tree; min-width: 0; }
   .cprof-map { grid-area: map; position: sticky; top: calc(var(--top-h, 0px) + 12px); min-width: 0; }
   .cprof-map svg.map { max-height: calc(100vh - var(--top-h, 0px) - 140px); }
-  .cprof-map .sub { font-size: 12px; }
-  svg.map .labels text { font-family: var(--font-body); fill: var(--text); stroke: var(--bg); stroke-width: 2.5px; stroke-linejoin: round; paint-order: stroke;
+  .cprof-map .sub { font-size: var(--g2-font-size-label); }
+  svg.map .labels text { font-family: var(--g2-font-sans); fill: var(--text); stroke: var(--page); stroke-width: 2.5px; stroke-linejoin: round; paint-order: stroke;
                          text-anchor: middle; dominant-baseline: central; pointer-events: none; }
-  svg.map .labels .k-seat { font-weight: 600; } svg.map .labels .k-m, svg.map .labels .k-s, svg.map .labels .k-o { font-weight: 500; }
+  svg.map .labels .k-seat { font-weight: 700; } svg.map .labels .k-m, svg.map .labels .k-s, svg.map .labels .k-o { font-weight: 600; }
   svg.map .labels .k-c { fill: var(--muted); }
-  .prof { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 0 0 12px; }
+  .prof { display: flex; flex-wrap: wrap; gap: var(--g2-space-2) var(--g2-space-4); align-items: center; margin: 0 0 var(--g2-space-4); }
   .prof img { width: 64px; height: 64px; object-fit: contain; flex: none; }
-  .prof h2 { margin: 0; font-size: 22px; font-weight: 600; }
-  .prof .sub { margin: 2px 0 4px; }
+  .prof h2 { margin: 0; font-size: var(--g2-font-size-heading-section); }
+  .prof .sub { margin: 2px 0 var(--g2-space-2); }
   .prof-head { min-width: 0; }
-  .maperr { color: var(--muted); font-size: 13px; }
+  .maperr { color: var(--muted); font-size: var(--g2-font-size-meta); }
 
-  /* list: civtech list rows — no box, hairlines between rows, mono column heads */
+  /* tables: no DS table yet (https://github.com/gov2-ro/gov2ro-design-system/issues/5). Hairlines between rows, bold column heads. */
   table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font: 500 11px/1.4 var(--font-mono); color: var(--muted); text-transform: uppercase;
-       letter-spacing: .1em; padding: 0 10px 5px; border-bottom: 1px solid var(--line); }
-  td { padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
-  th:first-child, td:first-child { padding-left: 2px; }
+  th { text-align: left; font-size: var(--g2-font-size-label); font-weight: 700; padding: 0 10px 6px; border-bottom: 1px solid var(--text); }
+  td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+  th:first-child, td:first-child { padding-left: 0; }
   tbody tr { cursor: pointer; }
-  tbody tr:hover { background: var(--surface); }
-  tbody tr:hover .nm { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-  .nm { font: 600 15px/1.3 var(--font-head); letter-spacing: -.005em; }
-  .sub { color: var(--muted); font-size: 13px; }
-  td > .sub { line-height: 1.35; margin-top: 1px; }
-  .contact { font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+  tbody tr:hover { background: rgb(var(--g2-color-selected-bg)); }
+  tbody tr:hover .nm { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .15em; }
+  .nm { font-weight: 700; line-height: 1.3; }
+  .sub { color: var(--muted); font-size: var(--g2-font-size-meta); }
+  td > .sub { margin-top: 2px; }
+  .contact { font-size: var(--g2-font-size-meta); line-height: 1.4; }
   .contact .line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   table.main th.c, table.main td.c { width: 34%; }
   table.main td.c { max-width: 0; }
-  .dc { font: 400 12px/1.4 var(--font-mono); color: var(--muted); white-space: nowrap; }
-  .more { display: block; margin: 12px auto; padding: 6px 16px; border: 1px solid var(--line-strong);
-          border-radius: var(--radius); background: none; cursor: pointer; font-size: 14px; }
-  .more:hover { border-color: var(--text); }
+  .dc { font: var(--g2-font-size-label)/1.4 var(--g2-font-mono); white-space: nowrap; }
+  .more { display: flex; margin: var(--g2-space-4) auto; }
 
-  /* chips */
-  .chip { display: inline-block; padding: 1px 6px; border-radius: 3px; background: var(--chip);
-          font-size: 12px; color: var(--ink-2); }
-  .src { display: inline-block; padding: 0 5px; margin-right: 3px; border: 1px solid currentColor;
-         border-radius: 3px; font: 500 10.5px/1.5 var(--font-mono); letter-spacing: .04em; }
-  .src.a { color: var(--anaf); } .src.r { color: var(--roepas); } .src.g { color: var(--reg); } .src.d { color: var(--decl); }
-  .flag { display: inline-block; padding: 0 6px; border-radius: 3px; background: var(--warn-soft);
-          color: var(--warn); font-size: 12px; margin: 2px 4px 2px 0; }
-  td > .flag { margin: 0 0 0 6px; vertical-align: 1px; }
-  p.flag { display: block; font-size: 13px; padding: 6px 10px; }
+  /* source badges: one ink per source, outlined, for the record dialog and the source filter */
+  .src { display: inline-block; padding: 0 5px; margin-right: 4px; border: 1px solid currentColor;
+         font: var(--g2-font-size-label)/1.5 var(--g2-font-mono); }
+  .src.a { color: rgb(var(--g2-color-info-ink)); } .src.r { color: rgb(var(--g2-color-success-ink)); }
+  .src.g { color: rgb(var(--g2-color-warning-ink)); } .src.d { color: rgb(var(--g2-color-progress-ink)); }
+  td > .g2-tag { margin-left: 6px; vertical-align: 2px; }
+  /* a warning paragraph: the DS inset with the warning tone */
+  .flag { display: block; margin: var(--g2-space-2) 0; padding: var(--g2-space-2) var(--g2-space-3); border-left: 5px solid rgb(var(--g2-color-warning-line));
+          background: rgb(var(--g2-color-warning-bg)); color: rgb(var(--g2-color-warning-ink)); font-size: var(--g2-font-size-meta); }
 
   /* trees */
   .tree details { margin-left: 18px; }
   .tree > details { margin-left: 0; }
-  .tree summary { cursor: pointer; padding: 3px 6px; border-radius: var(--radius); list-style: none;
-                  display: flex; gap: 2px 8px; align-items: baseline; flex-wrap: wrap; }
+  .tree summary { cursor: pointer; min-height: 36px; padding: 6px 6px; list-style: none;
+                  display: flex; gap: 2px var(--g2-space-2); align-items: baseline; flex-wrap: wrap; }
   .tree summary::-webkit-details-marker { display: none; }
   .tree summary::before { content: "▸"; color: var(--muted); width: 12px; flex: none; transition: transform .1s; }
   .tree details[open] > summary::before { transform: rotate(90deg); }
-  .tree summary:hover { background: var(--surface); }
-  .tree .grp > summary { font: 600 15px/1.35 var(--font-head); }
+  .tree summary:hover { background: var(--sunken); }
+  .tree .grp > summary { font-weight: 700; }
   .tree summary .label { min-width: 0; overflow-wrap: anywhere; }
-  .count { font: 400 11.5px/1.4 var(--font-mono); color: var(--muted); flex: none; }
-  .count.note { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; font-family: var(--font-body); font-size: 12px; }
-  button.link.count { font-family: var(--font-body); font-size: 12px; color: var(--accent); }
+  .count { font: var(--g2-font-size-label)/1.4 var(--g2-font-mono); color: var(--muted); flex: none; }
+  .count.note { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; font-family: var(--g2-font-sans); }
+  button.link.count { font-family: var(--g2-font-sans); font-weight: 400; color: var(--link); }
   .ctx > summary .label { color: var(--muted); }
-  .reveal { display: block; margin: 4px 0 6px 24px; padding: 3px 0; font-size: 13px; }
-  .link { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: inherit; }
-  .link:hover { text-decoration: underline; text-underline-offset: 2px; }
-  .link.acc { color: var(--accent); }
+  .reveal { display: block; margin: 4px 0 6px 24px; padding: 4px 0; font-size: var(--g2-font-size-meta); }
+  /* a button that looks like a link: the DS in-text link */
+  .link { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: inherit;
+          text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .15em; }
+  .link:hover { text-decoration-thickness: 3px; }
+  .link.acc { color: var(--link); }
   .kids { padding-bottom: 2px; }
-  .crumbs { display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: baseline; margin: 0 0 10px; font-size: 14px; }
+  /* breadcrumbs: local until https://github.com/gov2-ro/gov2ro-design-system/issues/3 */
+  .crumbs { display: flex; flex-wrap: wrap; gap: 2px var(--g2-space-2); align-items: baseline; margin: 0 0 var(--g2-space-3); font-size: var(--g2-font-size-meta); }
   .crumbs .sep { color: var(--muted); }
-  .crumbs .link { color: var(--accent); }
-  .crumbs .here { font-weight: 600; overflow-wrap: anywhere; }
-  .more.small { margin: 4px 0 4px 36px; padding: 2px 12px; font-size: 13px; }
+  .crumbs .link { color: var(--link); }
+  .crumbs .here { font-weight: 700; overflow-wrap: anywhere; }
+  .more.small { margin: var(--g2-space-1) 0 var(--g2-space-1) 36px; }
   /* institutions inside a tree node: compact table */
-  .lt-wrap { margin: 2px 0 8px 18px; overflow-x: auto; }
-  table.lt { font-size: 14px; }
+  .lt-wrap { margin: 2px 0 var(--g2-space-3) 18px; overflow-x: auto; }
+  table.lt { font-size: var(--g2-font-size-meta); }
   table.lt th { padding: 4px 8px; }
-  table.lt td { padding: 4px 8px; line-height: 1.3; }
-  table.lt td.c-cat { font-size: 12.5px; color: var(--muted); min-width: 110px; }
-  table.lt .nm { font: 500 14px/1.3 var(--font-body); }
+  table.lt td { padding: 6px 8px; line-height: 1.35; }
+  table.lt td.c-cat { color: var(--muted); min-width: 110px; }
+  table.lt .nm { font-weight: 600; }
   table.lt tr.ctx td { color: var(--muted); }
-  table.lt td.c-site { max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
-  table.lt td.c-where { font-size: 13px; color: var(--ink-2); }
+  table.lt td.c-site { max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* dialogs */
-  dialog { width: min(680px, calc(100vw - 24px)); max-height: calc(100vh - 40px); padding: 0;
-           border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--bg); color: var(--text); box-shadow: var(--shadow-lg); }
-  dialog::backdrop { background: rgb(10 10 12 / .42); }
-  .dh { display: flex; gap: 12px; align-items: flex-start; padding: 16px 18px 6px; }
+  dialog { width: min(720px, calc(100vw - 24px)); max-height: calc(100vh - 40px); padding: 0;
+           border: var(--g2-border-width-control) solid var(--text); background: var(--page); color: var(--text); }
+  dialog::backdrop { background: rgb(11 12 12 / .6); }
+  .dh { display: flex; gap: var(--g2-space-3); align-items: flex-start; padding: var(--g2-space-4) var(--g2-space-4) var(--g2-space-1); }
   .dh > div { min-width: 0; }
-  .dh h2 { font-size: 19px; font-weight: 600; margin: 0 0 6px; overflow-wrap: anywhere; }
+  .dh h2 { font-size: var(--g2-font-size-heading-section); margin: 0 0 var(--g2-space-2); overflow-wrap: anywhere; }
   .dh h2:focus { outline: none; }
-  .dh .x { margin-left: auto; border: 0; background: none; font-size: 20px; line-height: 1; cursor: pointer;
-           color: var(--muted); padding: 4px 8px; }
-  .dh .x:hover { color: var(--text); }
-  .db { padding: 0 18px 18px; }
-  .dtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 4px 0; font-size: 13px; }
-  .dtools input { height: 28px; width: min(100%, 320px); padding: 0 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--bg); }
-  dl { display: grid; grid-template-columns: 130px 1fr; gap: 4px 14px; margin: 6px 0 0; font-size: 14px; }
-  dt { color: var(--muted); font-size: 13px; }
+  .dh .x { margin-left: auto; width: 44px; height: 44px; flex: none; border: 0; background: none; font-size: 26px; line-height: 1; cursor: pointer; }
+  .db { padding: 0 var(--g2-space-4) var(--g2-space-4); }
+  .dtools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--g2-space-2) var(--g2-space-3); margin: var(--g2-space-1) 0; font-size: var(--g2-font-size-meta); }
+  .dtools input { width: min(100%, 360px); }
+  /* record details: a summary list, local until https://github.com/gov2-ro/gov2ro-design-system/issues/6 */
+  dl { display: grid; grid-template-columns: 150px 1fr; gap: 6px var(--g2-space-4); margin: var(--g2-space-2) 0 0; }
+  dt { color: var(--muted); font-size: var(--g2-font-size-meta); }
   dd { margin: 0; overflow-wrap: anywhere; }
-  .sec { margin: 14px 0 2px; padding-top: 10px; border-top: 1px solid var(--line); font: 500 11px/1.4 var(--font-mono);
-         text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
-  ul.plain { margin: 4px 0 0; padding-left: 18px; }
+  .sec { margin: var(--g2-space-5) 0 2px; padding-top: var(--g2-space-3); border-top: 1px solid var(--line); font-size: var(--g2-font-size-label);
+         font-weight: 700; color: var(--muted); }
+  ul.plain { margin: 4px 0 0; padding-left: 20px; }
   ul.plain li { overflow-wrap: anywhere; }
+
+  .g2-footer { margin-top: var(--g2-space-6); font-size: var(--g2-font-size-meta); }
+
+  /* Focus. Local controls above set colour and background, and the app layer wins over gov2.states.
+     These rules write the DS focus treatment again (COMPONENTS.md, "Layers and project CSS"). */
+  :is(a, button, summary):not(.g2-btn):focus-visible { outline: 3px solid transparent; background: rgb(var(--g2-color-focus)); color: rgb(var(--g2-color-on-focus));
+    box-shadow: 0 -2px rgb(var(--g2-color-focus)), 0 4px rgb(var(--g2-color-on-focus)); text-decoration: none; }
+  :is(a, button, summary):not(.g2-btn):focus-visible :is(.count, .label, .sub, .arrow, .menu-status, #stats) { color: inherit; }
+  .multi > summary:focus-visible { outline: 3px solid rgb(var(--g2-color-focus)); outline-offset: 0; box-shadow: inset 0 0 0 2px rgb(var(--g2-color-text)); }
+  .filters select:focus-visible, .org-select:focus-visible { outline: 3px solid rgb(var(--g2-color-focus)); outline-offset: 0; box-shadow: inset 0 0 0 2px rgb(var(--g2-color-text)); }
+  tbody tr:focus-visible { outline: 3px solid rgb(var(--g2-color-focus)); outline-offset: -3px; }
 
   @media (max-width: 760px) {
     .cprof { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "map" "tree"; }
-    .cprof-map { position: static; margin-bottom: 12px; }
-    .top { padding: 6px 12px; } main { padding: 8px 12px 24px; }
-    .title { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand menu" "stats about"; margin-bottom: 6px; }
-    .brand { gap: 8px; }
-    .brand img { width: 26px; height: 26px; }
-    h1 { font-size: 16px; }
-    #stats { font-size: 12px; }
-    .navmore .panel { position: absolute; width: 270px; max-width: calc(100vw - 24px); box-shadow: var(--shadow); }
-    #q { flex: 1 1 100px; }
-    #ftoggle { display: inline-flex; align-items: center; order: 1; }
-    #reset { order: 1; padding: 0 10px; }
-    .fmore { display: none; order: 3; flex: 0 0 100%; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 55vh; overflow-y: auto; }
+    .cprof-map { position: static; margin-bottom: var(--g2-space-3); }
+    #q { flex: 1 1 140px; }
+    #ftoggle { display: inline-flex; order: 1; }
+    /* phones: one row (search, Filtre); Resetează shows with the open disclosure */
+    #reset { order: 2; display: none; }
+    .filters:has(.fmore.open) #reset { display: inline-flex; }
+    .fmore { display: none; order: 3; flex: 0 0 100%; grid-template-columns: 1fr 1fr; gap: var(--g2-space-2); max-height: 55vh; overflow-y: auto; }
     .fmore.open { display: grid; }
     .fmore > * { order: 0; }
     .fmore > .multi { grid-column: 1 / -1; }
-    .multi .panel { position: static; width: auto; max-width: none; margin-top: 4px; box-shadow: none; }
+    .multi .panel { position: static; width: auto; max-width: none; margin-top: 4px; }
+    .navmore .panel { position: absolute; right: 0; width: 290px; max-width: calc(100vw - 24px); }
     th.c, td.c, table.lt .c-cat, table.lt .c-where { display: none; }
-    dl { grid-template-columns: 1fr; gap: 0; } dt { margin-top: 8px; }
+    dl { grid-template-columns: 1fr; gap: 0; } dt { margin-top: var(--g2-space-2); }
     .csv-hint { display: none; }
   }
+}
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="wrap">
-    <div class="title"><a class="brand" id="home-link" href="#" aria-label="Instituții publice — Acasă"><img src="assets/img/gx00.png" width="30" height="30" alt=""><h1>Instituții publice</h1></a><span id="stats" role="status">Se încarcă datele…</span>
-      <button id="about-btn" class="txtbtn" type="button">Despre date<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></button>
-      <details id="navmore" class="multi navmore" inert>
-        <summary>Mai multe<span id="menu-status" class="menu-status"></span></summary>
-        <div class="panel">
-          <a href="#v=stat" data-view="stat" class="menu-link">Structura statului</a>
-          <a href="#v=fam" data-view="fam" class="menu-link">Tip → instituții</a>
-          <a href="#v=list" id="list-link" class="menu-link">Listă</a>
-          <label class="chk"><input type="checkbox" id="web" checked> are site</label>
-          <label class="chk"><input type="checkbox" id="noanaf"> fără corespondent ANAF</label>
-          <label class="chk" title="Înregistrări cu posibil duplicat sau cu potrivire nerezolvată"><input type="checkbox" id="review"> de verificat</label>
-        </div>
-      </details>
-    </div>
+<header class="g2-header">
+  <span class="g2-ro-corner" aria-hidden="true"></span>
+  <div class="g2-header-in g2-container title">
+    <a class="g2-wordmark" id="home-link" href="#" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/gx00.png" width="28" height="28" alt=""><h1><span class="g2-ro-sweep">Instituții publice</span></h1></a>
+    <nav class="g2-nav" aria-label="Principal">
+      <a href="#v=stat" data-view="stat">Structura statului</a>
+      <a href="#v=fam" data-view="fam">Tip → instituții</a>
+      <a href="#v=list" id="list-link">Listă</a>
+    </nav>
+    <span class="grow"></span>
+    <span id="stats" role="status">Se încarcă datele…</span>
+    <button id="about-btn" class="txtbtn" type="button">Despre date<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></button>
+    <details id="navmore" class="multi navmore" inert>
+      <summary>Opțiuni<span id="menu-status" class="menu-status"></span></summary>
+      <div class="panel">
+        <label class="chk"><input type="checkbox" id="web" checked> are site</label>
+        <label class="chk"><input type="checkbox" id="noanaf"> fără corespondent ANAF</label>
+        <label class="chk" title="Înregistrări cu posibil duplicat sau cu potrivire nerezolvată"><input type="checkbox" id="review"> de verificat</label>
+      </div>
+    </details>
+  </div>
+</header>
+<div class="org-filterbar" id="filterbar">
+  <div class="g2-container">
     <div class="filters" id="filters" inert hidden>
-      <input id="q" type="search" placeholder="Caută: nume, CIF, localitate, site…" autocomplete="off" aria-label="Căutare">
-      <button id="ftoggle" type="button" aria-expanded="false" aria-controls="fmore">Filtre<span class="fbadge" id="fcount"></span></button>
-      <button id="reset" type="button">Resetează</button>
+      <input id="q" class="g2-input" type="search" placeholder="Caută: nume, CIF, localitate, site…" autocomplete="off" aria-label="Căutare">
+      <button id="ftoggle" class="g2-btn g2-secondary" type="button" aria-expanded="false" aria-controls="fmore">Filtre<span class="fbadge" id="fcount"></span></button>
+      <button id="reset" class="g2-btn g2-secondary" type="button">Resetează</button>
       <div class="fmore" id="fmore">
         <select id="cat" aria-label="Categorie"></select>
         <select id="fam" aria-label="Tip instituție"></select>
@@ -353,24 +335,30 @@
         </details>
       </div>
     </div>
-
   </div>
-</header>
-<main id="main" aria-busy="true">
+</div>
+<main id="main" class="g2-container" aria-busy="true">
   <div class="toolbar" id="toolbar" hidden>
     <label class="sortby">Ordonare
-      <select id="sort">
+      <select id="sort" class="org-select">
         <option value="n">A–Z</option>
         <option value="dc">nr. declarații ANI</option>
       </select>
     </label>
     <span class="grow"></span>
     <span class="csv-hint" id="csv-hint">Celulele cu mai multe valori folosesc „ | ” ca separator.</span>
-    <button id="csv" class="btn sm" type="button">Descarcă CSV</button>
+    <button id="csv" class="g2-btn g2-secondary" type="button">Descarcă CSV</button>
     <span id="csv-msg" role="status"></span>
   </div>
   <div id="results" tabindex="-1"></div>
 </main>
+<footer class="g2-footer">
+  <div class="g2-footer-in g2-container">
+    <p>Date din surse publice: ANAF, ROePAS, Registrul Național, ANI. <button class="link" type="button" id="about-foot">Despre date</button></p>
+    <p><button class="link" type="button" id="a11y-foot">Accesibilitate</button></p>
+    <p><a href="https://github.com/gov2-ro/institutii-publice">Cod sursă</a> · un proiect <a href="https://gov2.ro">gov2.ro</a></p>
+  </div>
+</footer>
 <dialog id="detail" aria-labelledby="dlg-title"></dialog>
 <dialog id="about" aria-labelledby="about-title"></dialog>
 
@@ -417,7 +405,7 @@
     results.replaceChildren(h('div', { class: 'notice', role: 'alert' },
       h('p', null, 'Nu s-au putut încărca datele instituțiilor.'), h('p', { class: 'sub' }, why),
       h('p', { class: 'sub' }, 'Încearcă din nou. Dacă problema persistă, datele nu au fost publicate sau sunt temporar indisponibile.'),
-      h('button', { class: 'btn', type: 'button', onclick: load }, 'Reîncearcă')));
+      h('button', { class: 'g2-btn', type: 'button', onclick: load }, 'Reîncearcă')));
   }
   function load() {
     $('stats').textContent = 'Se încarcă datele…';
@@ -613,13 +601,13 @@
       ? h('a', { href: r.w, target: '_blank', rel: 'noopener noreferrer', title: r.w, onclick: e => e.stopPropagation() }, domain(r.w))
       : domain(r.w);
     const emptyMsg = () => h('div', { class: 'empty' }, h('p', null, 'Nicio instituție nu corespunde filtrelor.'),
-      h('button', { class: 'btn', type: 'button', onclick: () => { clearFilters(); update(); } }, 'Resetează filtrele'));
+      h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => { clearFilters(); update(); } }, 'Resetează filtrele'));
     const rowKey = (r, open) => e => { if (e.key === 'Enter') open(r); };
 
     /* append `items` in pages of `size`; the "more" button lives in btnHost (default: the container itself) */
     function chunked(container, items, make, size = 100, small = false, btnHost = container) {
       let shown = 0;
-      const btn = h('button', { class: 'more' + (small ? ' small' : ''), type: 'button' });
+      const btn = h('button', { class: 'g2-btn g2-secondary more' + (small ? ' small' : ''), type: 'button' });
       const more = () => {
         const next = items.slice(shown, shown + size);
         const frag = document.createDocumentFragment();
@@ -643,8 +631,8 @@
       const kind = r => [r.cat, r.fam].filter(Boolean).join(' · ');
       const row = r => h('tr', { tabindex: 0, 'data-id': r.id, onclick: () => openRecord(r), onkeydown: rowKey(r, openRecord) },
         h('td', null, h('span', { class: 'nm' }, r.n),
-          r.mc && r.mc.length ? h('span', { class: 'flag' }, 'potrivire neclară') : null,
-          r.d ? h('span', { class: 'flag' }, 'posibil duplicat') : null,
+          r.mc && r.mc.length ? h('span', { class: 'g2-tag', 'data-tone': 'warning' }, 'potrivire neclară') : null,
+          r.d ? h('span', { class: 'g2-tag', 'data-tone': 'warning' }, 'posibil duplicat') : null,
           h('div', { class: 'sub' }, kind(r), where(r) ? h('span', { class: 'where' }, (kind(r) ? ' · ' : '') + where(r)) : null,
             S.sort === 'dc' && r.dc ? h('span', { class: 'dc' }, ' · ' + plural(r.dc, 'declarație', 'declarații')) : null)),
         h('td', { class: 'c contact' }, [r.w && h('div', { class: 'line site' }, siteLink(r)),
@@ -1275,8 +1263,8 @@
           h('h2', null, county === 'Bucuresti' ? 'București' : county),
           h('p', { class: 'sub' }, `${plural(all.length, 'înregistrare', 'înregistrări')} · ${plural(locs.size, 'localitate', 'localități')} · ${fmt(noU)} fără localitate`
             + (items.length !== all.length ? ` · ${fmt(items.length)} potrivite cu filtrele` : '')),
-          h('button', { class: 'btn sm', type: 'button', onclick: () => { clearFilters(); setView('acasa'); window.scrollTo(0, 0); } }, '← Toate județele'),
-          S.uat ? [' ', h('button', { class: 'btn sm', type: 'button', onclick: () => { S.uat = ''; update(); } }, `× ${S.uat}`)] : null)),
+          h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => { clearFilters(); setView('acasa'); window.scrollTo(0, 0); } }, '← Toate județele'),
+          S.uat ? [' ', h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => { S.uat = ''; update(); } }, `× ${S.uat}`)] : null)),
         h('div', { class: 'cprof-map', role: 'region', 'aria-label': 'Harta localităților' }, mapBox, note),
         h('div', { class: 'cprof-tree' }, tree));
     }
@@ -1376,7 +1364,7 @@
       const sibs = !r.fam ? [] : (parents.length ? subordinates.get(parents[0].f) || [] : rows.filter(x => x.county === r.county && !x.p))
         .filter(x => x !== r && x.fam === r.fam);
       const copyMsg = h('span', { role: 'status' });
-      const linkBox = h('input', { type: 'text', readonly: true, 'aria-label': 'Linkul înregistrării', value: location.href, hidden: true });
+      const linkBox = h('input', { class: 'g2-input', type: 'text', readonly: true, 'aria-label': 'Linkul înregistrării', value: location.href, hidden: true });
       const copy = async () => {
         const url = location.href;
         try { await navigator.clipboard.writeText(url); copyMsg.textContent = 'Link copiat.'; }
@@ -1387,13 +1375,13 @@
       };
       dlg.replaceChildren(
         h('div', { class: 'dh' },
-          h('div', null, h('h2', { id: 'dlg-title', tabindex: -1 }, r.n), h('span', { class: 'chip' }, r.cat), ' ', srcBadges(r)),
+          h('div', null, h('h2', { id: 'dlg-title', tabindex: -1 }, r.n), h('span', { class: 'g2-tag' }, r.cat), ' ', srcBadges(r)),
           h('button', { class: 'x', type: 'button', 'aria-label': 'Închide', onclick: () => dlg.close() }, '×')),
         h('div', { class: 'db' },
-          h('div', { class: 'dtools' }, h('button', { class: 'btn sm', type: 'button', onclick: copy }, 'Copiază linkul'), copyMsg, linkBox),
+          h('div', { class: 'dtools' }, h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: copy }, 'Copiază linkul'), copyMsg, linkBox),
           crumb,
           note ? h('p', { class: 'sub' }, 'Notă privind încadrarea în structură: ', note) : null,
-          cands.length ? h('div', { class: 'flag', style: 'display:block;padding:6px 10px' },
+          cands.length ? h('div', { class: 'flag' },
             h('strong', null, 'Potrivire nerezolvată. '),
             `Mai multe instituții ANAF se potrivesc la fel de bine (${cands.length}), așa că înregistrarea nu a fost combinată cu niciuna. Scorul de potrivire nu este o probabilitate.`,
             h('ul', { class: 'plain' }, cands.map(([c, rr]) => h('li', null, rr ? [peerBtn(rr), ` · CIF ${c}`] : `CIF ${c} (nu este în setul curent)`)))) : null,
@@ -1439,7 +1427,7 @@
         h('div', { class: 'db' },
           h('p', null, `Identificatorul „${id}” nu există în datele curente. Linkul poate veni dintr-o versiune mai veche a datelor.`),
           h('p', { class: 'sub' }, 'Filtrele și vizualizarea curentă au rămas neschimbate.'),
-          h('button', { class: 'btn', type: 'button', onclick: () => dlg.close() }, 'Închide')));
+          h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => dlg.close() }, 'Închide')));
     }
 
     /* dialog <-> URL. Opening a record pushes a history entry (`id` param); closing it by button, Escape or
@@ -1498,7 +1486,7 @@
           h('p', { class: 'sub' }, 'Numerele sunt înregistrări din surse, nu entități juridice verificate. Prezența într-o sursă nu arată dacă o instituție este activă sau dacă site-ul ei funcționează.'),
           h('p', { class: 'sub' }, 'Numărul din ANI numără declarații depuse, nu angajați și nu instituții distincte.'),
           DS ? [h('p', null, DS.generated_at ? ['Setul a fost generat la ', h('strong', null, when(DS.generated_at)), '.'] : null),
-            capped && capped.length ? h('p', { class: 'flag', style: 'display:block;padding:6px 10px' }, `Atenție: ${capped.length === 1 ? 'un export ANI a atins' : capped.length + ' exporturi ANI au atins'} limita de 10.000 de rânduri. Datele pot fi incomplete.`) : null,
+            capped && capped.length ? h('p', { class: 'flag' }, `Atenție: ${capped.length === 1 ? 'un export ANI a atins' : capped.length + ' exporturi ANI au atins'} limita de 10.000 de rânduri. Datele pot fi incomplete.`) : null,
             h('div', { class: 'sec' }, 'Fișiere sursă'),
             h('ul', { class: 'plain' }, inputs.map(i => h('li', null,
               h('strong', null, srcLabel[i.source] || i.source || 'sursă'), ' ', h('code', null, i.path || ''),
@@ -1511,14 +1499,21 @@
               ].filter(Boolean).join(' · ')),
               i.sha256 ? h('div', { class: 'sub', title: i.sha256 }, 'SHA-256: ', h('code', null, i.sha256.slice(0, 16) + '…')) : null)))]
           : h('p', null, 'Pentru acest set de date nu sunt disponibile informații despre fișierele sursă.'),
+          h('div', { class: 'sec', id: 'a11y', tabindex: -1 }, 'Accesibilitate'),
+          h('p', { class: 'sub' }, 'Pagina urmărește WCAG 2.2, nivelul AA, cu două abateri asumate. Titlul site-ului arată o bandă tricoloră care traversează textul la fiecare nouă secunde. Banda nu poate fi oprită din pagină; setarea de sistem pentru mișcare redusă o oprește. Cât timp banda trece peste o literă, contrastul literei poate fi sub 4,5:1. Acestea sunt abateri de la criteriile WCAG 2.2 2.2.2 (nivelul A) și 1.4.3 (nivelul AA).'),
+          h('p', { class: 'sub' }, 'Ai găsit o problemă de accesibilitate? ', h('a', { href: 'https://github.com/gov2-ro/institutii-publice/issues' }, 'Semnaleaz-o pe GitHub'), '.'),
           h('div', { class: 'sec' }, 'Export CSV'),
           h('p', { class: 'sub' }, 'Butonul „Descarcă CSV” exportă selecția curentă (toate înregistrările care corespund filtrelor, nu doar pagina afișată). Fișierul este UTF-8 cu BOM. O celulă cu mai multe valori le separă prin „ | ”. Un zero rămâne 0; o valoare necunoscută rămâne goală. Textele care încep cu = + - @ primesc în față un apostrof, ca să nu fie interpretate drept formule în Excel.')));
     }
     const warn = $('about-warn');
     if (capped && capped.length) warn.textContent = ' ⚠';
-    on($('about-btn'), 'click', () => { buildAbout(); about.showModal(); $('about-title').focus(); });
+    let aboutFrom = null;
+    const openAbout = (from, target) => { aboutFrom = from; buildAbout(); about.showModal(); $(target).focus(); };
+    on($('about-btn'), 'click', () => openAbout($('about-btn'), 'about-title'));
+    on($('about-foot'), 'click', () => openAbout($('about-foot'), 'about-title'));
+    on($('a11y-foot'), 'click', () => openAbout($('a11y-foot'), 'a11y'));
     on(about, 'click', e => { if (e.target === about) about.close(); });
-    on(about, 'close', () => $('about-btn').focus());
+    on(about, 'close', () => (aboutFrom || $('about-btn')).focus());
 
     /* ---------- source filter: checkbox dropdown + intersection / cumulative switch ---------- */
     const srcBox = $('src');
@@ -1595,7 +1590,7 @@
 
     // the sticky header height, for content that sticks under it (the county map)
     new ResizeObserver(([e]) => document.documentElement.style.setProperty('--top-h', e.target.offsetHeight + 'px'))
-      .observe(document.querySelector('header.top'));
+      .observe($('filterbar'));
     /* ---------- orchestration ---------- */
     let items = [];
     function update() {
@@ -1684,7 +1679,7 @@
     };
 
     /* ---------- wiring (runs once, only after the data has loaded and rendered) ---------- */
-    const viewLinks = [...document.querySelectorAll('#navmore [data-view]')];
+    const viewLinks = [...document.querySelectorAll('.g2-nav [data-view]')];
     const refreshViewLinks = () => viewLinks.forEach(x => {
       x.href = browseHref({ v: x.dataset.view });
       if (x.dataset.view === S.view) x.setAttribute('aria-current', 'page');

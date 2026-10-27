@@ -8,11 +8,20 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Includes conservative matching, confirmed category fixes, tree visibility, dense responsive filters, record links,
       review filters, CSV export, loading feedback, minimal dataset provenance and compact overview navigation.
       This is the bounded next release. The spec lists deferred research and data-enrichment work explicitly.
-- [ ] Adopt the gov2 design system (DS): [brief](briefs/ds-adoption.md), brief ready 2026-10-26.
-      Blocked until the owner announces a DS release. Owner decisions: DS fonts and sizes, dark mode kept,
-      tricolour title removed. DS proposals: dark scheme
-      ([#1](https://github.com/gov2-ro/gov2ro-design-system/issues/1)), tricolour title
-      ([#2](https://github.com/gov2-ro/gov2ro-design-system/issues/2)).
+- [x] Adopt the gov2 design system (DS) v0.13.0: [brief](briefs/ds-adoption.md). Built 2026-10-27, not yet
+      published (the owner reviews the screenshots first). DS fonts and sizes, DS dark scheme
+      (`data-g2-scheme="auto"`), DS title sweep, footer, accessibility statement in "Despre date".
+- [ ] Review and publish the DS adoption (owner): screenshots, then `sh scripts/publish_pages.sh`.
+- [ ] Rename the remaining local classes to the `org-` prefix (`.tree`, `.crumbs`, `.multi`, `.seg`, `.src`…).
+      New classes already use it. Low risk, but it touches the JS that builds the views.
+- [ ] Replace the local breadcrumbs, tables and record summary list when DS brief 07 ships them
+      (DS issues [#3](https://github.com/gov2-ro/gov2ro-design-system/issues/3),
+      [#5](https://github.com/gov2-ro/gov2ro-design-system/issues/5),
+      [#6](https://github.com/gov2-ro/gov2ro-design-system/issues/6)).
+- [ ] Propose to the DS the org components that a second project needs: county choropleth with legend,
+      multi-select filter with AND/OR, filter bar with a phone disclosure, collapsible tree, category tabs.
+- [ ] Phone list rows are taller with the DS sizes: 125 px at 375 px wide (was 75 px). Consider a phone layout
+      that shows fewer lines per row (card view, already deferred above).
 
 ## Explorer: "Structura statului" (spec: specs/structura-statului.md)
 - [x] Version 1: top layer from the Constitution, local administration, focus and breadcrumb, URL hash

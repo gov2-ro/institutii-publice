@@ -141,3 +141,21 @@ ready", "build accepted"). After each committed chunk, tag it: bump the minor ve
 new work, documentation and spec work included; bump the patch only for a correction. The
 version lives in annotated git tags (`vMAJOR.MINOR.PATCH`).
 Do this without asking, and say when you did.
+
+## Design system (gov2 DS)
+
+This project uses the gov2 design system (DS), version 0.13.0.
+DS repo: gov2-ro/gov2ro-design-system (local copy: ~/devbox/gov2/gov2ro-design-system).
+
+- Read `COMPONENTS.md` in the DS before you build UI. Use a DS component when one fits.
+- Do not edit the copy of the DS in this project: `explorer/assets/gov2/` (`gov2.css`, `fonts.css`, `fonts/`).
+- To update the DS, copy `gov2.css` from a DS tag. Then set the version above.
+- Before you update, read `CHANGELOG.md` in the DS back to the version above. The DS is 0.x, so a minor version can break. Look for **Breaking**.
+- Put the project styles in `explorer/index.html` (the inline `<style>`, in `@layer app`), with the class prefix `org-`. Use the DS tokens (`--g2-*`). Keep consumer adapters here, not in the DS. Prefer DS defaults; document useful local variations and preserve accessible behaviour.
+- Declare `@layer reset, gov2, utilities, app;` before every other stylesheet that creates layers. Put the reset in `reset`, utility classes in `utilities` and the project styles in `app`. A rule outside a layer outranks the DS. Do not add an activation attribute. See `docs/migration-from-0.6.0.md` in the DS.
+- When the project needs a component, a variant or a token that other projects can use, open an issue in the DS:
+  `gh issue create -R gov2-ro/gov2ro-design-system --label ds-proposal --title "[proposal] …" --body-file <file>`.
+  Use the sections of `.github/ISSUE_TEMPLATE/ds-proposal.md`.
+- Open an issue for a DS defect too, with the type "fix".
+- Do not wait for the DS. Build a local version with the project prefix, and put the issue URL in a comment next to it.
+- When the DS has the component, replace the local version.
