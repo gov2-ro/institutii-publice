@@ -1,5 +1,23 @@
 # Activity log
 
+## 2026-10-27 — Landing round 4, review corrections (Opus: accepted with 5 corrections)
+
+**Done**
+- The info line under the search says "Despre" (link to `despre.html`). The ⚠ in the header link has a margin (not a text
+  space) and `role="img"` with an `aria-label` that explains it (index and despre).
+- Domenii on desktop: an open card spans the whole row and lists its types in columns (about 260 px). A card that opens
+  waits until the row before it is full, so no cell stays empty and the DOM order is the visual order. Several domains may
+  be open at once. Focus stays on the toggle.
+- Footer, all three pages: "un proiect gov2.ro" followed by the GitHub icon link; the centre lines of text and icon are the
+  same (854 px and 854 px in the check).
+- Phone (below 760 px): the 6 largest domains and a button "Toate cele 17 domenii" (`aria-expanded`); the field "Caută un tip"
+  searches all domains.
+
+**Measured**
+- Landing at 390 px, collapsed: 3,373 px (was 3,957 px); with all 17 domains shown: 4,013 px. At 320 px: 3,591 px;
+  at 1,440 px: 4,139 px (unchanged). No horizontal scroll at 320, 390, 1,024 and 1,440 px, both schemes, three pages;
+  no target under 44 px. Tab order in an open domain follows the list down the columns. 44 tests pass; syntax check passes.
+
 ## 2026-10-27 — Landing round 4: "Domenii", page "Despre", jump links, map by domain (spec 2b)
 
 **Done**
