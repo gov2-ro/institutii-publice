@@ -1,5 +1,20 @@
 # Activity log
 
+## 2026-10-27 — Fix: ids absorbed twice came back (v0.31.0 defect, found by stiri)
+
+**Done**
+- Cause: `apply_curated_merges` ran before `merge_loose_names`. The curated merge absorbed D2b2455f7 and D6d6a8ee4 before
+  they took Df0d244a8 and Dfadd6216, so those two came back as records. Fix: curated merges run after the loose
+  pass, and a curated row that names an absorbed id acts on its survivor. G29409 now lists all 7 ids. 24,983 records.
+- Build check `check_absorbed_ids`: reads `institutii.csv` of every release tag from v0.15.0 on (git). The build stops
+  when an id that a release listed in `merged_ids` is a record again (override: `curation/unmerged.csv`, id + reason),
+  or when an id of the latest release has no record and no trail. Verified: it catches the v0.31.0 state against v0.28.0.
+- Tests: 3 new (43 in all).
+
+**Decided**
+- The check compares with git tags, so it needs a git checkout; without git it warns and skips. Cost of the
+  alternative (a stored list of absorbed ids): one more file to keep in step.
+
 ## 2026-10-27 — stiri requests after the v0.28.0 re-pin
 
 **Done**

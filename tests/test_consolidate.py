@@ -263,7 +263,7 @@ class SectorAndNationwide(unittest.TestCase):
         gone, sub = source_rec("R1", "Ministerul Y"), source_rec("R2", "Directia Z")
         recs = [anaf, gone, sub]
         stats = c.apply_curated_merges(recs, [
-            {"id": "R1", "kind": "merge", "target_id": "A1"}, {"id": "R2", "kind": "parent", "target_id": "A1"}])
+            {"id": "R1", "kind": "merge", "target_id": "A1", "new_name": ""}, {"id": "R2", "kind": "parent", "target_id": "A1", "new_name": ""}])
         self.assertEqual([r["id"] for r in recs], ["A1", "R2"])
         self.assertEqual((anaf["merged_ids"], anaf["sources"], anaf["aliases"]), (["R1"], ["anaf", "roepas"], ["Ministerul Y"]))
         self.assertEqual(sub["parents"][0]["cif"], "1")
@@ -304,6 +304,28 @@ class LooseNames(unittest.TestCase):
         recs = [a1, a2, source_rec("D1", "Directia X")]
         c.merge_loose_names(recs)
         self.assertEqual(len(recs), 3)
+
+
+class AbsorbedIds(unittest.TestCase):
+    OLD = "id,merged_ids\nA1,B1 | B2\nB3,\n"
+
+    def test_absorbed_id_back_as_record_stops(self):
+        recs = [{"id": "A1", "merged_ids": ["B1"]}, {"id": "B2"}, {"id": "B3"}]
+        with self.assertRaises(SystemExit):
+            c.check_absorbed_ids(recs, [("v1", self.OLD)])
+
+    def test_ok_with_trail_and_lost_id_stops(self):
+        ok = [{"id": "A1", "merged_ids": ["B1", "B2"]}, {"id": "B3"}]
+        c.check_absorbed_ids(ok, [("v1", self.OLD)])
+        with self.assertRaises(SystemExit):
+            c.check_absorbed_ids([{"id": "A1", "merged_ids": ["B1", "B2"]}], [("v1", self.OLD)])      # B3 vanished
+
+    def test_curated_merge_uses_survivor_of_absorbed_id(self):
+        keep = {**source_rec("R9", "Ministerul X"), "id": "A1", "cif": "1", "sources": ["anaf"], "merged_ids": ["G5"]}
+        sub = source_rec("R1", "Y")
+        recs = [keep, sub]
+        c.apply_curated_merges(recs, [{"id": "R1", "kind": "merge", "target_id": "G5", "new_name": ""}])
+        self.assertEqual((len(recs), keep["merged_ids"]), (1, ["G5", "R1"]))
 
 
 class PrefixTier(unittest.TestCase):

@@ -43,6 +43,7 @@ Usage: uv run scripts/consolidate.py   (or python3 with openpyxl installed)
 import csv
 import datetime
 import hashlib
+import io
 import json
 import math
 import re
@@ -264,6 +265,9 @@ def absorb(keep, rec, how):
 def apply_curated_merges(records, curated):
     """Apply curation/merges.csv. Stops on an unknown id. -> stats."""
     by_id = {r["id"]: r for r in records}
+    for r in records:                       # a row may name an id that an earlier merge absorbed: use its survivor
+        for m in r.get("merged_ids", []):
+            by_id.setdefault(m, r)
     stats, drop = Counter(), set()
     for c in sorted(curated, key=lambda c: c["kind"] == "rename"):         # renames last: merged records may be renamed
         rec, target = by_id.get(c["id"]), by_id.get(c["target_id"])
@@ -277,6 +281,8 @@ def apply_curated_merges(records, curated):
         if not rec or not target:
             raise SystemExit(f"{CURATED_MERGES}: {c['id']} or {c['target_id']} matches no record")
         if c["kind"] == "merge":
+            if rec is target:
+                continue
             absorb(target, rec, "curation")
             drop.add(rec["id"])
         else:
@@ -306,6 +312,60 @@ def apply_same_body(records, path=None):
     for i, t in links.items():
         by_id[i]["same_body_as"] = t
     return len(links)
+
+
+UNMERGED = ROOT / "curation/unmerged.csv"
+
+
+def released_csvs(min_version=(0, 15, 0)):
+    """Yield `institutii.csv` text of each released tag from `min_version` on (distinct blobs only). Needs git."""
+    import subprocess
+    git = lambda *a: subprocess.run(["git", "-C", str(ROOT), *a], capture_output=True, text=True, check=True).stdout
+    try:
+        tags = git("tag", "-l", "--sort=version:refname").split()
+    except (OSError, subprocess.CalledProcessError):
+        print("warning: git tags not readable, absorbed-id check skipped", file=sys.stderr)
+        return
+    seen = set()
+    for tag in tags:
+        m = re.fullmatch(r"v(\d+)\.(\d+)\.(\d+)", tag)
+        if not m or tuple(map(int, m.groups())) < min_version:
+            continue
+        try:
+            blob = git("rev-parse", f"{tag}:data/consolidated/institutii.csv").strip()
+            if blob in seen:
+                continue
+            seen.add(blob)
+            yield tag, git("show", f"{tag}:data/consolidated/institutii.csv")
+        except subprocess.CalledProcessError:
+            continue
+
+
+def check_absorbed_ids(records, released=None):
+    """An id that a released tag listed in `merged_ids` must not be a record now, unless curation/unmerged.csv
+    (id, reason) says so. Every id of the latest release must still be a record or appear in `merged_ids` or
+    `roepas_ids`. The build stops on a violation."""
+    released = list(released_csvs() if released is None else released)
+    if not released:
+        return
+    ids = {r["id"] for r in records}
+    trail = {m for r in records for m in r.get("merged_ids", [])}
+    trail |= {"R" + m for r in records for m in r.get("roepas_ids", [])}
+    allowed = set()
+    if UNMERGED.exists():
+        with UNMERGED.open(encoding="utf-8", newline="") as fh:
+            allowed = {r["id"] for r in csv.DictReader(fh) if r.get("id")}
+    back, lost = {}, []
+    for tag, text in released:
+        rows = list(csv.DictReader(io.StringIO(text)))
+        for row in rows:
+            for m in filter(None, (row.get("merged_ids") or "").split(" | ")):
+                if m in ids and m not in allowed:
+                    back.setdefault(m, tag)
+    lost = sorted(r["id"] for r in rows if r["id"] not in ids and r["id"] not in trail)
+    if back or lost:
+        raise SystemExit(f"absorbed ids are records again {dict(sorted(back.items()))}; "
+                         f"ids of {released[-1][0]} with no record and no trail {lost[:20]}")
 
 
 def check_aliases(records, path=None):
@@ -1349,10 +1409,11 @@ def main():
         merge_stats[k] += national_stats[k]
     merge_stats["groups"].update(national_stats["groups"])
     merge_stats["national"] = sum(national_stats["groups"].values())
-    merge_stats["curated"] = apply_curated_merges(records, load_curated_merges())
     merge_stats["loose"] = merge_loose_names(records)
+    merge_stats["curated"] = apply_curated_merges(records, load_curated_merges())
     merge_stats["sector_names"] = strip_sector_suffix(records)
     check_aliases(records)
+    check_absorbed_ids(records)
     merge_stats["same_body"] = apply_same_body(records)
     sector_stats = infer_sectors(records)
     sector_stats["unified"] += unified[True]
