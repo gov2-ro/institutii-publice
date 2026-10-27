@@ -106,3 +106,21 @@ D81c99b86,Jandarmeria Română,short_name,guess: the General Inspectorate of the
 A26282150,Institutul de Investigare a Crimelor Comunismului în România,former_name,"the institute was renamed IICCMER; the old record is G10574, the current one A26282150; upstream record 'INSTITUTUL DE INVESTIGARE A CRIMELOR COMUNISMULUI SI MEMORIA EXILULUI ROMANESC'; 89 corpus uses of 'Institutul de Investigare a Crimelor Comunismului în România'",reviewed
 A4193222,Inspectoratul General al Poliției de Frontieră,full_name,the ANAF name has the typo 'PLITIE'; this is the correct full name (ROePAS R11067969 spells it so); reviewed by the operator 2026-10-27,reviewed
 A42283735,ADR,acronym,"expands 'Autoritatea pentru Digitalizarea Romaniei'; requested by stiri 2026-10-27, not yet reviewed by the operator; reviewed by the operator 2026-10-27",reviewed
+G01264,ADR Centru,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G14002,ADR Nord-Vest,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G14002,ADR Nord Vest,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G14002,ADR-Nord Vest,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G14002,ADR NV,acronym,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G14002,ADR-NV,acronym,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G18008,ADR Sud-Vest Oltenia,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G18008,ADR Sud Vest Oltenia,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G18008,ADR SV Oltenia,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G18008,ADRSVOltenia,acronym,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G18008,ADR SV,acronym,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G30006,ADR Nord-Est,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G08253,ADR Sud-Est,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G08253,ADR SE,acronym,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G10078,ADR BI,acronym,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G10078,ADR București-Ilfov,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G12008,ADR Sud Muntenia,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
+G12008,ADR Sud-Muntenia,short_name,operator decision 2026-10-27: ADR + region = regional development agency,reviewed
