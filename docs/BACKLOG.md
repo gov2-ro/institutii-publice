@@ -60,6 +60,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       A first version (phones: name, kind, site; no location line) was built and then removed before the commit.
 - [ ] Add a light/dark toggle like civtech's footer control. The page follows only `prefers-color-scheme` now.
 
+## Explorer: landing v2 and "Cum e organizat statul" (spec: specs/landing-v2-organizare.md)
+- [ ] Owner: answer the five decisions in spec section 4 (landing search, headings, state row, remembered
+      county, separate page).
+- [ ] Build landing v2 and `explorer/organizare.html` ([brief](briefs/landing-v2-organizare.md)). Brief ready 2026-10-27.
+- [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
+
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)
 - [x] Restore the previous landing sections alongside the new directories. Remove the introduction and move “are site” into “Mai multe”.
 - [x] Keep the compact type grid, remove its duplicate, close categories initially, and put view links in the title-row menu.

@@ -1,5 +1,23 @@
 # Activity log
 
+## 2026-10-27 — Spec and brief: landing v2, page "Cum e organizat statul"
+
+**Done**
+- `docs/specs/landing-v2-organizare.md` and `docs/briefs/landing-v2-organizare.md`. No code changed.
+- Landing v2 order: search, county and locality picker, need-based tiles (family labels), six state cards
+  (India-style), then the type tabs and the map of today.
+
+**Decided (proposed; the owner decides in spec section 4)**
+- The new page is a separate static file. Cost of a view in `index.html`: the reader loads 6 MB of rows to read prose.
+- Need-based tiles use existing family labels, so no data change. Cost: a renamed family hides a link (logged).
+
+**Hard**
+- No official plain-language guide to the whole state structure found. Sources are the laws themselves.
+- Codul administrativ art. 5 does not define subordonare, coordonare or autoritate. The text must cite HG examples.
+
+**Measured**
+- 24,988 records, 17 categories, 176 families. Family labels for all proposed tiles exist in `metadata.json`.
+
 ## 2026-10-27 — Loose-name merge rule (owner decision)
 
 **Decided**
