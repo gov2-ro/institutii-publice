@@ -1,5 +1,15 @@
 # Activity log
 
+## 2026-10-27 — Alias rows approved
+
+**Done**
+- The operator approved the two `proposed` rows (A4193222 full name, A42283735 ADR), relayed by the stiri session.
+  Both are now `reviewed` in `curation/aliases.csv`. Tag v0.18.0.
+
+**Decided**
+- Courts (A4… vs A47373…): no merge. A bounded check of the two tax IDs in the official register comes first;
+  merge only on clear evidence. The check does not block the alias tag.
+
 ## 2026-10-27 — Alias fixes after stiri pinned v0.15.0
 
 **Done**
