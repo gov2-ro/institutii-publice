@@ -1,5 +1,17 @@
 # Activity log
 
+## 2026-10-27 — Alias fixes after stiri pinned v0.15.0
+
+**Done**
+- `curation/aliases.csv`: RAR now points at R11062162 (national body), not G01302 (Alba unit). Added the full
+  name of A4193222 (ANAF typo "PLITIE") and ADR for A42283735, both with status `proposed`.
+- Backlog: court pairs, Romsilva and IPJ Valcea, "Adr" R11176080, AMR and UNCJR.
+
+**Decided**
+- No merge of the A47373... court records: same name and address but a different parent CIF; unverified, and a wrong
+  merge hides a body. Cost: stiri keeps 126 ambiguous surfaces until the owner confirms.
+- New alias rows use kind `full_name` and status `proposed`; the operator has not reviewed them.
+
 ## 2026-10-27 — gov2 design system v0.13.0 adopted in the explorer
 
 **Done**

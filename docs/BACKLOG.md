@@ -118,6 +118,15 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Cross-source duplicates reported by stiri (2026-10-27): sector-relaxed same-name key, nationwide pass for
       Bucuresti bodies, `curation/merges.csv`, sector suffix removed from source-only names. Tag v0.15.0.
 - [x] Alias master `curation/aliases.csv` (105 rows from stiri, ids checked against each build).
+- [ ] Same-name pairs reported by stiri (2026-10-27), unresolved. Courts have two ANAF records with one name and
+      address but different parent CIFs: A17019105 / A47373006 (Curtea de Apel Bucuresti), A4340633 / A47373014
+      (Tribunalul Bucuresti), and the same pattern for Dolj, Maramures, Harghita, Timis, Constanta, Valcea. The
+      A47373... series has parent 4340587. Check with the owner whether it is a second CIF of the same body before
+      any merge. Also D4618737e / G10796 (Romsilva) and IPJ Valcea (D9c68db53, G40002, G40072): the names differ in
+      punctuation or spelling, so the same-name rule misses them. 126 ambiguous surfaces in all.
+- [ ] R11176080 is named only "Adr" (ROePAS, Str. Italiana 22, Sector 2). Its meaning is unknown. Not the
+      Autoritatea pentru Digitalizarea Romaniei (A42283735).
+- [ ] AMR and UNCJR are in no source. Add them as curated records when the owner decides how.
 - [ ] More duplicates that differ by an ANAF typo or an old name remain undetected. Review the weak candidates
       (`possible_duplicate_of`) of source-only Bucuresti records and add rows to `curation/merges.csv`.
 - [ ] No ANAF or registrul record exists for Inspectoratul General al Jandarmeriei Romane. Only the ANI record

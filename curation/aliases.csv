@@ -68,7 +68,7 @@ A10464660,CES,acronym,the upstream name 'CONSILIUL ECONOMIC SI SOCIAL' expands t
 A34998410,ANMCS,acronym,the upstream name 'AUTORITATEA NATIONALA DE MANAGEMENT AL CALITATII IN SANATATE' expands the acronym; 4 corpus hits as 'full name (ANMCS)'; 24 standalone uses in the corpus,reviewed
 A29348330,ISCTR,acronym,the upstream name 'INSPECTORATUL DE STAT PENTRU CONTROLUL IN TRANSPORTUL RUTIER' expands the acronym; 4 corpus hits as 'full name (ISCTR)'; 30 standalone uses in the corpus,reviewed
 A4193222,IGPF,acronym,the upstream name 'INSPECTORATUL GENERAL AL POLITIEI DE FRONTIERA' expands the acronym; 4 corpus hits as 'full name (IGPF)'; 17 standalone uses in the corpus,reviewed
-G01302,RAR,acronym,the upstream name 'Registrul Auto Roman' expands the acronym; 4 corpus hits as 'full name (RAR)'; 406 standalone uses in the corpus,reviewed
+R11062162,RAR,acronym,"the upstream name 'Registrul Auto Roman' expands the acronym; 4 corpus hits as 'full name (RAR)'; 406 standalone uses in the corpus; repointed 2026-10-27: G01302 is the Alba unit, R11062162 is the national body",reviewed
 R11047377,ANPM,acronym,the upstream name 'AGENTIA NATIONALA PENTRU PROTECTIA MEDIULUI' expands the acronym; 3 corpus hits as 'full name (ANPM)'; 9 standalone uses in the corpus,reviewed
 A4204291,SRI,acronym,the upstream name 'SERVICIUL ROMAN DE INFORMATII' expands the acronym; 3 corpus hits as 'full name (SRI)'; 664 standalone uses in the corpus,reviewed
 A10668016,SIE,acronym,the upstream name 'SERVICIUL DE INFORMATII EXTERNE' expands the acronym; 1 corpus hits as 'full name (SIE)'; 15 standalone uses in the corpus,reviewed
@@ -104,3 +104,5 @@ A4266669,Ministerul Muncii,short_name,"guess: the ministry has used ""Ministerul
 A4453144,Poliția Română,short_name,guess: the national command of the Romanian Police is the General Inspectorate (IGPR); mentions of the police as a whole link to it; upstream record 'INSPECTORATUL GENERAL AL POLITIEI ROMANE'; 120 corpus uses of 'Poliția Română',reviewed
 D81c99b86,Jandarmeria Română,short_name,guess: the General Inspectorate of the Gendarmerie is the national command; its only record is a declaration record; upstream record 'INSPECTORATUL GENERAL AL JANDARMERIEI ROMANE'; 20 corpus uses of 'Jandarmeria Română',reviewed
 A26282150,Institutul de Investigare a Crimelor Comunismului în România,former_name,"the institute was renamed IICCMER; the old record is G10574, the current one A26282150; upstream record 'INSTITUTUL DE INVESTIGARE A CRIMELOR COMUNISMULUI SI MEMORIA EXILULUI ROMANESC'; 89 corpus uses of 'Institutul de Investigare a Crimelor Comunismului în România'",reviewed
+A4193222,Inspectoratul General al Poliției de Frontieră,full_name,the ANAF name has the typo 'PLITIE'; this is the correct full name (ROePAS R11067969 spells it so),proposed
+A42283735,ADR,acronym,"expands 'Autoritatea pentru Digitalizarea Romaniei'; requested by stiri 2026-10-27, not yet reviewed by the operator",proposed
