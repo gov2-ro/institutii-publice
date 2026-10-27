@@ -77,6 +77,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] The "Guvernul" and "Ministere" card counts (7,907 and 7,654) include the 6,000 schools funded through the
       Ministerul Educației. Consider a note or a count of direct subordinates only.
 - [x] Landing: replace the category tabs with the "Toate tipurile" side box (spec section 2, item 5). Owner request 2026-10-27. Built 2026-10-27 (not published).
+- [ ] "Toate tipurile" box: records without a type are invisible there. "Companii de stat" shows 10 of 930 records
+      (914 have no family); Altele 182 of 1,235; Agricultură 432 of 936. Add a last row per category,
+      "Alte instituții din categorie · N", that opens the list filtered by the category.
 - [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
 
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)

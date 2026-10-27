@@ -1,5 +1,11 @@
 # Activity log
 
+## 2026-10-27 — Review (Opus): "Toate tipurile" side box accepted
+
+**Decided**
+- Accepted c99bea0 from screenshots at 390 and 1,440 px, light and dark, with a category open and "spital" typed.
+- Follow-up in the backlog: the box hides the 5,272 records without a family. Companii de stat shows 10 of 930.
+
 ## 2026-10-27 — Landing: "Toate tipurile" side box replaces the category tabs (spec section 2, item 5)
 
 **Done**
