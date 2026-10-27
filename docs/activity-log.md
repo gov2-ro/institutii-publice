@@ -1,5 +1,21 @@
 # Activity log
 
+## 2026-10-27 — Linker fix: county-less ANAF names (A4469183)
+
+**Done**
+- `Linker`: an ANAF name that states no county gets its row's county as `_geo`. A source name that states another
+  county no longer links to it (tokens and prefix tiers). Cause of the 16 foreign aliases on A4469183.
+- Build check: ids that were records in a release and now are not get a trail in `merged_ids` when the source row
+  links to an ANAF record (`link_trail`) or the same ANI name sits in one record under another county.
+
+**Measured**
+- A4469183: 16 aliases -> 3; declaratii_count 14,415 -> 14,311. 67 records changed counts or sources; 24,983 -> 24,984
+  records. 3 old D ids (D83ae5f51, D77016141, Dfa62d78e) now merged into the record that holds their ANI name,
+  with a trail; 4 new records appeared (for example G10049, Ilfov AJOFM, no longer pulled into a wrong ANAF row).
+
+**Hard**
+- First run of the new check stopped the build on those 3 ids. The check worked as designed; the trail rule was added.
+
 ## 2026-10-27 — Landing v2 and the page "Cum e organizat statul" (brief landing-v2-organizare)
 
 **Done**

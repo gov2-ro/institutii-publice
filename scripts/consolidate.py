@@ -341,10 +341,11 @@ def released_csvs(min_version=(0, 15, 0)):
             continue
 
 
-def check_absorbed_ids(records, released=None):
+def check_absorbed_ids(records, released=None, link_trail=None):
     """An id that a released tag listed in `merged_ids` must not be a record now, unless curation/unmerged.csv
     (id, reason) says so. Every id of the latest release must still be a record or appear in `merged_ids` or
-    `roepas_ids`. The build stops on a violation."""
+    `roepas_ids`. An id that was a record and is now linked into an ANAF record (`link_trail`), or whose ANI name now
+    sits in one record under another county, is added to that record's `merged_ids`. The build stops on a violation."""
     released = list(released_csvs() if released is None else released)
     if not released:
         return
@@ -362,10 +363,28 @@ def check_absorbed_ids(records, released=None):
             for m in filter(None, (row.get("merged_ids") or "").split(" | ")):
                 if m in ids and m not in allowed:
                     back.setdefault(m, tag)
+    by_id = {r["id"]: r for r in records}
+    by_name = defaultdict(list)
+    for r in records:
+        by_name[fold(r.get("name", ""))].append(r)
+    names = {r["id"]: "name:" + fold(r.get("name", "")) for r in rows}
     lost = sorted(r["id"] for r in rows if r["id"] not in ids and r["id"] not in trail)
+    for i in list(lost):                    # a source row that now links to an ANAF record: the trail goes to that record
+        lt = link_trail or {}
+        keep = by_id.get(lt.get(i) or (lt.get(names[i]) if i.startswith("D") else None))
+        if not keep and i.startswith("D"):             # the same ANI name, filed under another county, is one record now
+            same = by_name.get(names[i][5:], [])
+            keep = same[0] if len(same) == 1 else None
+        if keep:
+            keep["merged_ids"] = list(dict.fromkeys([*keep.get("merged_ids", []), i]))
+            lost.remove(i)
     if back or lost:
         raise SystemExit(f"absorbed ids are records again {dict(sorted(back.items()))}; "
                          f"ids of {released[-1][0]} with no record and no trail {lost[:20]}")
+
+
+def declaratii_id(name, county):
+    return "D" + hashlib.sha1(f"{fold(name)}|{fold(county)}".encode()).hexdigest()[:8]
 
 
 def unique_aliases(records):
@@ -544,7 +563,7 @@ class Linker:
             a["_kind"], a["_canon"] = prep(a["name"])
             a["_toks"] = self.tokens(a["_canon"])
             a["_nums"] = set(re.findall(r"\d+", a["_canon"]))
-            a["_geo"] = self.geo(a["_f"])
+            a["_geo"] = self.geo(a["_f"]) or frozenset({a["_ck"]})      # a name without a county sits in its row's county
             a["_plain"] = " - " not in squash(a["name"])
             self.exact[(a["_ck"], a["_f"])].append(i)
             self.canon[(a["_ck"], a["_canon"])].append(i)
@@ -610,7 +629,7 @@ class Linker:
                 continue
             if f[-1].isdigit() and af[len(f)].isdigit():
                 continue
-            if src_geo and a["_geo"] and src_geo.isdisjoint(a["_geo"]):
+            if src_geo and src_geo.isdisjoint(a["_geo"]):
                 continue
             # a cut on a word boundary may be a generic head ("SERVICIUL DE UTILITATI PUBLICE" -> "... BUFTEA"):
             # accept it only when one ANAF name in the whole country continues it. A mid-word cut is a truncation.
@@ -659,7 +678,7 @@ class Linker:
             a = self.anaf[i]
             if a["_kind"] != kind:
                 continue
-            if src_geo and a["_geo"] and src_geo.isdisjoint(a["_geo"]):
+            if src_geo and src_geo.isdisjoint(a["_geo"]):
                 continue                             # names another county: "DSP Ilfov" is not "DSP Bucuresti"
             if nums and a["_nums"] and nums != a["_nums"]:
                 continue                             # "Scoala nr 1" is not "Scoala nr 2"
@@ -1319,6 +1338,7 @@ def main():
         unified[label != raw] += 1
         return label
 
+    link_trail = {}              # id a source row would have had as a record -> id of the ANAF record it joined
     links = {"roepas": defaultdict(list), "registrul": defaultdict(list), "declaratii": defaultdict(list)}
     standalone = {"roepas": [], "registrul": [], "declaratii": []}
     for src, rows in (("roepas", roepas), ("registrul", registrul)):
@@ -1326,6 +1346,8 @@ def main():
             tier, idx, score, cands = linker.link(row["county"], row["name"], row.get("city"))
             if tier in TIER_RANK:
                 links[src][idx[0]].append((tier, row))
+                if src == "registrul":
+                    link_trail["G" + row["num"]] = "A" + anaf[idx[0]]["cif"]
             else:
                 standalone[src].append((tier, idx, score, row, cands))
     county_re = re.compile(r"\b(" + "|".join(sorted(county_display, key=len, reverse=True)) + r")\b")
@@ -1343,6 +1365,7 @@ def main():
         row = {**row, "county": county_of(ck)}
         if tier in TIER_RANK:
             links["declaratii"][idx[0]].append((tier, row))
+            link_trail["name:" + fold(row["name"])] = "A" + anaf[idx[0]]["cif"]
         else:
             standalone["declaratii"].append((tier, idx, score, row, cands))
 
@@ -1410,7 +1433,7 @@ def main():
     for tier, idx, score, r, cands in declaratii_standalone(standalone["declaratii"], aggregate):
         group = r.get("group")
         records.append({
-            "id": "D" + hashlib.sha1(f"{fold(r['name'])}|{fold(r['county'])}".encode()).hexdigest()[:8],
+            "id": declaratii_id(r["name"], r["county"]),
             "name": r["name"], "county": r["county"], "uat": None, "address": None, "cif": None,
             "cif_tva": None, "parents": [],
             "category": COMPANY if group and re.match(r"(societati|companii|regii)", group)
@@ -1430,7 +1453,7 @@ def main():
     merge_stats["curated"] = apply_curated_merges(records, load_curated_merges())
     merge_stats["sector_names"] = strip_sector_suffix(records)
     check_aliases(records)
-    check_absorbed_ids(records)
+    check_absorbed_ids(records, link_trail=link_trail)
     merge_stats["same_body"] = apply_same_body(records)
     sector_stats = infer_sectors(records)
     sector_stats["unified"] += unified[True]

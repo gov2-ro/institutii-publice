@@ -31,7 +31,11 @@ puts the structure of the state after them.
 
 ## 2. Landing page v2
 
-Order, from the top. Every section uses the active filters, as now (the website default stays).
+Order, from the top. Every section uses the active filters, as now (the website default stays), with one
+exception. **The tiles of section 3 and the cards of section 4 ignore the website filter** (owner, 2026-10-27).
+Their counts include records without a website, and their links carry `web=0`. *Why:* with the default, 27 tile
+labels had no record and the courts and hospitals disappeared; a visitor needs the address and phone too.
+Search, the type tabs and the map keep the website default.
 
 1. **Search.** A large search field: "Caută o instituție, o localitate sau un CIF". Under it, three example
    links (for example "Spitalul Județean Cluj", "Primăria Iași", a CIF). Enter opens the list view with `q`
@@ -79,8 +83,9 @@ Order, from the top. Every section uses the active filters, as now (the website 
 5. **Tipuri de instituții** — the category tabs of today, unchanged.
 6. **Județe** — the county map and the county list of today, unchanged.
 
-Phone (320–390 px): one column. Search, then the county selects, then the tiles in one column. Each tile shows
-its title and its first 3 links; a "+ N" link opens the family list. Touch targets stay at least 44 px.
+Phone (320–390 px): one column. Search, then the county selects, then the tiles in one column. On phones the
+tiles and the cards start collapsed to their title row (a disclosure), and the county list under the map sits
+behind a disclosure. Target: the landing page at 390 px is at most about 3,000 px tall with everything collapsed. Touch targets stay at least 44 px.
 
 Icons: inline SVG, line style, `stroke="currentColor"`, `aria-hidden="true"`, one `<symbol>` sprite in the page.
 The DS has no icon set ("Not in the DS yet"), so the class is `org-icon`. Open a `ds-proposal` issue only when a

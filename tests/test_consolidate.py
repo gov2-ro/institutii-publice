@@ -320,6 +320,12 @@ class AbsorbedIds(unittest.TestCase):
         with self.assertRaises(SystemExit):
             c.check_absorbed_ids([{"id": "A1", "merged_ids": ["B1", "B2"]}], [("v1", self.OLD)])      # B3 vanished
 
+    def test_same_ani_name_in_another_county_gets_a_trail(self):
+        old = "id,name,merged_ids\nD1,Spitalul X,\nD2,Spitalul X,\n"
+        recs = [{"id": "D2", "name": "Spitalul X"}]
+        c.check_absorbed_ids(recs, [("v1", old)])
+        self.assertEqual(recs[0]["merged_ids"], ["D1"])
+
     def test_curated_merge_uses_survivor_of_absorbed_id(self):
         keep = {**source_rec("R9", "Ministerul X"), "id": "A1", "cif": "1", "sources": ["anaf"], "merged_ids": ["G5"]}
         sub = source_rec("R1", "Y")

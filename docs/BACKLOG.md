@@ -136,9 +136,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] `aliases_unique` column built 2026-10-27 (5,239 records): aliases whose folded text no other record uses and that
       are not a bare kind of body. 41 rows "Consiliul Judetean X" added to `curation/aliases.csv` as `proposed`;
       the operator must review them (a row becomes `reviewed` on approval).
-- [ ] A4469183 "INSPECTORATUL DE POLITIE JUDETEAN" (ANAF, Arges, no county in the name) carries 16 aliases that name other
-      counties' IPJs. The linker attached them to a record that is not theirs. Find the tier and fix it; `aliases_unique`
-      keeps these wrong aliases (they are unique to this record).
+- [x] A4469183 generic IPJ record: fixed 2026-10-27. The tokens tier let a source name that states county X link to
+      an ANAF row of county Y when the ANAF name states no county. An ANAF name without a county now counts as
+      its row's county. 16 foreign aliases -> 0 (3 aliases left, all Arges or bare). 67 records changed counts.
 - [x] Cross-source duplicates reported by stiri (2026-10-27): sector-relaxed same-name key, nationwide pass for
       Bucuresti bodies, `curation/merges.csv`, sector suffix removed from source-only names. Tag v0.15.0.
 - [x] Alias master `curation/aliases.csv` (105 rows from stiri, ids checked against each build).
