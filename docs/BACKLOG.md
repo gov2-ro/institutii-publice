@@ -90,6 +90,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Map: counts per 10,000 inhabitants (needs INS population per county; licence and date to record).
 - [ ] A family label is cut off: "Centrul național pentru conservarea și promovarea culturii t" (seen in Domenii,
       Cultură). Check `pretty` / the network-family key for truncated tokens.
+- [ ] Despre: the source files show local paths and raw export names ("Lens Visualization [2026-10-19…] 3.csv").
+      Show a readable name per source and keep the path in a detail line.
 - [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
 
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)

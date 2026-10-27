@@ -1,5 +1,12 @@
 # Activity log
 
+## 2026-10-28 — Review (Opus): limited preview polish accepted
+
+**Decided**
+- Accepted bdd39ce against `docs/briefs/limited-preview.md`, from screenshots (landing top in dark, footer, Despre
+  contact). Accepted the shortened footer text "Surse: …" (it lets the footer fit one row at 1,440 px).
+- Not checked: a real share preview of `og.png` (needs the published site; use a share debugger after publishing).
+
 ## 2026-10-28 — Limited preview polish (brief limited-preview)
 
 **Done**
