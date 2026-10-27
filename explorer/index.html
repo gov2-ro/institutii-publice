@@ -269,7 +269,10 @@
   .org-clear { min-height: 44px; padding: 0 var(--g2-space-2); }
   .org-clear[hidden] { display: none; }
   .org-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--g2-space-4); }
-  .org-tile { display: flex; flex-direction: column; gap: var(--g2-space-2); min-width: 0; }
+  .org-tile { display: flex; flex-direction: column; min-width: 0; }
+  .org-tile h3 + .org-tbody { margin-top: var(--g2-space-2); }
+  .org-tbody { flex: 1; }
+  .org-tbody > .sub { margin: 0; }
   .org-tile h3 { display: flex; gap: var(--g2-space-2); align-items: center; margin: 0; font-size: 1.125rem; }
   .org-tile > .sub { margin: 0; }
   .org-links { margin: 0; padding: 0; list-style: none; }
@@ -277,7 +280,16 @@
   .org-links li:last-child { border-bottom: 0; }
   .org-links li > a { display: inline-flex; align-items: center; min-height: 44px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .org-links li > .count { align-self: center; }
-  .org-more { display: none; min-height: 44px; align-self: flex-start; }
+  .org-tbody { display: flex; flex-direction: column; gap: var(--g2-space-2); min-width: 0; }
+  .org-tbody[hidden] { display: none; }
+  .org-tt { display: flex; gap: var(--g2-space-2); align-items: center; width: 100%; min-height: 44px; padding: 0; border: 0; background: none; color: inherit;
+            font: inherit; font-weight: inherit; text-align: left; cursor: pointer; }
+  .org-tt-l { flex: 1; min-width: 0; }
+  .org-chev { flex: none; width: .6em; height: .6em; margin-right: 4px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform .1s; }
+  .org-tt[aria-expanded=true] .org-chev { transform: rotate(-135deg); }
+  .org-cdet > summary::before { content: "▸"; width: 1em; }
+  .org-cdet[open] > summary::before { content: "▾"; }
+  .org-cdet > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
   .org-selform { display: flex; gap: var(--g2-space-2); align-items: flex-end; margin-top: auto; padding-top: var(--g2-space-2); }
   .org-selform .g2-field { flex: 1; min-width: 0; }
   .org-after { margin: var(--g2-space-3) 0 0; }
@@ -299,9 +311,9 @@
     .navmore .panel { position: absolute; right: 0; width: 290px; max-width: calc(100vw - 24px); }
     th.c, td.c, table.lt .c-cat, table.lt .c-where { display: none; }
     .csv-hint { display: none; }
-    .org-grid { grid-template-columns: minmax(0, 1fr); gap: var(--g2-space-3); }
-    .org-more { display: inline-flex; align-items: center; }
-    .org-tile:not(.open) .org-links li:nth-child(n+4) { display: none; }
+    .org-grid { grid-template-columns: minmax(0, 1fr); gap: var(--g2-space-2); }
+    .org-tile { padding: 0 var(--g2-space-3); }
+    .org-tile h3 + .org-tbody { margin-top: 0; padding-bottom: var(--g2-space-3); }
     .org-searchform .g2-btn { padding-inline: var(--g2-space-3); }
   }
 }
@@ -574,7 +586,7 @@
       (skip === 'county' || !S.county || r.county === S.county) &&
       (skip === 'uat' || !S.uat || r.u === S.uat) &&
       (skip === 'src' || !srcList.length || (S.srcMode === 'all' ? srcList.every(k => srcTest[k](r)) : srcList.some(k => srcTest[k](r)))) &&
-      (!S.web || r.w) &&
+      (skip === 'web' || !S.web || r.w) &&
       (!S.review || needsReview(r)) &&
       qTokens.every(t => r.hay.includes(t));
 
@@ -1337,7 +1349,9 @@
         links: [{ cat: 'Companii de stat' }, { fam: 'Regie autonomă' }, { cat: 'Servicii publice locale și regii' }] },
     ];
     const HOME_EXAMPLES = ['Municipiul Iași', 'Spital Cluj', '4541580'];
-    const HOME_COUNTY_KEY = 'org-home-county', HOME_SHOWN = 3;       // links a tile shows on a phone before "+ N"
+    const HOME_COUNTY_KEY = 'org-home-county';
+    const homePhone = matchMedia('(max-width: 760px)'), homeOpen = new Set();   // phone: the open tiles and cards (by title)
+    homePhone.addEventListener('change', () => { if (S.view === 'acasa') update(); });
     const famKnown = new Set(fams), homeWarned = new Set();
     const homeWarn = label => { if (!homeWarned.has(label)) { homeWarned.add(label); console.warn('[org] HOME_TASKS: absent family', label); } };
     const icon = id => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1350,19 +1364,27 @@
     const countyName = c => c === 'Bucuresti' ? 'București' : c;
     function renderHome(items) {
       const ctx = buildCtx(items, isFiltered());
-      const byFam = new Map(), byRecCat = new Map(), byId = new Map();
-      for (const r of items) {
-        byId.set(r.id, r);
-        if (r.fam) { if (!byFam.has(r.fam)) byFam.set(r.fam, []); byFam.get(r.fam).push(r); }
-        byRecCat.set(r.cat, (byRecCat.get(r.cat) || 0) + 1);
+      const byFam = new Map();
+      for (const r of items) if (r.fam) { if (!byFam.has(r.fam)) byFam.set(r.fam, []); byFam.get(r.fam).push(r); }
+      // tiles and cards ignore the website filter (owner, 2026-10-27); every other filter applies
+      const allRows = rows.filter(r => pass(r, 'web')), ctxAll = buildCtx(allRows, isFiltered());
+      const allByFam = new Map(), allByCat = new Map(), allById = new Map();
+      for (const r of allRows) {
+        allById.set(r.id, r);
+        if (r.fam) { if (!allByFam.has(r.fam)) allByFam.set(r.fam, []); allByFam.get(r.fam).push(r); }
+        allByCat.set(r.cat, (allByCat.get(r.cat) || 0) + 1);
       }
+      const noWeb = () => { S.web = false; el.web.checked = false; };
       const families = [...byFam].sort((a, b) => b[1].length - a[1].length || coll.compare(a[0], b[0]));
-      const familyHref = (f, list, k) => list.length === 1 && !k ? browseHref({ id: list[0].id }) : browseHref({ v: 'fam', fam: f, cat: '', k });
-      const familyLink = (f, list, cls, k) => browseLink(f, familyHref(f, list, k), () => { if (k && list.length > 1) S.county = k; focusFamily(f, '', list); }, cls);
-      const stateMatches = n => [...subtree(n.id)].filter(r => ctx.matchSet.has(r));
-      const stateHref = (n, matches) => matches.length === 1 ? browseHref({ id: matches[0].id }) : browseHref({ v: 'stat', n: stateTarget(n.id) });
+      const familyHref = (f, list, k, nw) => list.length === 1 && !k && !nw ? browseHref({ id: list[0].id }) : browseHref({ v: 'fam', fam: f, cat: '', k, web: nw ? '0' : '' });
+      const familyLink = (f, list, cls, k, nw) => browseLink(f, familyHref(f, list, k, nw), () => {
+        if (nw && list.length > 1) noWeb();               // one record opens in the dialog; the filter stays
+        if (k && list.length > 1) S.county = k;
+        focusFamily(f, '', list); }, cls);
+      const stateMatches = n => [...subtree(n.id)].filter(r => ctxAll.matchSet.has(r));
+      const stateHref = (n, matches) => matches.length === 1 ? browseHref({ id: matches[0].id }) : browseHref({ v: 'stat', n: stateTarget(n.id), web: '0' });
       const li = (link, count) => h('li', null, link, h('span', { class: 'count' }, fmt(count)));
-      const goList = patch => { Object.assign(S, patch); S.node = ''; setView('list'); window.scrollTo(0, 0); };
+      const goList = patch => { noWeb(); Object.assign(S, patch); S.node = ''; setView('list'); window.scrollTo(0, 0); };
 
       /* 1. search */
       const go = q => { q = (q || '').trim(); if (!q) return; S.q = q; el.q.value = q; leaveHome(); update(); window.scrollTo(0, 0); };
@@ -1407,24 +1429,29 @@
           const links = [];
           for (const f of tk.fams) {
             if (!famKnown.has(f)) { homeWarn(f); continue; }
-            const all = byFam.get(f);
-            if (!all) continue;                              // no record passes the filters (for example, none has a website)
+            const all = allByFam.get(f);
+            if (!all) continue;                              // no record passes the filters
             const list = k ? all.filter(r => r.county === k) : all;
-            if (list.length) links.push(li(familyLink(f, list, 'link acc', k), list.length));
+            if (list.length) links.push(li(familyLink(f, list, 'link acc', k, true), list.length));
           }
           return links.length ? tile(tk, links) : null;
         }).filter(Boolean);
       }
+      /* a tile or a card. On a phone it starts collapsed to its title row (a button with aria-expanded). */
+      let tileN = 0;
       function tile(def, links, extra) {
-        const box = h('div', { class: 'g2-tile org-tile' }, h('h3', null, icon(def.icon), h('span', null, def.t)),
-          extra || null, h('ul', { class: 'org-links' }, links));
-        if (links.length > HOME_SHOWN) {
-          const b = h('button', { class: 'link acc org-more', type: 'button', 'aria-expanded': 'false', onclick: () => {
-            const open = box.classList.toggle('open'); b.setAttribute('aria-expanded', String(open));
-            b.textContent = open ? 'Mai puține' : `+ ${links.length - HOME_SHOWN}`; } }, `+ ${links.length - HOME_SHOWN}`);
-          box.append(b);
-        }
-        return box;
+        const id = `org-t${++tileN}`, phone = homePhone.matches;
+        const body = h('div', { class: 'org-tbody', id }, extra || null, h('ul', { class: 'org-links' }, links));
+        const ttl = [icon(def.icon), h('span', { class: 'org-tt-l' }, def.t)];
+        let head;
+        if (phone) {
+          const open = homeOpen.has(def.t);
+          body.hidden = !open;
+          head = h('h3', null, h('button', { class: 'org-tt', type: 'button', 'aria-expanded': String(open), 'aria-controls': id, onclick: e => {
+            const on = body.hidden; body.hidden = !on; e.currentTarget.setAttribute('aria-expanded', String(on)); on ? homeOpen.add(def.t) : homeOpen.delete(def.t); } },
+            ...ttl, h('span', { class: 'org-chev', 'aria-hidden': 'true' })));
+        } else head = h('h3', null, ...ttl);
+        return h('div', { class: 'g2-tile org-tile' }, head, body);
       }
       function refreshTasks() { tasksBox.replaceChildren(...buildTiles()); }
       refreshTasks();
@@ -1433,17 +1460,17 @@
       /* 4. how the state is organised: one card per branch */
       const nodeLink = id => {
         const n = vnode.get(id);
-        if (!n || !ctx.visible(id)) return null;
+        if (!n || !ctxAll.visible(id)) return null;
         const matches = stateMatches(n);
-        return matches.length ? li(browseLink(n.label, stateHref(n, matches), () => focusNode(id), 'link acc'), matches.length) : null;
+        return matches.length ? li(browseLink(n.label, stateHref(n, matches), () => { const m = stateMatches(n); if (m.length === 1) openRecord(m[0]); else { noWeb(); focusNode(id); } }, 'link acc'), matches.length) : null;
       };
       const branchLinks = l => {
         if (l.node) return nodeLink(l.node);
-        if (l.cat) { const n = byRecCat.get(l.cat); return n ? li(browseLink(l.cat, browseHref({ v: 'list', cat: l.cat, fam: '' }), () => goList({ cat: l.cat, fam: '' }), 'link acc'), n) : null; }
+        if (l.cat) { const n = allByCat.get(l.cat); return n ? li(browseLink(l.cat, browseHref({ v: 'list', cat: l.cat, fam: '', web: '0' }), () => goList({ cat: l.cat, fam: '' }), 'link acc'), n) : null; }
         if (!famKnown.has(l.fam)) { homeWarn(l.fam); return null; }
-        const list = byFam.get(l.fam);
+        const list = allByFam.get(l.fam);
         if (!list) return null;
-        return li(familyLink(l.fam, list, 'link acc'), list.length);
+        return li(familyLink(l.fam, list, 'link acc', '', true), list.length);
       };
       const branchSelect = (b, idx) => {
         const s = b.select;
@@ -1451,11 +1478,11 @@
         const id = `home-b${idx}`;
         let opts;
         if (s.counties) opts = counties.map(c => [c, countyName(c)]);
-        else opts = s.nodes.flatMap(n => (vnode.get(n) ? vnode.get(n).recs : [])).filter(r => ctx.matchSet.has(r)).sort((a, c) => coll.compare(a.n, c.n)).map(r => [r.id, r.n]);
+        else opts = s.nodes.flatMap(n => (vnode.get(n) ? vnode.get(n).recs : [])).filter(r => ctxAll.matchSet.has(r)).sort((a, c) => coll.compare(a.n, c.n)).map(r => [r.id, r.n]);
         if (!opts.length) return null;
         const sel = h('select', { class: 'g2-input', id }, h('option', { value: '' }, 'Alege…'), opts.map(([v, t]) => h('option', { value: v }, t)));
         return h('form', { class: 'org-selform', onsubmit: e => { e.preventDefault(); if (!sel.value) { sel.focus(); return; }
-          if (s.counties) openCounty(sel.value); else { const r = byId.get(sel.value); if (r) openRecord(r); } } },
+          if (s.counties) { noWeb(); openCounty(sel.value); } else { const r = allById.get(sel.value); if (r) openRecord(r); } } },
           h('div', { class: 'g2-field' }, h('label', { class: 'g2-label', for: id }, s.label), sel),
           h('button', { class: 'g2-btn g2-secondary', type: 'submit' }, 'Vezi'));
       };
@@ -1463,7 +1490,7 @@
         const links = b.links.map(branchLinks).filter(Boolean), sel = branchSelect(b, i);
         if (!links.length && !sel) return null;
         const t = tile(b, links, h('p', { class: 'sub' }, b.text));
-        if (sel) t.append(sel);
+        if (sel) t.querySelector('.org-tbody').append(sel);
         return t;
       }).filter(Boolean);
       const stateSec = h('section', { class: 'home-sec', 'aria-labelledby': 'h-state' }, h('h2', { id: 'h-state' }, 'Cum e organizat statul'),
@@ -1507,7 +1534,8 @@
       const sec3 = h('section', { class: 'home-sec', 'aria-labelledby': 'h-map' }, h('h2', { id: 'h-map' }, 'Județe'),
         h('p', { class: 'sub' }, 'Înregistrări care corespund filtrelor, pe județ. Alege un județ pentru profilul lui.'
           + (noCounty ? ` ${plural(noCounty, 'înregistrare fără județ', 'înregistrări fără județ')}.` : '')),
-        h('div', { class: 'maprow' }, h('div', { class: 'mapcol' }, mapBox), h('div', { class: 'mapside' }, list)));
+        h('div', { class: 'maprow' }, h('div', { class: 'mapcol' }, mapBox), h('div', { class: 'mapside' }, homePhone.matches
+          ? h('details', { class: 'org-cdet' }, h('summary', null, `Lista județelor (${counties.length})`), list) : list)));
       countyMap(mapBox);
       return h('div', null, searchSec, placeSec, tasksSec, stateSec, types, sec3);
     }

@@ -41,17 +41,19 @@
   /* the diagram: a dashed frame, groups as a grid on desktop, one column on phones */
   .org-frame { margin: var(--g2-space-4) 0; padding: var(--g2-space-4); border: 2px dashed var(--muted); }
   .org-frame > .org-frame-t { margin: 0 0 var(--g2-space-3); font-weight: 700; font-size: var(--g2-font-size-heading-section); }
-  .org-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--g2-space-4); }
+  .org-groups { align-items: start; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--g2-space-4); }
   .org-group { --gbg: var(--sunken); --gline: var(--muted); --gink: var(--text);
     min-width: 0; padding: var(--g2-space-3); background: var(--gbg); color: var(--gink); border: 3px var(--gstyle, solid) var(--gline); }
   .org-group[data-line=solid] { --gstyle: solid; }
   .org-group[data-line=dashed] { --gstyle: dashed; }
   .org-group[data-line=dotted] { --gstyle: dotted; }
+  .org-group[data-line=groove] { --gstyle: groove; border-width: 6px; }
   .org-group[data-line=double] { --gstyle: double; border-width: 6px; }
   .org-group[data-g=leg] { --gbg: rgb(var(--g2-color-info-bg)); --gline: rgb(var(--g2-color-info-line)); --gink: rgb(var(--g2-color-info-ink)); }
   .org-group[data-g=ctl] { --gbg: rgb(var(--g2-color-progress-bg)); --gline: rgb(var(--g2-color-progress-line)); --gink: rgb(var(--g2-color-progress-ink)); }
   .org-group[data-g=pres], .org-group[data-g=ter] { --gbg: rgb(var(--g2-color-success-bg)); --gline: rgb(var(--g2-color-success-line)); --gink: rgb(var(--g2-color-success-ink)); }
-  .org-group[data-g=jud], .org-group[data-g=ccr] { --gbg: rgb(var(--g2-color-warning-bg)); --gline: rgb(var(--g2-color-warning-line)); --gink: rgb(var(--g2-color-warning-ink)); }
+  .org-group[data-g=jud] { --gbg: rgb(var(--g2-color-warning-bg)); --gline: rgb(var(--g2-color-warning-line)); --gink: rgb(var(--g2-color-warning-ink)); }
+  .org-group[data-g=ccr] { --gbg: rgb(var(--g2-color-surface-sunken)); --gline: rgb(var(--g2-color-text)); --gink: rgb(var(--g2-color-text)); }
   .org-group[data-g=loc] { --gbg: rgb(var(--g2-color-info-bg)); --gline: rgb(var(--g2-color-info-line)); --gink: rgb(var(--g2-color-info-ink)); }
   .org-group[data-g=ent] { --gbg: rgb(var(--g2-color-danger-bg)); --gline: rgb(var(--g2-color-danger-line)); --gink: rgb(var(--g2-color-danger-ink)); }
   .org-group h3 { margin: 0 0 var(--g2-space-2); font-size: 1.0625rem; }
@@ -73,6 +75,7 @@
   .org-key li { display: flex; gap: var(--g2-space-3); align-items: center; }
   .org-sw { flex: none; width: 56px; height: 0; border-top: 3px solid var(--text); }
   .org-sw[data-line=dashed] { border-top-style: dashed; } .org-sw[data-line=dotted] { border-top-style: dotted; }
+  .org-sw[data-line=groove] { border-top: 6px groove var(--text); }
   .org-sw[data-line=double] { border-top: 6px double var(--text); }
   .org-rels dt { margin-top: var(--g2-space-4); font-weight: 700; }
   .org-rels dd { margin: var(--g2-space-1) 0 0; }
@@ -143,16 +146,16 @@
 <article class="org-group" data-g="ter" data-line="solid" aria-labelledby="g-ter">
 <h3 id="g-ter">Guvernul în județe</h3>
 <p class="org-rel"><span class="org-rel-k">Relația:</span> prefectul conduce serviciile publice deconcentrate<span class="org-cite"> (Constituția, art. 123 alin. 2)</span></p>
-<ul class="org-boxes"><li><a class="org-box" href="index.html#v=fam&amp;fam=Institu%C8%9Bia%20prefectului%20jude%C8%9Bul&amp;web=0"><span class="org-box-t">Instituția prefectului</span><span class="org-box-sub">Guvernul numește un prefect în fiecare județ (art. 123 alin. 1)</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Direc%C8%9Bia%20de%20s%C4%83n%C4%83tate%20public%C4%83&amp;web=0"><span class="org-box-t">Direcția de sănătate publică</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Inspectoratul%20teritorial%20de%20munc%C4%83&amp;web=0"><span class="org-box-t">Inspectoratul teritorial de muncă</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Inspectoratul%20%C8%99colar%20jude%C8%9Bean&amp;web=0"><span class="org-box-t">Inspectoratul școlar județean</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Direc%C8%9Bia%20general%C4%83%20finan%C8%9Belor%20publice&amp;web=0"><span class="org-box-t">Direcția generală a finanțelor publice</span></a></li></ul><p class="org-gnote">Casetele de mai sus sunt exemple de tipuri din listă. Nu am verificat actul de înființare al fiecărui tip.</p>
+<ul class="org-boxes"><li><a class="org-box" href="index.html#v=fam&amp;fam=Institu%C8%9Bia%20prefectului%20jude%C8%9Bul&amp;web=0"><span class="org-box-t">Instituția prefectului</span><span class="org-box-sub">Guvernul numește un prefect în fiecare județ (art. 123 alin. 1)</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Direc%C8%9Bia%20de%20s%C4%83n%C4%83tate%20public%C4%83&amp;web=0"><span class="org-box-t">Direcția de sănătate publică</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Inspectoratul%20teritorial%20de%20munc%C4%83&amp;web=0"><span class="org-box-t">Inspectoratul teritorial de muncă</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Inspectoratul%20%C8%99colar%20jude%C8%9Bean&amp;web=0"><span class="org-box-t">Inspectoratul școlar județean</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Direc%C8%9Bia%20general%C4%83%20finan%C8%9Belor%20publice&amp;web=0"><span class="org-box-t">Direcția generală a finanțelor publice</span></a></li></ul><p class="org-gnote">Exemple de servicii publice deconcentrate din listă.</p>
 </article>
 <article class="org-group" data-g="jud" data-line="dotted" aria-labelledby="g-jud">
 <h3 id="g-jud">Autoritatea judecătorească</h3>
 <p class="org-rel"><span class="org-rel-k">Relația:</span> judecătorii sunt independenți și se supun numai legii<span class="org-cite"> (Constituția, art. 124 alin. 3)</span></p>
 <ul class="org-boxes"><li><a class="org-box" href="index.html#v=stat&amp;n=justitie&amp;web=0"><span class="org-box-t">Înalta Curte de Casație și Justiție, Consiliul Superior al Magistraturii</span><span class="org-box-sub">ÎCCJ asigură aplicarea unitară a legii (art. 126 alin. 3)</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Curtea%20de%20apel&amp;web=0"><span class="org-box-t">Curți de apel</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Tribunalul&amp;web=0"><span class="org-box-t">Tribunale</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Judecatoria&amp;web=0"><span class="org-box-t">Judecătorii</span></a></li><li><a class="org-box" href="index.html#v=fam&amp;fam=Parchetul%20de%20pe%20l%C3%A2ng%C4%83%20tribunalul&amp;web=0"><span class="org-box-t">Parchetele de pe lângă instanțe</span><span class="org-box-sub">Ministerul Public: parchete pe lângă instanțele de judecată (art. 131 alin. 3)</span></a></li></ul>
 </article>
-<article class="org-group" data-g="ccr" data-line="dotted" aria-labelledby="g-ccr">
+<article class="org-group" data-g="ccr" data-line="groove" aria-labelledby="g-ccr">
 <h3 id="g-ccr">Curtea Constituțională</h3>
-<p class="org-rel"><span class="org-rel-k">Relația:</span> garantul supremației Constituției; are titlul ei în Constituție<span class="org-cite"> (Constituția, art. 142 alin. 1 și Titlul V)</span></p>
+<p class="org-rel"><span class="org-rel-k">Relația:</span> garantul supremației Constituției; are titlul ei în Constituție, în afara autorității judecătorești<span class="org-cite"> (Constituția, art. 142 alin. 1 și Titlul V)</span></p>
 <ul class="org-boxes"><li><a class="org-box" href="index.html#v=stat&amp;n=ccr&amp;web=0"><span class="org-box-t">Curtea Constituțională</span></a></li></ul>
 </article>
 <article class="org-group" data-g="ctl" data-line="dashed" aria-labelledby="g-ctl">
@@ -178,7 +181,7 @@
 <article class="org-group" data-g="own" data-line="dotted" aria-labelledby="g-own">
 <h3 id="g-own">Instituții cu statut propriu</h3>
 <p class="org-rel"><span class="org-rel-k">Relația:</span> universitățile au autonomie universitară<span class="org-cite"> (Constituția, art. 32 alin. 6)</span></p>
-<ul class="org-boxes"><li><a class="org-box" href="index.html#v=fam&amp;fam=Universitate&amp;web=0"><span class="org-box-t">Universități</span></a></li><li><a class="org-box" href="index.html#v=stat&amp;n=academii&amp;web=0"><span class="org-box-t">Academii și alte instituții publice autonome</span></a></li><li><a class="org-box" href="index.html#v=stat&amp;n=servicii&amp;web=0"><span class="org-box-t">Servicii publice autonome</span><span class="org-box-sub">de exemplu Societatea Română de Radiodifuziune</span></a></li></ul><p class="org-gnote">Nu am verificat în lege autonomia academiilor și a serviciilor din această grupă. Grupa urmează încadrarea din explorer.</p>
+<ul class="org-boxes"><li><a class="org-box" href="index.html#v=fam&amp;fam=Universitate&amp;web=0"><span class="org-box-t">Universități</span></a></li><li><a class="org-box" href="index.html#v=stat&amp;n=academii&amp;web=0"><span class="org-box-t">Academii și alte instituții publice autonome</span></a></li><li><a class="org-box" href="index.html#v=stat&amp;n=servicii&amp;web=0"><span class="org-box-t">Servicii publice autonome</span><span class="org-box-sub">de exemplu Societatea Română de Radiodifuziune</span></a></li></ul><p class="org-gnote">Încadrarea academiilor și a serviciilor publice autonome este disputată; grupa urmează încadrarea din exploratorul «Structura statului».</p>
 </article>
 </div>
 </div>
@@ -189,6 +192,7 @@
   <li><span class="org-sw" data-line="solid"></span><span><strong>Contur continuu</strong>: conducere sau subordonare.</span></li>
   <li><span class="org-sw" data-line="dashed"></span><span><strong>Contur întrerupt</strong>: legătură cu Parlamentul (control sau numire).</span></li>
   <li><span class="org-sw" data-line="dotted"></span><span><strong>Contur punctat</strong>: autonomie sau independență.</span></li>
+  <li><span class="org-sw" data-line="groove"></span><span><strong>Contur în relief</strong>: Curtea Constituțională, cu titlul ei în Constituție.</span></li>
   <li><span class="org-sw" data-line="double"></span><span><strong>Contur dublu</strong>: autoritate publică tutelară.</span></li>
 </ul>
 <p>Cuvintele de mai jos apar des în acte. Codul administrativ nu definește <span class="org-term">subordonarea</span>, <span class="org-term">coordonarea</span> și <span class="org-term">autoritatea</span> la art. 5 (verificat în textul de pe legislatie.just.ro). De aceea dăm câte un exemplu din textul legii.</p>

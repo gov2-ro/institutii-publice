@@ -38,6 +38,20 @@
 
 ## 2026-10-27 — Landing v2 and the page "Cum e organizat statul" (brief landing-v2-organizare)
 
+**Review round 1 (Opus): accepted with 5 corrections**
+- Corrections made (same day): (1) tiles and cards ignore the website filter; their links, counts and selects carry
+  `web=0` (a record opened in the dialog keeps the filter); (2) phone: tiles and cards start collapsed (button with
+  `aria-expanded`), the county list sits in a `<details>`, the "+ N" button is gone; (3) the two "Nu am verificat…" notes
+  on `organizare.html` are replaced by the wording of the review; (4) Curtea Constituțională has its own colour
+  (neutral surface) and its own line style (groove); (5) diagram groups use `align-items: start`.
+- Measured after the corrections: 40 of 40 `HOME_TASKS` labels visible with the default state (task links 40, was 31
+  together with the cards; card links 22; "Instanțe și parchete" tile and the court links of Justiție present; Sănătate
+  shows the 6 hospital and health types). With county Cluj: 37 task links, all with `k=Cluj`.
+- Landing height at 390 px: 5,970 px (round 1), 2,909 px with everything collapsed; 320 px: 3,209 px. At 1,440 px:
+  3,468 px (was 2,895 px, the tiles now show all 40 links). No horizontal scroll at 320 to 1,440 px; no control under 44 px.
+- Diagram frame height (light): 2,811 px at 768, 2,579 px at 1,024, 2,025 px at 1,440. 34 of 34 box links still
+  open a non-empty view; 62 tile and card links and 22 card links: none empty. 44 tests pass; roots check true.
+
 **Done**
 - `explorer/index.html`, `renderHome`: search (writes the same `S.q`, opens the list), "Unde locuiești?" (two selects,
   "Arată", "Șterge", county in `localStorage` key `org-home-county`, try/catch, memory fallback), "De ce ai nevoie?"
