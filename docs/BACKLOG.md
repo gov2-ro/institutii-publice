@@ -121,10 +121,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Courts check done 2026-10-27 ([report](reports/2026-10-27-courts-cif-check.md)): the register shows the same
       name, address and phone under both CIFs; not merged. Linked 2026-10-27 by `same_body_as` (29 pairs, operator decision).
 - [x] 12 more court pairs linked 2026-10-27 (partners found by hand; see `curation/same_body.csv`).
-- [ ] 15 more A47372... courts have exactly one A4... partner in the same city and street but were not named in the
-      operator decision: CA Pitesti, Trib. Arges, CA Bacau, Trib. Bacau, CA Oradea, Trib. Bihor, Trib. Botosani,
-      CA Brasov, Trib. Brasov, Trib. Covasna, Trib. Hunedoara, Trib. Neamt, Trib. Satu Mare, CA Suceava, Trib. Suceava.
-      Ask the operator whether to link them.
+- [x] 15 more A47372... courts linked 2026-10-27 (operator principle: two records of one court). 56 links in all.
 - [ ] stiri, 32 ambiguous pairs: non-court ones (Romsilva D4618737e / G10796, 168 mentions, and others) need evidence
       listed for the operator. Not linked.
 - [ ] ADR Vest (Timisoara) has no record in any source. stiri counts 7 mentions. Add a curated record, then alias rows.

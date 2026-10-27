@@ -1,5 +1,14 @@
 # Activity log
 
+## 2026-10-27 — 15 more court links
+
+**Done**
+- Operator principle (via stiri): two records of one court are the same body. The 15 courts of the 47372... series
+  are linked to their one A4... partner (same county, city and street). 56 `same_body_as` links now.
+
+**Decided**
+- Only courts; a Court of Appeal and a Tribunal never link (each pair has the same court type).
+
 ## 2026-10-27 — 12 more court links
 
 **Done**
