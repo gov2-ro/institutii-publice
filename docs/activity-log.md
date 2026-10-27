@@ -1,5 +1,11 @@
 # Activity log
 
+## 2026-10-27 — County council alias rows approved
+
+**Done**
+- The operator approved the 41 "Consiliul Județean X" rows (relayed by the stiri session). All are `reviewed` in
+  `curation/aliases.csv`. The tag also carries the AJOFM Ilfov fix of the previous entry.
+
 ## 2026-10-27 — Fix: AJOFM Ilfov split and a gap in the id check (found by stiri on v0.33.0)
 
 **Done**
