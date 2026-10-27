@@ -1,5 +1,31 @@
 # Activity log
 
+## 2026-10-27 — DS v0.14.0: breadcrumbs, tables, summary list, skip link
+
+**Done**
+- Updated `explorer/assets/gov2/gov2.css` to DS tag v0.14.0. The fonts are the same as in v0.13.0.
+  The DS changelog has no **Breaking** item between 0.13.0 and 0.14.0.
+- Replaced three local components with DS classes and deleted their local rules:
+  - `.crumbs` → `.g2-breadcrumbs` (`nav > ol`, `aria-current="page"` on the current item). One helper,
+    `breadcrumbs(label, steps)`, builds the state tree, family and record-dialog trails.
+  - the list and tree tables → `.g2-table`, with `scope="col"` and an accessible name.
+  - the record `dl` → `.g2-summary-list`, with one `div` for each row.
+- Added `.g2-skip-link` to `#main` (`tabindex="-1"`). A click handler moves the focus, so the hash does not change.
+
+**Measured** (headless Chrome, 5 views × light/dark × 1280/375)
+- No errors, no overflow, `reachableRoots` OK, font Inter, no other hosts, 0 contrast failures in the first screen.
+- List row: 69 px at 1280 (was 73 with 0.13.0), 121 px at 375 (was 125). The DS table pads 8 × 12 px.
+- Breadcrumb steps are 39 px tall. The skip link is 155 × 50 px with the yellow focus; `main` gets no fill.
+- The record summary list is two columns at 1280 and stacks at 375. The dialog has no sideways overflow.
+- The three tree tables of "Parlamentul" do not scroll sideways. Unit tests: OK.
+
+**Decided**
+- Breadcrumb steps stay buttons, not links, because they change the page state and the record dialog.
+  A local rule gives them the target and the colour of a DS breadcrumb link. A link would need a URL for each step.
+- The main list table does not use `.g2-table-stacked`: the phone layout already hides the contact column.
+- `.lt-wrap` keeps `overflow-x: auto` and is not a `.g2-table-wrap`. No measured table scrolls, and a focusable
+  region for each tree table adds a tab stop for each table. Assumed, not measured, for all nodes.
+
 ## 2026-10-27 — Alias rows approved
 
 **Done**

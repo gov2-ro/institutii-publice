@@ -169,11 +169,8 @@
   .prof-head { min-width: 0; }
   .maperr { color: var(--muted); font-size: var(--g2-font-size-meta); }
 
-  /* tables: no DS table yet (https://github.com/gov2-ro/gov2ro-design-system/issues/5). Hairlines between rows, bold column heads. */
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: var(--g2-font-size-label); font-weight: 700; padding: 0 10px 6px; border-bottom: 1px solid var(--text); }
-  td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
-  th:first-child, td:first-child { padding-left: 0; }
+  /* tables: the DS .g2-table. Local variations: a whole row opens the record, and long values wrap. */
+  .g2-table td { overflow-wrap: anywhere; }
   tbody tr { cursor: pointer; }
   tbody tr:hover { background: rgb(var(--g2-color-selected-bg)); }
   tbody tr:hover .nm { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .15em; }
@@ -219,11 +216,10 @@
   .link:hover { text-decoration-thickness: 3px; }
   .link.acc { color: var(--link); }
   .kids { padding-bottom: 2px; }
-  /* breadcrumbs: local until https://github.com/gov2-ro/gov2ro-design-system/issues/3 */
-  .crumbs { display: flex; flex-wrap: wrap; gap: 2px var(--g2-space-2); align-items: baseline; margin: 0 0 var(--g2-space-3); font-size: var(--g2-font-size-meta); }
-  .crumbs .sep { color: var(--muted); }
-  .crumbs .link { color: var(--link); }
-  .crumbs .here { font-weight: 700; overflow-wrap: anywhere; }
+  /* breadcrumbs: the DS .g2-breadcrumbs. The steps are buttons, because they change the page state.
+     They get the target and the colour of a DS breadcrumb link (.g2-link-quiet). */
+  .g2-breadcrumbs { margin: 0 0 var(--g2-space-3); }
+  .g2-breadcrumbs .link { padding-block: var(--g2-space-2); color: rgb(var(--g2-color-text)); }
   .more.small { margin: var(--g2-space-1) 0 var(--g2-space-1) 36px; }
   /* institutions inside a tree node: compact table */
   .lt-wrap { margin: 2px 0 var(--g2-space-3) 18px; overflow-x: auto; }
@@ -247,10 +243,7 @@
   .db { padding: 0 var(--g2-space-4) var(--g2-space-4); }
   .dtools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--g2-space-2) var(--g2-space-3); margin: var(--g2-space-1) 0; font-size: var(--g2-font-size-meta); }
   .dtools input { width: min(100%, 360px); }
-  /* record details: a summary list, local until https://github.com/gov2-ro/gov2ro-design-system/issues/6 */
-  dl { display: grid; grid-template-columns: 150px 1fr; gap: 6px var(--g2-space-4); margin: var(--g2-space-2) 0 0; }
-  dt { color: var(--muted); font-size: var(--g2-font-size-meta); }
-  dd { margin: 0; overflow-wrap: anywhere; }
+  /* record details: the DS .g2-summary-list */
   .sec { margin: var(--g2-space-5) 0 2px; padding-top: var(--g2-space-3); border-top: 1px solid var(--line); font-size: var(--g2-font-size-label);
          font-weight: 700; color: var(--muted); }
   ul.plain { margin: 4px 0 0; padding-left: 20px; }
@@ -282,13 +275,13 @@
     .multi .panel { position: static; width: auto; max-width: none; margin-top: 4px; }
     .navmore .panel { position: absolute; right: 0; width: 290px; max-width: calc(100vw - 24px); }
     th.c, td.c, table.lt .c-cat, table.lt .c-where { display: none; }
-    dl { grid-template-columns: 1fr; gap: 0; } dt { margin-top: var(--g2-space-2); }
     .csv-hint { display: none; }
   }
 }
 </style>
 </head>
 <body>
+<a class="g2-skip-link" href="#main">Sari la conținut</a>
 <header class="g2-header">
   <span class="g2-ro-corner" aria-hidden="true"></span>
   <div class="g2-header-in g2-container title">
@@ -337,7 +330,7 @@
     </div>
   </div>
 </div>
-<main id="main" class="g2-container" aria-busy="true">
+<main id="main" class="g2-container" tabindex="-1" aria-busy="true">
   <div class="toolbar" id="toolbar" hidden>
     <label class="sortby">Ordonare
       <select id="sort" class="org-select">
@@ -625,8 +618,8 @@
     function renderList(items) {
       if (!items.length) return emptyMsg();
       const body = h('tbody');
-      const table = h('table', { class: 'main' },
-        h('thead', null, h('tr', null, h('th', null, 'Instituție'), h('th', { class: 'c' }, 'Contact'))), body);
+      const table = h('table', { class: 'g2-table main', 'aria-label': 'Instituții' },
+        h('thead', null, h('tr', null, h('th', { scope: 'col' }, 'Instituție'), h('th', { class: 'c', scope: 'col' }, 'Contact'))), body);
       const wrap = h('div');
       const kind = r => [r.cat, r.fam].filter(Boolean).join(' · ');
       const row = r => h('tr', { tabindex: 0, 'data-id': r.id, onclick: () => openRecord(r), onkeydown: rowKey(r, openRecord) },
@@ -670,8 +663,8 @@
 
     function leafTable(list, matchSet, cols) {
       const body = h('tbody');
-      const wrap = h('div', { class: 'lt-wrap' }, h('table', { class: 'lt' },
-        h('thead', null, h('tr', null, cols.map(c => h('th', { class: 'c-' + c }, COLS[c][0])))), body));
+      const wrap = h('div', { class: 'lt-wrap' }, h('table', { class: 'g2-table lt', 'aria-label': 'Instituții' },
+        h('thead', null, h('tr', null, cols.map(c => h('th', { class: 'c-' + c, scope: 'col' }, COLS[c][0])))), body));
       const row = r => h('tr', { class: matchSet.has(r) ? '' : 'ctx', tabindex: 0, 'data-id': r.id, onclick: () => openRecord(r),
           onkeydown: rowKey(r, openRecord) },
         cols.map(c => h('td', { class: 'c-' + c }, COLS[c][1](r))));
@@ -803,14 +796,14 @@
       S.node = id === STAT ? '' : stateTarget(id);
       setView('stat'); window.scrollTo(0, 0);
     }
+    /* DS breadcrumbs. A step is [text, action]; a step without an action is the current item. */
+    const breadcrumbs = (label, steps) => h('nav', { class: 'g2-breadcrumbs', 'aria-label': label },
+      h('ol', null, steps.map(([text, go]) => go
+        ? h('li', null, h('button', { class: 'link', type: 'button', onclick: go }, text))
+        : h('li', { 'aria-current': 'page' }, text))));
     function crumbs(id) {
-      const ids = chain(id), box = h('nav', { class: 'crumbs', 'aria-label': 'Poziția în structură' });
-      ids.forEach((x, i) => {
-        if (i) box.append(h('span', { class: 'sep' }, '›'));
-        box.append(i === ids.length - 1 ? h('span', { class: 'here' }, labelOf(x))
-          : h('button', { class: 'link', type: 'button', onclick: () => focusNode(x) }, labelOf(x)));
-      });
-      return box;
+      const ids = chain(id);
+      return breadcrumbs('Poziția în structură', ids.map((x, i) => [labelOf(x), i < ids.length - 1 && (() => focusNode(x))]));
     }
 
     /* the context for a tree: which records have which visible children. A matching record is linked under each of its
@@ -940,9 +933,8 @@
       const NONE = NO_FAMILY;
       const matchSet = new Set(items);
       if (S.fam && !directory) {
-        const nav = h('nav', { class: 'crumbs', 'aria-label': 'Poziția în tipuri' },
-          h('button', { class: 'link', type: 'button', onclick: () => { S.fam = ''; S.cat = ''; update(); } }, 'Tipuri de instituții'),
-          h('span', { class: 'sep' }, '›'), h('span', { class: 'here' }, S.fam));
+        const nav = breadcrumbs('Poziția în tipuri',
+          [['Tipuri de instituții', () => { S.fam = ''; S.cat = ''; update(); }], [S.fam]]);
         const tree = h('div', { class: 'tree' }), ctx = buildCtx(items, isFiltered());
         const sorted = items.slice().sort((a, b) => coll.compare(a.county, b.county) || coll.compare(a.n, b.n));
         // A family is a peer group. Keep the focused results inside that group.
@@ -1335,7 +1327,7 @@
 
     /* ---------- detail dialog ---------- */
     const dlg = $('detail');
-    const pair = (k, v) => v || v === 0 ? [h('dt', null, k), h('dd', null, v)] : [];
+    const pair = (k, v) => v || v === 0 ? h('div', null, h('dt', null, k), h('dd', null, v)) : [];
     const linkTo = (url, text) => isHttp(url) ? h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, text || url) : text || url;
     const tierText = { exact: 'nume identic', canonical: 'nume normalizat (autoritate locală)', tokens: 'nume similar',
       unit: 'același număr de unitate militară', national: 'nume identic, instituție centrală (depusă din alt județ)',
@@ -1351,14 +1343,10 @@
       const cands = (r.mc || []).map(c => [c, byCif.get(c)]);
       const path = r.f ? chain(r.f) : [STAT, 'fara-anaf'];
       const stepTo = id => { closeDialogSilently(); S.node = id === STAT ? '' : id; setView('stat'); };
-      const crumb = h('nav', { class: 'crumbs', 'aria-label': 'Poziția în structură' });
-      path.forEach((x, i) => {
-        if (i) crumb.append(h('span', { class: 'sep' }, '›'));
-        const last = r.f && i === path.length - 1;
-        crumb.append(last ? h('span', { class: 'here' }, r.n) : h('button', { class: 'link', type: 'button',
-          onclick: () => vnode.has(x) ? stepTo(x) : openRecord(byCif.get(x)) }, labelOf(x)));
-      });
-      if (!r.f) crumb.append(h('span', { class: 'sep' }, '›'), h('span', { class: 'here' }, r.n));
+      const steps = path.map((x, i) => r.f && i === path.length - 1 ? [r.n]
+        : [labelOf(x), () => vnode.has(x) ? stepTo(x) : openRecord(byCif.get(x))]);
+      if (!r.f) steps.push([r.n]);
+      const crumb = breadcrumbs('Poziția în structură', steps);
       const note = r.f && noteOf.get(r.f);
       // same family, same ordonator (or same county when it has none)
       const sibs = !r.fam ? [] : (parents.length ? subordinates.get(parents[0].f) || [] : rows.filter(x => x.county === r.county && !x.p))
@@ -1387,13 +1375,13 @@
             h('ul', { class: 'plain' }, cands.map(([c, rr]) => h('li', null, rr ? [peerBtn(rr), ` · CIF ${c}`] : `CIF ${c} (nu este în setul curent)`)))) : null,
           dup ? h('p', { class: 'flag' }, 'Posibil duplicat al: ', peerBtn(dup), ' (potrivire nesigură, nu a fost combinat; scorul nu este o probabilitate)') : null,
           h('div', { class: 'sec' }, 'Locație'),
-          h('dl', null, pair('Județ', r.county), pair('Localitate (UAT)', r.u && (r.us ? [r.u, ' ', h('span', { class: 'sub' }, '(sector dedus din nume)')] : r.u)), pair('Adresă', r.a),
+          h('dl', { class: 'g2-summary-list' }, pair('Județ', r.county), pair('Localitate (UAT)', r.u && (r.us ? [r.u, ' ', h('span', { class: 'sub' }, '(sector dedus din nume)')] : r.u)), pair('Adresă', r.a),
             pair('Coordonate', r.la != null && h('a', { href: `https://www.openstreetmap.org/?mlat=${r.la}&mlon=${r.lo}#map=15/${r.la}/${r.lo}`,
               target: '_blank', rel: 'noopener noreferrer' }, `${r.la}, ${r.lo}`))),
           (r.w || r.e || r.ph || r.fx) ? [h('div', { class: 'sec' }, 'Contact'),
-            h('dl', null, pair('Site', r.w && linkTo(r.w)), pair('Email', r.e), pair('Telefon', r.ph), pair('Fax', r.fx))] : null,
+            h('dl', { class: 'g2-summary-list' }, pair('Site', r.w && linkTo(r.w)), pair('Email', r.e), pair('Telefon', r.ph), pair('Fax', r.fx))] : null,
           h('div', { class: 'sec' }, 'Identificare'),
-          h('dl', null, pair('Identificator', r.id),
+          h('dl', { class: 'g2-summary-list' }, pair('Identificator', r.id),
             pair('Tip', r.fam && h('span', null, r.fam, ' · ',
               h('button', { class: 'link acc', type: 'button', onclick: () => {
                 closeDialogSilently(); clearFilters({ fam: r.fam, web: false }); setView('fam'); } }, `arată toate (${fmt(famSize.get(r.fam))})`))),
@@ -1416,7 +1404,7 @@
             h('ul', { class: 'plain' }, sibs.slice(0, 25).map(s => h('li', null, peerBtn(s))),
               sibs.length > 25 ? h('li', { class: 'sub' }, `… și încă ${fmt(sibs.length - 25)}`) : null)] : null,
           (r.ru || r.pc != null || r.ou) ? [h('div', { class: 'sec' }, 'ROePAS'),
-            h('dl', null, pair('Pagină', r.ru && linkTo(r.ru, 'roepas.ro')),
+            h('dl', { class: 'g2-summary-list' }, pair('Pagină', r.ru && linkTo(r.ru, 'roepas.ro')),
               pair('Proceduri', r.pc != null ? `${fmt(r.pc)} (${fmt(r.po || 0)} online)` : null),
               pair('Organizare', r.ou && r.ou.join(' · ')))] : null));
     }
@@ -1700,6 +1688,8 @@
       if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault(); closeDialogSilently(); setView('acasa'); window.scrollTo(0, 0);
     });
+    // the skip link moves focus without a hash change, because the hash holds the view state
+    on(document.querySelector('.g2-skip-link'), 'click', e => { e.preventDefault(); $('main').focus(); });
     on($('list-link'), 'click', e => {
       if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault(); $('navmore').open = false; S.node = ''; setView('list');

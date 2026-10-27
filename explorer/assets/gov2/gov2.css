@@ -1,4 +1,4 @@
-/* gov2 — stilul comun pentru proiectele gov2.ro · v0.13.0 · 27.10.2026
+/* gov2 — stilul comun pentru proiectele gov2.ro · v0.14.0 · 27.10.2026
 
    Shared stylesheet for gov2.ro projects.
    Inspired by igov.ro's GOV.UK-derived theme (brand.css, 2026-10): Inter + Fragment Mono,
@@ -83,6 +83,9 @@
   --g2-color-danger-line:              212 53 28; /* #d4351c */
   --g2-color-danger-ink:               42 11 6; /* #2a0b06 */
   --g2-color-success-solid:            0 112 60; /* #00703c */
+
+  /* Highlight: the background of a matched word in <mark>. Not the focus yellow: yellow means keyboard focus. */
+  --g2-color-highlight-bg:             255 247 191; /* #fff7bf */
 
   /* Tricolour (decorative only: never text, except .g2-ro-sweep (ADR 0010)) */
   --g2-color-ro-blue:                  0 43 127; /* #002b7f */
@@ -186,6 +189,9 @@
   --g2-color-danger-ink:               255 217 211; /* #ffd9d3 */
   --g2-color-success-solid:            47 165 100; /* #2fa564 */
 
+  /* Highlight: the background of a matched word in <mark> */
+  --g2-color-highlight-bg:             92 77 0; /* #5c4d00  7.46:1 with the dark text colour */
+
   /* Chart ramp: the same order of emphasis as the light scheme */
   --g2-color-chart-1:                  79 148 216; /* #4f94d8 */
   --g2-color-chart-2:                  156 195 246; /* #9cc3f6 */
@@ -250,6 +256,9 @@
   --g2-color-danger-ink:               255 217 211; /* #ffd9d3 */
   --g2-color-success-solid:            47 165 100; /* #2fa564 */
 
+  /* Highlight: the background of a matched word in <mark> */
+  --g2-color-highlight-bg:             92 77 0; /* #5c4d00  7.46:1 with the dark text colour */
+
   /* Chart ramp: the same order of emphasis as the light scheme */
   --g2-color-chart-1:                  79 148 216; /* #4f94d8 */
   --g2-color-chart-2:                  156 195 246; /* #9cc3f6 */
@@ -268,6 +277,9 @@ body{margin:0;background:rgb(var(--g2-color-page));color:rgb(var(--g2-color-text
 a{color:rgb(var(--g2-color-link));text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.15em}
 a:where(:visited){color:rgb(var(--g2-color-link-visited))}
 a:where(:hover){text-decoration-thickness:3px}
+/* Highlight for a matched word. The text keeps the text colour; the background is not the focus yellow. */
+mark{background:rgb(var(--g2-color-highlight-bg));color:rgb(var(--g2-color-text))}
+@media(forced-colors:active){mark{background:Mark;color:MarkText}}
 /* Important declarations invert the layer order: this rule wins over project rules in later layers. */
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 }
@@ -386,6 +398,51 @@ a:where(:hover){text-decoration-thickness:3px}
 .g2-notice>*:first-child{margin:0;padding:2px 15px 7px;color:rgb(var(--g2-color-on-solid));font-weight:700}
 .g2-notice>*:last-child{margin:0;padding:12px 15px 14px;background:rgb(var(--g2-color-surface))}
 .g2-tile{padding:20px;border:1px solid rgb(var(--g2-color-line));border-top:5px solid rgb(var(--g2-color-brand));border-radius:var(--g2-radius)}
+/* ---- Skip link: the first focusable element of the page. Invisible until it has focus, then it shows the standard focus treatment (states layer).
+   The target (main) needs an id and tabindex="-1", so that activating the link moves focus to it. ---- */
+.g2-skip-link{position:absolute;z-index:10;inset-block-start:var(--g2-space-2);inset-inline-start:var(--g2-space-2);box-sizing:border-box;max-width:calc(100% - 2 * var(--g2-space-2));padding:var(--g2-space-3) var(--g2-space-4);background:rgb(var(--g2-color-page));color:rgb(var(--g2-color-text));font-weight:600}
+.g2-skip-link:not(:focus){width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* ---- Breadcrumbs: <nav> with an <ol>. The separator is generated content with an empty text alternative, so that a screen reader does not announce it.
+   The current item is not a link; a long current item wraps. ---- */
+.g2-breadcrumbs ol{display:flex;flex-wrap:wrap;align-items:center;margin:0;padding:0;list-style:none;font-size:var(--g2-font-size-meta);color:rgb(var(--g2-color-text-muted))}
+.g2-breadcrumbs li{min-width:0;overflow-wrap:anywhere}
+.g2-breadcrumbs li+li::before{content:"/";content:"/" / "";margin-inline:var(--g2-space-2);color:rgb(var(--g2-color-text-faint))}
+.g2-breadcrumbs a{display:inline-block;padding-block:var(--g2-space-2)}
+.g2-breadcrumbs [aria-current=page]{color:rgb(var(--g2-color-text));font-weight:600}
+
+/* ---- Pagination: <nav> with a position line and links. The links are plain links with a 44px target, not buttons.
+   Leave out an absent previous or next link. The current numbered link is in the states layer. ---- */
+.g2-pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--g2-space-2) var(--g2-space-5);padding-block:var(--g2-space-2);border-top:2px solid rgb(var(--g2-color-text))}
+.g2-pagination p{margin:0}
+.g2-pagination ul{display:flex;flex-wrap:wrap;gap:var(--g2-space-1) var(--g2-space-2);margin:0;padding:0;list-style:none}
+.g2-pagination a{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding-inline:var(--g2-space-3);border:var(--g2-border-width-control) solid transparent}
+
+/* ---- Data table: give it a <caption> or an accessible name, and scope on every header cell.
+   .g2-table-wrap scrolls a wide table inside the page; as a scrollable region it needs tabindex="0", role="region" and an accessible name.
+   .g2-table-stacked shows one row as a block below 45em; add explicit table roles to its elements (COMPONENTS.md). ---- */
+.g2-table-wrap{max-width:100%;overflow-x:auto}
+.g2-table{width:100%;border-collapse:collapse}
+.g2-table caption{padding-block-end:var(--g2-space-2);text-align:left;font-weight:700}
+.g2-table :where(th,td){padding:var(--g2-space-2) var(--g2-space-3);border-bottom:1px solid rgb(var(--g2-color-line));text-align:left;vertical-align:top}
+.g2-table thead th{background:rgb(var(--g2-color-surface-sunken));font-size:var(--g2-font-size-label);font-weight:600}
+.g2-table tbody th{font-weight:600}
+.g2-table .g2-cell-num{text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:45em){
+.g2-table-stacked,.g2-table-stacked :where(caption,thead,tbody,tfoot,tr,th,td){display:block}
+.g2-table-stacked thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.g2-table-stacked tr{padding-block:var(--g2-space-2);border-bottom:1px solid rgb(var(--g2-color-line))}
+.g2-table-stacked :where(th,td){padding:var(--g2-space-1) var(--g2-space-3);border-bottom:0}
+.g2-table-stacked td[data-label]::before{content:attr(data-label);display:block;font-size:var(--g2-font-size-label);font-weight:600;color:rgb(var(--g2-color-text-muted))}
+.g2-table-stacked .g2-cell-num{text-align:left}
+}
+
+/* ---- Summary list: <dl> with one <div> for each row. A row stacks when the list is narrower than about 27rem; a long value wraps. ---- */
+.g2-summary-list{margin:0}
+.g2-summary-list>div{display:flex;flex-wrap:wrap;gap:var(--g2-space-1) var(--g2-space-4);padding-block:var(--g2-space-2)}
+.g2-summary-list>div+div{border-top:1px solid rgb(var(--g2-color-line))}
+.g2-summary-list dt{flex:0 0 min(100%,14rem);min-width:0;font-size:var(--g2-font-size-label);font-weight:600;color:rgb(var(--g2-color-text-muted))}
+.g2-summary-list dd{flex:1 1 12rem;min-width:0;margin:0;overflow-wrap:anywhere}
 .g2-mono{font-family:var(--g2-font-mono);font-variant-numeric:tabular-nums}
 }
 
@@ -404,6 +461,14 @@ a:where(:hover){text-decoration-thickness:3px}
 :is(input,textarea,select):focus-visible{background:rgb(var(--g2-color-control-bg));color:rgb(var(--g2-color-text));outline:3px solid rgb(var(--g2-color-focus));outline-offset:0;box-shadow:inset 0 0 0 2px rgb(var(--g2-color-text))}
 .g2-btn:focus-visible{background:rgb(var(--g2-color-focus));color:rgb(var(--g2-color-on-focus));box-shadow:0 2px rgb(var(--g2-color-text))}
 .g2-wordmark:focus-visible em{color:inherit}
+/* A container that receives focus from a skip link or from a script (tabindex="-1") gets no focus fill: it is not a control.
+   A control, a link and a widget role with tabindex="-1" (roving focus) keep the standard treatment. */
+[tabindex="-1"]:not(a[href],button,input,select,textarea,summary,[contenteditable],[role=button],[role=link],[role=tab],[role=menuitem],[role=option],[role=treeitem],[role=gridcell],[role=checkbox],[role=radio],[role=switch]):focus-visible{background:none;color:inherit;box-shadow:none;outline:none}
+/* The scrollable region of a wide table: a yellow outline and an inner ink ring, as on a field, so that the cells keep their own backgrounds. */
+.g2-table-wrap:focus-visible{background:none;color:inherit;outline:3px solid rgb(var(--g2-color-focus));outline-offset:0;box-shadow:inset 0 0 0 2px rgb(var(--g2-color-text))}
+/* The current numbered page: a border and bold text. Forced colours give every link the same border: use the system selection colours. */
+.g2-pagination a:where([aria-current]:not([aria-current=false],[aria-current=""])){border-color:rgb(var(--g2-color-text));font-weight:700}
+@media(forced-colors:active){.g2-pagination a:where([aria-current]:not([aria-current=false],[aria-current=""])){background:Highlight;color:HighlightText}}
 /* Title sweep: a focused host link shows the focus colours with plain text, so that no glyph stays transparent. */
 :focus-visible .g2-ro-sweep{background:none}
 :focus-visible .g2-ro-sweep,.g2-ro-sweep:focus-visible{-webkit-text-fill-color:currentColor}
