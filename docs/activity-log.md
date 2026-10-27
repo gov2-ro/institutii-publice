@@ -1,5 +1,17 @@
 # Activity log
 
+## 2026-10-27 — Landing top row: no headings or labels, one row on desktop (Opus, small change)
+
+**Done**
+- Removed the headings "Caută o instituție…" and "Unde locuiești?" and the labels "Județ" and "Localitate" (owner).
+  The search field, the two selects and the two sections carry `aria-label`, so the accessible names stay.
+- From 1,024 px the search, the county select, the locality select and "Arată" sit in one row. Phones stack as before;
+  the phone placeholder is the short "Nume, localitate sau CIF", so it does not truncate.
+
+**Measured**
+- The three controls share one top (76 px) at 1,024 and 1,440 px. No horizontal scroll at 390, 1,024 and 1,440 px.
+  No page errors. JS syntax check and 44 unit tests pass.
+
 ## 2026-10-27 — Review (Opus): landing round 4 accepted
 
 **Decided**

@@ -306,7 +306,10 @@
   .org-after a { display: inline-block; min-height: 44px; padding-top: 10px; }
 
   @media (min-width: 1024px) {
-    .org-top { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--g2-space-6); align-items: start; }
+    .org-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--g2-space-4); align-items: start; }
+    .org-searchform { max-width: none; }
+    .org-place .org-placeform { flex-wrap: nowrap; }
+    .org-place .org-placeform .g2-field { flex: 0 0 200px; }
     .org-tasks, .org-dom-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
   @media (min-width: 761px) {
@@ -1407,10 +1410,10 @@
 
       /* 1. search */
       const go = q => { q = (q || '').trim(); if (!q) return; S.q = q; el.q.value = q; leaveHome(); update(); window.scrollTo(0, 0); };
-      const qIn = h('input', { class: 'g2-input', id: 'home-q', type: 'search', name: 'q', autocomplete: 'off', placeholder: 'Nume, localitate sau CIF',
-        'aria-describedby': 'home-q-hint' });
-      const searchSec = h('section', { class: 'home-sec org-search', 'aria-labelledby': 'h-search' },
-        h('h2', { id: 'h-search' }, 'Caută o instituție, o localitate sau un CIF'),
+      const qIn = h('input', { class: 'g2-input', id: 'home-q', type: 'search', name: 'q', autocomplete: 'off', placeholder: homePhone.matches ? 'Nume, localitate sau CIF' : 'Caută o instituție, o localitate sau un CIF',
+        'aria-label': 'Caută o instituție, o localitate sau un CIF', 'aria-describedby': 'home-q-hint' });
+      // no visible headings or labels in the top row (owner, 2026-10-27): the controls carry aria-label
+      const searchSec = h('section', { class: 'home-sec org-search', 'aria-label': 'Caută' },
         h('form', { class: 'org-searchform', role: 'search', onsubmit: e => { e.preventDefault(); go(qIn.value); } }, qIn,
           h('button', { class: 'g2-btn', type: 'submit' }, 'Caută')),
         h('p', { class: 'sub', id: 'home-q-hint' }, 'De exemplu: ', HOME_EXAMPLES.flatMap((q, i) => [i ? ', ' : '',
@@ -1420,9 +1423,9 @@
           h('a', { class: 'link acc', href: 'despre.html' }, 'Despre')));
 
       /* 2. place */
-      const cSel = h('select', { class: 'g2-input', id: 'home-county' }, h('option', { value: '' }, 'Alege județul'),
+      const cSel = h('select', { class: 'g2-input', id: 'home-county', 'aria-label': 'Județ' }, h('option', { value: '' }, 'Alege județul'),
         counties.map(c => h('option', { value: c }, countyName(c))));
-      const uSel = h('select', { class: 'g2-input', id: 'home-uat', disabled: true }, h('option', { value: '' }, 'Toate localitățile'));
+      const uSel = h('select', { class: 'g2-input', id: 'home-uat', 'aria-label': 'Localitate', disabled: true }, h('option', { value: '' }, 'Toate localitățile'));
       const clear = h('button', { class: 'link acc org-clear', type: 'button', onclick: () => { homeCounty = ''; saveHomeCounty(''); cSel.value = ''; fillUat(); refreshTasks(); } }, 'Șterge');
       function fillUat() {
         const m = new Map();
@@ -1433,11 +1436,11 @@
       }
       cSel.value = homeCounty; fillUat();
       cSel.addEventListener('change', () => { homeCounty = cSel.value; saveHomeCounty(homeCounty); fillUat(); refreshTasks(); });
-      const placeSec = h('section', { class: 'home-sec', 'aria-labelledby': 'h-place' }, h('h2', { id: 'h-place' }, 'Unde locuiești?'),
+      const placeSec = h('section', { class: 'home-sec org-place', 'aria-label': 'Unde locuiești?' },
         h('form', { class: 'org-placeform', onsubmit: e => { e.preventDefault(); if (!cSel.value) { cSel.focus(); return; }
           closeDialogSilently(); clearFilters({ county: cSel.value, uat: uSel.value, web: S.web }); setView('loc'); window.scrollTo(0, 0); } },
-          h('div', { class: 'g2-field' }, h('label', { class: 'g2-label', for: 'home-county' }, 'Județ'), cSel),
-          h('div', { class: 'g2-field' }, h('label', { class: 'g2-label', for: 'home-uat' }, 'Localitate'), uSel),
+          h('div', { class: 'g2-field' }, cSel),
+          h('div', { class: 'g2-field' }, uSel),
           h('button', { class: 'g2-btn', type: 'submit' }, 'Arată'), clear));
 
       /* 3. needs: tiles scoped to the remembered county */
