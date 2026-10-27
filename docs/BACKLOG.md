@@ -63,7 +63,19 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 ## Explorer: landing v2 and "Cum e organizat statul" (spec: specs/landing-v2-organizare.md)
 - [x] Owner: answer the five decisions in spec section 4 (landing search, headings, state row, remembered
       county, separate page). All five accepted, 2026-10-27.
-- [ ] Build landing v2 and `explorer/organizare.html` ([brief](briefs/landing-v2-organizare.md)). Brief ready 2026-10-27.
+- [x] Build landing v2 and `explorer/organizare.html` ([brief](briefs/landing-v2-organizare.md)). Built 2026-10-27,
+      not published; Opus reviews first.
+- [ ] Landing v2 on a phone (390 px) is 5,970 px tall (was 2,262 px). Consider collapsing the 6 cards of "Cum e organizat
+      statul", or the 41-county list, behind a disclosure on phones.
+- [ ] With the default "are site" filter, tile links for types with no website in the data are hidden (for example
+      courts, hospitals, schools: 27 family labels of `HOME_TASKS` have no record with a website).
+      Owner decision: keep the default, or let the tiles ignore the website filter.
+- [ ] `organizare.html`: claims dropped for lack of a checked source (see the activity log, 2026-10-27, landing v2).
+      Open them again when a source is checked: Academia Română and the branch academies as autonomous bodies;
+      autonomous authorities "under parliamentary control"; DNA and DIICOT inside the Ministerul Public; "tutela
+      administrativă" as a legal term; the Legea 544/2001 guide link.
+- [ ] Add a check that every link of `organizare.html` opens a non-empty view (the build has none; this run used a
+      Playwright script outside the repo).
 - [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
 
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)

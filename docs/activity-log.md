@@ -1,5 +1,48 @@
 # Activity log
 
+## 2026-10-27 — Landing v2 and the page "Cum e organizat statul" (brief landing-v2-organizare)
+
+**Done**
+- `explorer/index.html`, `renderHome`: search (writes the same `S.q`, opens the list), "Unde locuiești?" (two selects,
+  "Arată", "Șterge", county in `localStorage` key `org-home-county`, try/catch, memory fallback), "De ce ai nevoie?"
+  (`HOME_TASKS`, 10 tiles), "Cum e organizat statul" (`HOME_BRANCHES`, 6 cards with a "Vezi" select) and the unchanged
+  type tabs and county map. One SVG sprite (16 symbols, `org-icon`). Link to `organizare.html` in the "Opțiuni" menu
+  and under the cards. Styles in `@layer app`, prefix `org-`.
+- `explorer/organizare.html`: static page, 7 sections, the diagram as HTML and CSS (10 groups, 34 box links).
+  Colour tokens are DS tones; the line style (solid, dashed, dotted, double) repeats the relation, and each group
+  states it in words.
+- Sources opened on legislatie.just.ro (2026-10-27): Constituția (47355), Codul administrativ (215925), Legea 500/2002
+  (37954), Legea 273/2006 (73527), OUG 109/2011 (133685; title checked) and Legea 304/2022 (261410, link found with a
+  web search; opened and checked).
+
+**Measured**
+- Landing height at 390 px: 2,262 px before, 5,970 px after. At 1,440 px: 1,068 px before, 2,895 px after.
+- No horizontal scroll at 320, 390, 768, 1,024 and 1,440 px, both schemes (landing and `organizare.html`).
+  Controls of the new sections are at least 44 px high.
+- `HOME_TASKS` and `HOME_BRANCHES`: no family label is absent from the data (`console.warn` stays silent).
+  With the default "are site" filter, 27 of the labels have no record with a website, so their links are hidden
+  (for example courts, hospitals, schools); the links return with `web=0`.
+- 31 tile links and 18 card links: none opens an empty view. With county Cluj chosen, all 5 visible tile links carry
+  `k=Cluj`; after "Șterge" none does. With `localStorage` blocked, the page renders and works.
+- `organizare.html`: 34 of 34 box links open a non-empty view. `explorer.reachableRoots()` equals `expectedRoots()`.
+- Tests: 44 pass; `node --check` passes.
+
+**Hard**
+- The browser extension of Claude in Chrome was not connected. Checks ran in Playwright with the local Chrome.
+- Two bugs found by the checks: a nested array passed to `h()` (the example links showed as text) and to
+  `replaceChildren` (the locality select stayed empty). Both fixed.
+
+**Decided**
+- On a phone a tile shows 3 links and a "+ N" button that opens the rest in place (the spec says a link to the family
+  list). Cost of the alternative: a family link does not fit tiles that hold several families.
+- Diagram links use `web=0`, so that every box opens a non-empty view. Cost of the alternative: courts and parishes
+  show an empty view under the default website filter.
+- Claims dropped for lack of a checked source: Academia Română and the branch academies as autonomous; autonomous
+  authorities "under parliamentary control" (the page cites art. 117 alin. 3 only); DNA and DIICOT in the diagram;
+  "tutela administrativă" (the page describes art. 123 alin. 4 and 5 instead); the Legea 544/2001 guide link;
+  the reason why professional bodies are in the ANAF list; the number 5,657 (not shown, to keep the page free of
+  counts; measured today: 5,657 records with two parents, 5,609 of them in "Educație").
+
 ## 2026-10-27 — `aliases_unique` and county council alias rows
 
 **Done**
