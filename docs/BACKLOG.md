@@ -77,11 +77,11 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] The "Guvernul" and "Ministere" card counts (7,907 and 7,654) include the 6,000 schools funded through the
       Ministerul Educației. Consider a note or a count of direct subordinates only.
 - [x] Landing: replace the category tabs with the "Toate tipurile" side box (spec section 2, item 5). Owner request 2026-10-27. Built 2026-10-27 (not published).
-- [~] (In round 4, spec 2b.3) "Toate tipurile" box: records without a type are invisible there. "Companii de stat" shows 10 of 930 records
+- [x] (Done in round 4, spec 2b.3) "Toate tipurile" box: records without a type are invisible there. "Companii de stat" shows 10 of 930 records
       (914 have no family); Altele 182 of 1,235; Agricultură 432 of 936. Add a last row per category,
       "Alte instituții din categorie · N", that opens the list filtered by the category.
-- [ ] Landing round 4 (spec section 2b): two-column top, jump links, "Domenii" section, page "Despre", GitHub icon,
-      map compare by domain and type. Owner request 2026-10-27.
+- [x] Landing round 4 (spec section 2b): two-column top, jump links, "Domenii" section, page "Despre", GitHub icon,
+      map compare by domain and type. Owner request 2026-10-27. Built 2026-10-27 (not published).
 - [ ] Collect visitor feedback (owner, 2026-10-27). Options: a "Semnalează o problemă" link on each record (GitHub
       issue with the record id prefilled), a short form, an e-mail address. Decide the channel and who reads it.
 - [ ] Map: a "pe hartă" link per need tile ("De ce ai nevoie?"), kept apart from the domain selects (spec 2b.5).

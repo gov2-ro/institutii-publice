@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ro" data-g2-scheme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Despre date &middot; org.gov2.ro</title>
+<meta name="description" content="Despre datele din org.gov2.ro: sursele, data generării, fișierele sursă și exportul CSV.">
+<link rel="icon" type="image/png" href="assets/favicon/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg" />
+<link rel="shortcut icon" href="assets/favicon/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content="org.gov2.ro" />
+<link rel="manifest" href="assets/favicon/site.webmanifest" />
+<link rel="stylesheet" href="assets/gov2/gov2.css">
+<link rel="stylesheet" href="assets/gov2/fonts.css">
+<style>
+@layer app {
+  /* Page "Cum e organizat statul". Same DS and layer rules as index.html. Group colours use the DS tone tokens,
+     which have a dark value in the DS dark scheme. The line style repeats the relation, so colour is never the only signal. */
+  :root {
+    --text: rgb(var(--g2-color-text)); --muted: rgb(var(--g2-color-text-muted)); --line: rgb(var(--g2-color-line)); --page: rgb(var(--g2-color-page));
+    --link: rgb(var(--g2-color-link)); --sunken: rgb(var(--g2-color-surface-sunken));
+  }
+  * { box-sizing: border-box; }
+  html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+  h1, h2, h3 { line-height: var(--g2-line-height-heading); }
+  .g2-header .title { gap: var(--g2-space-2) var(--g2-space-4); }
+  .g2-header .grow { flex: 1; }
+  .txtbtn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--g2-space-2); color: rgb(var(--g2-color-on-header)); font-size: var(--g2-font-size-meta); font-weight: 600; text-decoration: none; }
+  .txtbtn:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+  .g2-footer a.org-gh { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; vertical-align: middle; }
+  .g2-wordmark span.org-wm { font-weight: 700; }
+  main { padding-block: var(--g2-space-5) var(--g2-space-6); }
+  .org-page > :not(.org-frame) { max-width: 46rem; }
+  .org-page h1 { margin: 0 0 var(--g2-space-3); }
+  .org-page h2 { margin: var(--g2-space-6) 0 var(--g2-space-3); font-size: var(--g2-font-size-heading-section); }
+  .org-lead { font-size: 1.125rem; }
+  .org-cite { color: var(--muted); font-size: var(--g2-font-size-meta); }
+  .org-rel-k { font-weight: 600; }
+  .org-term { font-style: italic; }
+  .org-toc { margin: var(--g2-space-3) 0 0; padding-left: 1.25rem; }
+  .org-toc a { display: inline-block; min-height: 44px; padding: 9px 0; }
+
+  /* the diagram: a dashed frame, groups as a grid on desktop, one column on phones */
+  .org-frame { margin: var(--g2-space-4) 0; padding: var(--g2-space-4); border: 2px dashed var(--muted); }
+  .org-frame > .org-frame-t { margin: 0 0 var(--g2-space-3); font-weight: 700; font-size: var(--g2-font-size-heading-section); }
+  .org-groups { align-items: start; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--g2-space-4); }
+  .org-group { --gbg: var(--sunken); --gline: var(--muted); --gink: var(--text);
+    min-width: 0; padding: var(--g2-space-3); background: var(--gbg); color: var(--gink); border: 3px var(--gstyle, solid) var(--gline); }
+  .org-group[data-line=solid] { --gstyle: solid; }
+  .org-group[data-line=dashed] { --gstyle: dashed; }
+  .org-group[data-line=dotted] { --gstyle: dotted; }
+  .org-group[data-line=groove] { --gstyle: groove; border-width: 6px; }
+  .org-group[data-line=double] { --gstyle: double; border-width: 6px; }
+  .org-group[data-g=leg] { --gbg: rgb(var(--g2-color-info-bg)); --gline: rgb(var(--g2-color-info-line)); --gink: rgb(var(--g2-color-info-ink)); }
+  .org-group[data-g=ctl] { --gbg: rgb(var(--g2-color-progress-bg)); --gline: rgb(var(--g2-color-progress-line)); --gink: rgb(var(--g2-color-progress-ink)); }
+  .org-group[data-g=pres], .org-group[data-g=ter] { --gbg: rgb(var(--g2-color-success-bg)); --gline: rgb(var(--g2-color-success-line)); --gink: rgb(var(--g2-color-success-ink)); }
+  .org-group[data-g=jud] { --gbg: rgb(var(--g2-color-warning-bg)); --gline: rgb(var(--g2-color-warning-line)); --gink: rgb(var(--g2-color-warning-ink)); }
+  .org-group[data-g=ccr] { --gbg: rgb(var(--g2-color-surface-sunken)); --gline: rgb(var(--g2-color-text)); --gink: rgb(var(--g2-color-text)); }
+  .org-group[data-g=loc] { --gbg: rgb(var(--g2-color-info-bg)); --gline: rgb(var(--g2-color-info-line)); --gink: rgb(var(--g2-color-info-ink)); }
+  .org-group[data-g=ent] { --gbg: rgb(var(--g2-color-danger-bg)); --gline: rgb(var(--g2-color-danger-line)); --gink: rgb(var(--g2-color-danger-ink)); }
+  .org-group h3 { margin: 0 0 var(--g2-space-2); font-size: 1.0625rem; }
+  .org-group .org-rel { margin: 0 0 var(--g2-space-3); font-size: var(--g2-font-size-meta); }
+  .org-group .org-cite { color: inherit; opacity: .85; }
+  .org-gnote { margin: var(--g2-space-3) 0 0; font-size: var(--g2-font-size-meta); }
+  .org-boxes { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--g2-space-2); }
+  .org-box { display: flex; flex-direction: column; gap: 2px; min-height: 44px; padding: 10px var(--g2-space-3);
+    background: rgb(var(--g2-color-page)); color: rgb(var(--g2-color-text)); border: 1px solid var(--gline); text-decoration: none; }
+  .org-box:hover .org-box-t { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 3px; }
+  .org-box-t { font-weight: 600; overflow-wrap: anywhere; }
+  .org-box-sub { font-size: var(--g2-font-size-meta); color: var(--muted); overflow-wrap: anywhere; }
+  .org-box:focus-visible { outline: 3px solid transparent; background: rgb(var(--g2-color-focus)); color: rgb(var(--g2-color-on-focus));
+    box-shadow: 0 -2px rgb(var(--g2-color-focus)), 0 4px rgb(var(--g2-color-on-focus)); }
+  .org-box:focus-visible .org-box-sub { color: inherit; }
+
+  /* the key */
+  .org-key { margin: var(--g2-space-3) 0; padding: 0; list-style: none; display: grid; gap: var(--g2-space-2); }
+  .org-key li { display: flex; gap: var(--g2-space-3); align-items: center; }
+  .org-sw { flex: none; width: 56px; height: 0; border-top: 3px solid var(--text); }
+  .org-sw[data-line=dashed] { border-top-style: dashed; } .org-sw[data-line=dotted] { border-top-style: dotted; }
+  .org-sw[data-line=groove] { border-top: 6px groove var(--text); }
+  .org-sw[data-line=double] { border-top: 6px double var(--text); }
+  .org-rels dt { margin-top: var(--g2-space-4); font-weight: 700; }
+  .org-rels dd { margin: var(--g2-space-1) 0 0; }
+  .org-src li { margin-bottom: var(--g2-space-2); }
+  .org-page > :not(.org-frame) { max-width: 46rem; }
+  .sub { color: var(--muted); font-size: var(--g2-font-size-meta); }
+  .flag { display: block; margin: var(--g2-space-2) 0; padding: var(--g2-space-2) var(--g2-space-3); border-left: 5px solid rgb(var(--g2-color-warning-line)); background: rgb(var(--g2-color-warning-bg)); color: rgb(var(--g2-color-warning-ink)); font-size: var(--g2-font-size-meta); }
+  code { font-family: var(--g2-font-mono); font-size: .9em; overflow-wrap: anywhere; }
+  ul.plain { margin: 4px 0 0; padding-left: 20px; }
+  ul.plain li { overflow-wrap: anywhere; margin-bottom: var(--g2-space-3); }
+  .g2-footer { margin-top: var(--g2-space-6); font-size: var(--g2-font-size-meta); }
+
+  /* focus: the app layer wins over gov2.states, so these rules write the DS treatment again (see index.html) */
+  :is(a, summary):not(.g2-btn, .org-box):focus-visible { outline: 3px solid transparent; background: rgb(var(--g2-color-focus)); color: rgb(var(--g2-color-on-focus));
+    box-shadow: 0 -2px rgb(var(--g2-color-focus)), 0 4px rgb(var(--g2-color-on-focus)); text-decoration: none; }
+  @media (max-width: 760px) {
+    .org-frame { padding: var(--g2-space-3); }
+    .org-groups { grid-template-columns: minmax(0, 1fr); gap: var(--g2-space-3); }
+  }
+}
+</style>
+</head>
+<body>
+<a class="g2-skip-link" href="#main">Sari la conținut</a>
+<header class="g2-header">
+  <span class="g2-ro-corner" aria-hidden="true"></span>
+  <div class="g2-header-in g2-container title">
+    <a class="g2-wordmark" href="index.html" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/gx00.png" width="28" height="28" alt=""><span class="g2-ro-sweep org-wm">Instituții publice</span></a>
+    <nav class="g2-nav" aria-label="Principal">
+      <a href="index.html#v=stat">Structura statului</a>
+      <a href="index.html#v=fam">Domenii</a>
+      <a href="index.html#v=list">Listă</a>
+      <a href="organizare.html">Cum e organizat statul</a>
+    </nav>
+    <span class="grow"></span>
+    <a class="txtbtn" href="despre.html" aria-current="page">Despre<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></a>
+  </div>
+</header>
+<main id="main" class="g2-container" tabindex="-1">
+<div class="org-page">
+<h1>Despre date</h1>
+<p class="sub">Numerele sunt înregistrări din surse, nu entități juridice verificate. Prezența într-o sursă nu arată dacă o instituție este activă sau dacă site-ul ei funcționează.</p>
+<p class="sub">Numărul din ANI numără declarații depuse, nu angajați și nu instituții distincte.</p>
+<div id="ds"><p class="sub" role="status">Se încarcă informațiile despre fișiere…</p></div>
+<h2>Export CSV</h2>
+<p class="sub">Butonul „Descarcă CSV” exportă selecția curentă (toate înregistrările care corespund filtrelor, nu doar pagina afișată). Fișierul este UTF-8 cu BOM. O celulă cu mai multe valori le separă prin „ | ”. Un zero rămâne 0; o valoare necunoscută rămâne goală. Textele care încep cu = + - @ primesc în față un apostrof, ca să nu fie interpretate drept formule în Excel.</p>
+<p><a href="index.html">← Înapoi la explorator</a></p>
+</div>
+</main>
+<footer class="g2-footer">
+  <div class="g2-footer-in g2-container">
+    <p>Date din surse publice: ANAF, ROePAS, Registrul Național, ANI. <a href="index.html">Explorator</a> · <a href="despre.html">Despre</a></p>
+    <p><a class="org-gh" href="https://github.com/gov2-ro/institutii-publice" aria-label="Cod sursă pe GitHub"><svg width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a> · un proiect <a href="https://gov2.ro">gov2.ro</a></p>
+  </div>
+</footer>
+<script>
+(() => {
+  const srcLabel = { anaf: 'Lista entităților publice ANAF', roepas: 'ROePAS (roepas.ro)', registrul: 'Registrul Național al Instituțiilor Publice',
+    registru: 'Registrul Național al Instituțiilor Publice', ani: 'Declarații de integritate ANI', declaratii: 'Declarații de integritate ANI' };
+  const fmt = n => n.toLocaleString('ro-RO');
+  const plural = (n, one, many) => `${fmt(n)} ${n === 1 ? one : many}`;
+  const when = s => { const d = new Date(s); return isNaN(d) ? String(s) : d.toLocaleString('ro-RO', { dateStyle: 'medium', timeStyle: 'short' }); };
+  const kb = n => n >= 1048576 ? `${(n / 1048576).toLocaleString('ro-RO', { maximumFractionDigits: 1 })} MB` : `${fmt(Math.round(n / 1024))} KB`;
+  const h = (tag, props, ...kids) => {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(props || {})) if (v != null && v !== false) el.setAttribute(k, v === true ? '' : v);
+    for (const c of kids.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(c));
+    return el;
+  };
+  const box = document.getElementById('ds');
+  fetch('metadata.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(D => {
+    const DS = D.dataset, inputs = (DS && DS.inputs) || [], capped = inputs.filter(i => i.capped);
+    if (capped.length) document.getElementById('about-warn').textContent = ' ⚠';
+    box.replaceChildren(...(DS ? [
+      h('p', null, DS.generated_at ? ['Setul a fost generat la ', h('strong', null, when(DS.generated_at)), '.'] : null),
+      capped.length ? h('p', { class: 'flag' }, `Atenție: ${capped.length === 1 ? 'un export ANI a atins' : capped.length + ' exporturi ANI au atins'} limita de 10.000 de rânduri. Datele pot fi incomplete.`) : null,
+      h('h2', null, 'Fișiere sursă'),
+      h('ul', { class: 'plain' }, inputs.map(i => h('li', null,
+        h('strong', null, srcLabel[i.source] || i.source || 'sursă'), ' ', h('code', null, i.path || ''),
+        h('div', { class: 'sub' }, [
+          i.bytes != null ? kb(i.bytes) : null,
+          i.rows != null ? plural(i.rows, 'rând', 'rânduri') : null,
+          i.modified_at ? `fișier modificat la ${when(i.modified_at)} (data fișierului local, nu data verificării instituțiilor)` : null,
+          i.exported_at ? `export ANI din ${when(i.exported_at)}` : null,
+          i.capped ? 'a atins limita de 10.000 de rânduri' : null,
+        ].filter(Boolean).join(' · ')),
+        i.sha256 ? h('div', { class: 'sub', title: i.sha256 }, 'SHA-256: ', h('code', null, i.sha256.slice(0, 16) + '…')) : null)))]
+      : [h('p', null, 'Pentru acest set de date nu sunt disponibile informații despre fișierele sursă.')]));
+  }).catch(() => box.replaceChildren(h('p', { class: 'flag', role: 'alert' }, 'Informațiile despre fișierele sursă nu au putut fi încărcate.')));
+})();
+</script>
+</body>
+</html>

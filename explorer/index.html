@@ -280,21 +280,19 @@
   .org-cdet > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
   .org-selform { display: flex; gap: var(--g2-space-2); align-items: flex-end; margin-top: auto; padding-top: var(--g2-space-2); }
   .org-selform .g2-field { flex: 1; min-width: 0; }
-  /* "Toate tipurile": the complete index of types. Desktop: a right column beside the tiles; narrow: one collapsed row. */
-  .org-types { min-width: 0; margin: 0 0 var(--g2-space-6); padding: 0 var(--g2-space-3); border: 1px solid var(--line); border-top: 5px solid rgb(var(--g2-color-brand)); }
-  .org-types > h2 { margin: 0; font-size: 1.125rem; }
-  .org-types > h2:not(:has(button)) { padding-block: var(--g2-space-3) var(--g2-space-2); }
-  .org-types-body { padding-bottom: var(--g2-space-3); }
-  .org-types .org-tbody { gap: var(--g2-space-2); }
-  .org-types .g2-input { min-height: 44px; }
-  .org-cats { margin: 0; padding: 0; list-style: none; }
-  .org-cats > li { border-bottom: 1px solid var(--line); }
-  .org-cats > li:last-child { border-bottom: 0; }
-  .org-cat { display: flex; gap: var(--g2-space-2); align-items: center; width: 100%; min-height: 44px; padding: 0; border: 0; background: none; color: inherit;
-             font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
-  .org-cat .count { margin-left: auto; font-weight: 400; }
-  .org-cats .org-links { padding-left: var(--g2-space-3); }
-  .org-cats .org-links[hidden] { display: none; }
+  /* "Domenii": collapsible cards, one per domain; a flat list while the field "Caută un tip" has text */
+  .org-tq { max-width: 420px; margin-bottom: var(--g2-space-3); }
+  .org-tq .g2-input { min-height: 44px; }
+  .org-dom-grid { align-items: start; }
+  .org-tt .count { margin-left: auto; font-weight: 400; }
+  .org-jump { margin: 0 0 var(--g2-space-5); }
+  .org-jump .link { min-height: 44px; padding: 0 var(--g2-space-1); }
+  .org-top { display: block; }
+  .org-mapsel { display: flex; flex-wrap: wrap; gap: var(--g2-space-3); margin-bottom: var(--g2-space-2); }
+  .org-mapsel .g2-field { flex: 1 1 220px; max-width: 360px; min-width: 0; }
+  .org-mapsel .g2-input { min-height: 44px; }
+  a.txtbtn { display: inline-flex; align-items: center; text-decoration: none; }
+  .g2-footer a.org-gh { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; vertical-align: middle; }
   .org-flat { margin: 0; padding: 0; list-style: none; }
   .org-flat li { align-items: center; padding-block: 2px; }
   .org-flat .org-tl { display: flex; flex-direction: column; flex: 1; min-width: 0; }
@@ -304,9 +302,11 @@
   .org-after a { display: inline-block; min-height: 44px; padding-top: 10px; }
 
   @media (min-width: 1024px) {
-    .org-needs { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--g2-space-5); align-items: start; }
-    .org-needs .org-tasks { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .org-types { position: sticky; top: var(--g2-space-3); max-height: calc(100vh - 2 * var(--g2-space-3)); overflow-y: auto; }
+    .org-top { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--g2-space-6); align-items: start; }
+    .org-tasks, .org-dom-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  @media (min-width: 761px) and (max-width: 1023px) {
+    .org-dom-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 760px) {
     .cprof { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "map" "tree"; }
@@ -341,12 +341,12 @@
     <a class="g2-wordmark" id="home-link" href="#" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/gx00.png" width="28" height="28" alt=""><h1><span class="g2-ro-sweep">Instituții publice</span></h1></a>
     <nav class="g2-nav" aria-label="Principal">
       <a href="#v=stat" data-view="stat">Structura statului</a>
-      <a href="#v=fam" data-view="fam">Tip → instituții</a>
+      <a href="#v=fam" data-view="fam">Domenii</a>
       <a href="#v=list" id="list-link">Listă</a>
     </nav>
     <span class="grow"></span>
     <span id="stats" role="status">Se încarcă datele…</span>
-    <button id="about-btn" class="txtbtn" type="button">Despre date<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></button>
+    <a id="about-btn" class="txtbtn" href="despre.html">Despre<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></a>
     <details id="navmore" class="multi navmore" inert>
       <summary>Opțiuni<span id="menu-status" class="menu-status"></span></summary>
       <div class="panel">
@@ -401,13 +401,11 @@
 </main>
 <footer class="g2-footer">
   <div class="g2-footer-in g2-container">
-    <p>Date din surse publice: ANAF, ROePAS, Registrul Național, ANI. <button class="link" type="button" id="about-foot">Despre date</button></p>
-    <p><button class="link" type="button" id="a11y-foot">Accesibilitate</button></p>
-    <p><a href="https://github.com/gov2-ro/institutii-publice">Cod sursă</a> · un proiect <a href="https://gov2.ro">gov2.ro</a></p>
+    <p>Date din surse publice: ANAF, ROePAS, Registrul Național, ANI. <a href="despre.html">Despre</a></p>
+    <p><a class="org-gh" href="https://github.com/gov2-ro/institutii-publice" aria-label="Cod sursă pe GitHub"><svg class="org-icon-fill" width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a> · un proiect <a href="https://gov2.ro">gov2.ro</a></p>
   </div>
 </footer>
 <dialog id="detail" aria-labelledby="dlg-title"></dialog>
-<dialog id="about" aria-labelledby="about-title"></dialog>
 
 <script>
 (() => {
@@ -1220,13 +1218,12 @@
     }
 
     /* counties */
-    const countyCounts = () => { const m = new Map(); for (const r of items) if (r.county) m.set(r.county, (m.get(r.county) || 0) + 1); return m; };
     const countyFeatures = g => g.features.map(f => ({ f, name: counties.find(c => norm(c) === norm(f.properties.name.replace(/^Municipiul /, ''))) || null }));
     const openCounty = c => { clearFilters({ county: c, web: S.web }); closeDialogSilently(); setView('loc'); window.scrollTo(0, 0); };
-    function countyMap(box) {
+    function countyMap(box, counts) {
       gis('romania-counties.geojson').then(g => {
         if (!box.isConnected) return;
-        const counts = countyCounts(), feats = countyFeatures(g);
+        const feats = countyFeatures(g);
         const polysOf = f => f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
         const all = feats.flatMap(x => polysOf(x.f)), pj = project(all);
         const shapes = feats.filter(x => x.name).map(x => ({ d: pathOf(polysOf(x.f), pj), count: counts.get(x.name) || 0, name: x.name, pick: () => openCounty(x.name) }));
@@ -1364,8 +1361,7 @@
     const HOME_EXAMPLES = ['Municipiul Iași', 'Spital Cluj', '4541580'];
     const HOME_COUNTY_KEY = 'org-home-county';
     const homePhone = matchMedia('(max-width: 760px)'), homeOpen = new Set();   // phone: the open tiles and cards (by title)
-    const homeNarrow = matchMedia('(max-width: 1023px)');
-    for (const mq of [homePhone, homeNarrow]) mq.addEventListener('change', () => { if (S.view === 'acasa') update(); });
+    homePhone.addEventListener('change', () => { if (S.view === 'acasa') update(); });
     const famKnown = new Set(fams), homeWarned = new Set();
     const homeWarn = label => { if (!homeWarned.has(label)) { homeWarned.add(label); console.warn('[org] HOME_TASKS: absent family', label); } };
     const icon = id => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1374,7 +1370,8 @@
     const readHomeCounty = () => { try { const c = localStorage.getItem(HOME_COUNTY_KEY); return counties.includes(c) ? c : ''; } catch (e) { return ''; } };
     const saveHomeCounty = c => { try { c ? localStorage.setItem(HOME_COUNTY_KEY, c) : localStorage.removeItem(HOME_COUNTY_KEY); } catch (e) {} };
     let homeCounty = readHomeCounty();                       // the remembered county (memory only when storage is blocked)
-    let homeOpenCat = new Set(), homeTypesOpen = false;      // "Toate tipurile": the open categories; the box on narrow screens
+    let homeOpenCat = new Set();                             // "Domenii": the open domains
+    let homeMapSel = { cat: '', fam: '' };                   // the map's domain and type (local to the map)
     const countyName = c => c === 'Bucuresti' ? 'București' : c;
     function renderHome(items) {
       const ctx = buildCtx(items, isFiltered());
@@ -1409,7 +1406,7 @@
           browseLink(q, browseHref({ v: 'list', q }), () => go(q), 'link acc')]), '.'),
         h('p', { class: 'sub' }, `${fmt(rows.length)} de instituții · surse: ANAF, ROePAS, Registrul Național, ANI`
           + (DS && DS.generated_at ? ` · date din ${new Date(DS.generated_at).toLocaleDateString('ro-RO', { dateStyle: 'long' })}` : '') + ' · ',
-          h('button', { class: 'link acc', type: 'button', onclick: e => openAbout(e.currentTarget, 'about-title') }, 'Despre date')));
+          h('a', { class: 'link acc', href: 'despre.html' }, 'Despre date')));
 
       /* 2. place */
       const cSel = h('select', { class: 'g2-input', id: 'home-county' }, h('option', { value: '' }, 'Alege județul'),
@@ -1505,79 +1502,115 @@
         if (sel) t.querySelector('.org-tbody').append(sel);
         return t;
       }).filter(Boolean);
-      const stateSec = h('section', { class: 'home-sec', 'aria-labelledby': 'h-state' }, h('h2', { id: 'h-state' }, 'Cum e organizat statul'),
+      const stateSec = h('section', { class: 'home-sec', 'aria-labelledby': 'h-state' }, h('h2', { id: 'h-state', tabindex: '-1' }, 'Cum e organizat statul'),
         h('div', { class: 'org-grid' }, cards),
         h('p', { class: 'org-after' }, h('a', { href: 'organizare.html' }, 'Cum funcționează fiecare ramură →')));
 
-      /* 5. "Toate tipurile": the complete index of types, beside the tiles (or one collapsed row on narrow screens).
-         Counts follow the tile rule: the website filter is ignored, the remembered county applies. */
-      const typesBody = h('div', { class: 'org-tbody org-types-body', id: 'org-types-body' });
-      const tIn = h('input', { class: 'g2-input', id: 'home-tq', type: 'search', autocomplete: 'off', oninput: () => drawTypes() });
-      const typesHead = h('span', { class: 'org-tt-l' }, 'Toate tipurile');
-      const typeLink = (f, list) => h('li', null, familyLink(f, list, 'link acc', homeCounty, true), h('span', { class: 'count' }, fmt(list.length)));
-      function typeIndex() {                                  // [[category, [[family, records]], total]], biggest first
-        const k = homeCounty, byCat = new Map();
-        for (const [f, all] of allByFam) {
-          const list = k ? all.filter(r => r.county === k) : all;
-          if (!list.length) continue;
-          const c = famCat.get(f);
-          if (!byCat.has(c)) byCat.set(c, []);
-          byCat.get(c).push([f, list]);
+      /* 5. "Domenii": the categories, each with its types and a row for the records without a type. Counts follow the tile rule:
+         the website filter is ignored, the remembered county applies. A type is counted by its records inside the domain, so that
+         the types and the row "Alte instituții din domeniu" add up to the domain count (which equals the list view count). */
+      const tIn = h('input', { class: 'g2-input', id: 'home-tq', type: 'search', autocomplete: 'off', oninput: () => drawDomains() });
+      const domGrid = h('div'), domRes = h('p', { class: 'sub', role: 'status' });
+      function domainIndex() {                                // [[category, { n, none, fams: Map(family -> records) }]], biggest first
+        const k = homeCounty, m = new Map();
+        for (const r of allRows) {
+          if (k && r.county !== k) continue;
+          let d = m.get(r.cat);
+          if (!d) m.set(r.cat, d = { n: 0, none: 0, fams: new Map() });
+          d.n++;
+          if (r.fam) { if (!d.fams.has(r.fam)) d.fams.set(r.fam, []); d.fams.get(r.fam).push(r); } else d.none++;
         }
-        return [...byCat].map(([c, l]) => [c, l.sort((x, y) => y[1].length - x[1].length || coll.compare(x[0], y[0])), l.reduce((n, e) => n + e[1].length, 0)])
-          .sort((x, y) => y[2] - x[2] || coll.compare(x[0], y[0]));
+        return [...m].sort((x, y) => y[1].n - x[1].n || coll.compare(x[0], y[0]));
       }
-      function drawTypes() {
-        const idx = typeIndex(), nTypes = idx.reduce((n, e) => n + e[1].length, 0);
-        typesHead.textContent = `Toate tipurile (${fmt(nTypes)})`;
-        const q = fold(tIn.value).trim();
+      const domTypeLink = (c, f, list) => browseLink(f, list.length === 1 && !homeCounty ? browseHref({ id: list[0].id })
+        : browseHref({ v: 'fam', fam: f, cat: c, k: homeCounty, web: '0' }), () => {
+        if (list.length === 1) { openRecord(list[0]); return; }          // one record opens in the dialog; the filter stays
+        noWeb(); if (homeCounty) S.county = homeCounty;
+        S.fam = f; S.cat = c; S.node = ''; setView('fam'); window.scrollTo(0, 0); }, 'link acc');
+      const domNoneLink = c => browseLink('Alte instituții din domeniu', browseHref({ v: 'list', cat: c, fam: NO_FAMILY, k: homeCounty, web: '0' }),
+        () => goList({ cat: c, fam: NO_FAMILY, county: homeCounty }), 'link acc');
+      function domainCard([c, d], i) {
+        const id = `org-dom${i}`, open = homeOpenCat.has(c);
+        const sorted = [...d.fams].sort((x, y) => y[1].length - x[1].length || coll.compare(x[0], y[0]));
+        const body = h('div', { class: 'org-tbody', id, hidden: !open },
+          h('ul', { class: 'org-links' }, sorted.map(([f, l]) => li(domTypeLink(c, f, l), l.length)), d.none ? li(domNoneLink(c), d.none) : null));
+        return h('div', { class: 'g2-tile org-tile' }, h('h3', null, h('button', { class: 'org-tt', type: 'button', 'aria-expanded': String(open), 'aria-controls': id, onclick: e => {
+          const on = body.hidden; body.hidden = !on; e.currentTarget.setAttribute('aria-expanded', String(on)); on ? homeOpenCat.add(c) : homeOpenCat.delete(c); } },
+          h('span', { class: 'org-tt-l' }, c), h('span', { class: 'count' }, fmt(d.n)), h('span', { class: 'org-chev', 'aria-hidden': 'true' }))), body);
+      }
+      function drawDomains() {
+        const idx = domainIndex(), q = fold(tIn.value).trim();
         if (q) {
-          const hits = idx.flatMap(([c, l]) => l.filter(([f]) => fold(f).includes(q)).map(e => [c, ...e]))
+          const hits = idx.flatMap(([c, d]) => [...d.fams].filter(([f]) => fold(f).includes(q)).map(([f, l]) => [c, f, l]))
             .sort((x, y) => y[2].length - x[2].length || coll.compare(x[1], y[1]));
-          typesRes.textContent = hits.length ? `${plural(hits.length, 'tip găsit', 'tipuri găsite')}` : 'Niciun tip nu corespunde.';
-          typesList.replaceChildren(...hits.slice(0, 100).map(([c, f, list]) => h('li', null, h('span', { class: 'org-tl' }, familyLink(f, list, 'link acc', homeCounty, true), h('span', { class: 'sub' }, c)),
-            h('span', { class: 'count' }, fmt(list.length)))), ...(hits.length > 100 ? [h('li', { class: 'sub' }, `… și încă ${fmt(hits.length - 100)}. Scrie mai mult.`)] : []));
-          typesList.className = 'org-links org-flat';
+          domRes.textContent = hits.length ? plural(hits.length, 'tip găsit', 'tipuri găsite') : 'Niciun tip nu corespunde.';
+          domGrid.className = 'org-dom-flat';
+          domGrid.replaceChildren(h('ul', { class: 'org-links org-flat' }, hits.slice(0, 100).map(([c, f, l]) => h('li', null,
+            h('span', { class: 'org-tl' }, domTypeLink(c, f, l), h('span', { class: 'sub' }, c)), h('span', { class: 'count' }, fmt(l.length)))),
+            hits.length > 100 ? h('li', { class: 'sub' }, `… și încă ${fmt(hits.length - 100)}. Scrie mai mult.`) : null));
         } else {
-          typesRes.textContent = '';
-          typesList.className = 'org-cats';
-          typesList.replaceChildren(...idx.map(([c, l, n], i) => {
-            const id = `org-cat${i}`, open = homeOpenCat.has(c);
-            const panel = h('ul', { class: 'org-links', id, hidden: !open }, l.map(([f, list]) => typeLink(f, list)));
-            return h('li', null, h('button', { class: 'org-cat', type: 'button', 'aria-expanded': String(open), 'aria-controls': id, onclick: e => {
-              const on = panel.hidden; panel.hidden = !on; e.currentTarget.setAttribute('aria-expanded', String(on)); on ? homeOpenCat.add(c) : homeOpenCat.delete(c); } },
-              h('span', { class: 'org-tt-l' }, c), h('span', { class: 'count' }, fmt(n)), h('span', { class: 'org-chev', 'aria-hidden': 'true' })), panel);
-          }));
+          domRes.textContent = '';
+          domGrid.className = 'org-grid org-dom-grid';
+          domGrid.replaceChildren(...idx.map(domainCard));
         }
       }
-      const typesRes = h('p', { class: 'sub', role: 'status' }), typesList = h('ul');
-      typesBody.append(h('div', { class: 'g2-field' }, h('label', { class: 'g2-label', for: 'home-tq' }, 'Caută un tip'), tIn), typesRes, typesList);
-      refreshTypes = drawTypes;
-      drawTypes();
-      const narrow = homeNarrow.matches;
-      let typesTitle;
-      if (narrow) {
-        typesBody.hidden = !homeTypesOpen;
-        typesTitle = h('h2', { id: 'h-types' }, h('button', { class: 'org-tt', type: 'button', 'aria-expanded': String(homeTypesOpen), 'aria-controls': 'org-types-body', onclick: e => {
-          const on = typesBody.hidden; typesBody.hidden = !on; homeTypesOpen = on; e.currentTarget.setAttribute('aria-expanded', String(on)); } },
-          typesHead, h('span', { class: 'org-chev', 'aria-hidden': 'true' })));
-      } else typesTitle = h('h2', { id: 'h-types' }, typesHead);
-      const typesBox = h('aside', { class: 'org-types', 'aria-labelledby': 'h-types' }, typesTitle, typesBody);
-      // county map + a plain list of counties with counts (the non-map route)
-      const counts = countyCounts(), mapBox = h('div', null, h('p', { class: 'sub', role: 'status' }, 'Se încarcă harta…'));
-      const noCounty = items.filter(r => !r.county).length;
-      const { cls } = classes([...counts.values()]);
-      const list = h('ul', { class: 'cgrid', 'aria-label': 'Județe cu numărul de înregistrări' }, counties.map(c => h('li', null,
-        h('span', { class: 'sw q' + cls(counts.get(c) || 0) }),
-        h('a', { class: 'link acc', href: browseHref({ v: 'loc', k: c }), onclick: e => { if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); openCounty(c); } }, c === 'Bucuresti' ? 'București' : c),
-        h('span', { class: 'count' }, fmt(counts.get(c) || 0)))));
+      refreshTypes = drawDomains;
+      drawDomains();
+      const domSec = h('section', { class: 'home-sec', 'aria-labelledby': 'h-dom' }, h('h2', { id: 'h-dom', tabindex: '-1' }, 'Domenii'),
+        h('div', { class: 'g2-field org-tq' }, h('label', { class: 'g2-label', for: 'home-tq' }, 'Caută un tip'), tIn), domRes, domGrid);
+
+      /* 6. county map: compare by domain and type. The selection is local to the map and ignores the website filter. */
+      const mapBox = h('div', null, h('p', { class: 'sub', role: 'status' }, 'Se încarcă harta…'));
+      const mapNote = h('p', { class: 'sub', role: 'status' }), listBox = h('div');
+      const mCat = h('select', { class: 'g2-input', id: 'home-mcat' }), mFam = h('select', { class: 'g2-input', id: 'home-mfam', disabled: true });
+      const catCount = new Map(), famCount = new Map();                  // category -> n; category -> family -> n
+      for (const r of allRows) {
+        catCount.set(r.cat, (catCount.get(r.cat) || 0) + 1);
+        if (r.fam) { if (!famCount.has(r.cat)) famCount.set(r.cat, new Map()); const m = famCount.get(r.cat); m.set(r.fam, (m.get(r.fam) || 0) + 1); }
+      }
+      mCat.replaceChildren(h('option', { value: '' }, 'Toate'), ...[...catCount].sort((x, y) => y[1] - x[1] || coll.compare(x[0], y[0])).map(([c, n]) => h('option', { value: c }, `${c} (${fmt(n)})`)));
+      mCat.value = catCount.has(homeMapSel.cat) ? homeMapSel.cat : '';
+      homeMapSel.cat = mCat.value;
+      function fillMapFam() {
+        const m = famCount.get(mCat.value) || new Map();
+        mFam.replaceChildren(h('option', { value: '' }, 'Toate'), ...[...m].sort((x, y) => y[1] - x[1] || coll.compare(x[0], y[0])).map(([f, n]) => h('option', { value: f }, `${f} (${fmt(n)})`)));
+        if (!m.has(homeMapSel.fam)) homeMapSel.fam = '';
+        mFam.value = homeMapSel.fam; mFam.disabled = !mCat.value;
+      }
+      function drawCounty() {
+        const m = new Map(); let noCounty = 0, total = 0;
+        for (const r of allRows) {
+          if ((homeMapSel.cat && r.cat !== homeMapSel.cat) || (homeMapSel.fam && r.fam !== homeMapSel.fam)) continue;
+          total++; r.county ? m.set(r.county, (m.get(r.county) || 0) + 1) : noCounty++;
+        }
+        const { cls } = classes(counties.map(c => m.get(c) || 0));
+        listBox.replaceChildren(h('ul', { class: 'cgrid', 'aria-label': 'Județe cu numărul de înregistrări' }, counties.map(c => h('li', null,
+          h('span', { class: 'sw q' + cls(m.get(c) || 0) }),
+          h('a', { class: 'link acc', href: browseHref({ v: 'loc', k: c }), onclick: e => { if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); openCounty(c); } }, countyName(c)),
+          h('span', { class: 'count' }, fmt(m.get(c) || 0))))));
+        const what = homeMapSel.fam ? `${homeMapSel.fam} (${homeMapSel.cat})` : homeMapSel.cat || 'toate domeniile';
+        mapNote.textContent = `${what}: ${plural(total, 'înregistrare', 'înregistrări')}`
+          + (noCounty ? `, din care ${plural(noCounty, 'înregistrare fără județ', 'înregistrări fără județ')}` : '') + '.';
+        countyMap(mapBox, m);
+      }
+      mCat.addEventListener('change', () => { homeMapSel = { cat: mCat.value, fam: '' }; fillMapFam(); drawCounty(); });
+      mFam.addEventListener('change', () => { homeMapSel.fam = mFam.value; drawCounty(); });
+      fillMapFam();
       const sec3 = h('section', { class: 'home-sec', 'aria-labelledby': 'h-map' }, h('h2', { id: 'h-map' }, 'Județe'),
-        h('p', { class: 'sub' }, 'Înregistrări care corespund filtrelor, pe județ. Alege un județ pentru profilul lui.'
-          + (noCounty ? ` ${plural(noCounty, 'înregistrare fără județ', 'înregistrări fără județ')}.` : '')),
+        h('p', { class: 'sub' }, 'Numărul de înregistrări pe județ, fără filtrul „are site”. Alege un domeniu sau un tip ca să compari județele. Alege un județ pentru profilul lui.'),
+        h('div', { class: 'org-mapsel' },
+          h('div', { class: 'g2-field' }, h('label', { class: 'g2-label', for: 'home-mcat' }, 'Domeniu'), mCat),
+          h('div', { class: 'g2-field' }, h('label', { class: 'g2-label', for: 'home-mfam' }, 'Tip'), mFam)),
+        mapNote,
         h('div', { class: 'maprow' }, h('div', { class: 'mapcol' }, mapBox), h('div', { class: 'mapside' }, homePhone.matches
-          ? h('details', { class: 'org-cdet' }, h('summary', null, `Lista județelor (${counties.length})`), list) : list)));
-      countyMap(mapBox);
-      return h('div', null, searchSec, placeSec, h('div', { class: 'org-needs' }, tasksSec, typesBox), stateSec, sec3);
+          ? h('details', { class: 'org-cdet' }, h('summary', null, `Lista județelor (${counties.length})`), listBox) : listBox)));
+      drawCounty();
+
+      /* top row and jump links */
+      const jump = id => () => { const t = $(id); t.scrollIntoView({ block: 'start' }); t.focus({ preventScroll: true }); };
+      const jumpRow = h('p', { class: 'org-jump' }, 'Sari la: ', h('button', { class: 'link acc', type: 'button', onclick: jump('h-dom') }, 'Domenii'), ' · ',
+        h('button', { class: 'link acc', type: 'button', onclick: jump('h-state') }, 'Structura statului'));
+      return h('div', null, h('div', { class: 'org-top' }, searchSec, placeSec), jumpRow, tasksSec, domSec, stateSec, sec3);
     }
 
     /* ---------- detail dialog ---------- */
@@ -1713,51 +1746,10 @@
       else if (dlg.open) { ignoreClose = true; dlg.close(); restoreFocus(); }
     }
 
-    /* ---------- about the data (metadata.dataset; optional) ---------- */
-    const about = $('about');
+    /* ---------- dataset (metadata.dataset; the page despre.html shows the details) ---------- */
     const DS = D.dataset;
-    const srcLabel = { anaf: 'Lista entităților publice ANAF', roepas: 'ROePAS (roepas.ro)', registrul: 'Registrul Național al Instituțiilor Publice',
-      registru: 'Registrul Național al Instituțiilor Publice', ani: 'Declarații de integritate ANI', declaratii: 'Declarații de integritate ANI' };
-    const when = s => { const d = new Date(s); return isNaN(d) ? String(s) : d.toLocaleString('ro-RO', { dateStyle: 'medium', timeStyle: 'short' }); };
-    const kb = n => n >= 1048576 ? `${(n / 1048576).toLocaleString('ro-RO', { maximumFractionDigits: 1 })} MB` : `${fmt(Math.round(n / 1024))} KB`;
     const capped = DS && (DS.inputs || []).filter(i => i.capped);
-    function buildAbout() {
-      const inputs = (DS && DS.inputs) || [];
-      about.replaceChildren(
-        h('div', { class: 'dh' }, h('div', null, h('h2', { id: 'about-title', tabindex: -1 }, 'Despre date')),
-          h('button', { class: 'x', type: 'button', 'aria-label': 'Închide', onclick: () => about.close() }, '×')),
-        h('div', { class: 'db' },
-          h('p', { class: 'sub' }, 'Numerele sunt înregistrări din surse, nu entități juridice verificate. Prezența într-o sursă nu arată dacă o instituție este activă sau dacă site-ul ei funcționează.'),
-          h('p', { class: 'sub' }, 'Numărul din ANI numără declarații depuse, nu angajați și nu instituții distincte.'),
-          DS ? [h('p', null, DS.generated_at ? ['Setul a fost generat la ', h('strong', null, when(DS.generated_at)), '.'] : null),
-            capped && capped.length ? h('p', { class: 'flag' }, `Atenție: ${capped.length === 1 ? 'un export ANI a atins' : capped.length + ' exporturi ANI au atins'} limita de 10.000 de rânduri. Datele pot fi incomplete.`) : null,
-            h('div', { class: 'sec' }, 'Fișiere sursă'),
-            h('ul', { class: 'plain' }, inputs.map(i => h('li', null,
-              h('strong', null, srcLabel[i.source] || i.source || 'sursă'), ' ', h('code', null, i.path || ''),
-              h('div', { class: 'sub' }, [
-                i.bytes != null ? kb(i.bytes) : null,
-                i.rows != null ? plural(i.rows, 'rând', 'rânduri') : null,
-                i.modified_at ? `fișier modificat la ${when(i.modified_at)} (data fișierului local, nu data verificării instituțiilor)` : null,
-                i.exported_at ? `export ANI din ${when(i.exported_at)}` : null,
-                i.capped ? 'a atins limita de 10.000 de rânduri' : null,
-              ].filter(Boolean).join(' · ')),
-              i.sha256 ? h('div', { class: 'sub', title: i.sha256 }, 'SHA-256: ', h('code', null, i.sha256.slice(0, 16) + '…')) : null)))]
-          : h('p', null, 'Pentru acest set de date nu sunt disponibile informații despre fișierele sursă.'),
-          h('div', { class: 'sec', id: 'a11y', tabindex: -1 }, 'Accesibilitate'),
-          h('p', { class: 'sub' }, 'Pagina urmărește WCAG 2.2, nivelul AA, cu două abateri asumate. Titlul site-ului arată o bandă tricoloră care traversează textul continuu, într-o buclă de șapte secunde. Banda nu poate fi oprită din pagină; setarea de sistem pentru mișcare redusă o oprește. Banda este peste litere aproape tot timpul (circa 6,7 din 7 secunde), iar sub bandă contrastul unei litere poate scădea sub 4,5:1, până la 1,54:1. Acestea sunt abateri de la criteriile WCAG 2.2 2.2.2 (nivelul A) și 1.4.3 (nivelul AA).'),
-          h('p', { class: 'sub' }, 'Ai găsit o problemă de accesibilitate? ', h('a', { href: 'https://github.com/gov2-ro/institutii-publice/issues' }, 'Semnaleaz-o pe GitHub'), '.'),
-          h('div', { class: 'sec' }, 'Export CSV'),
-          h('p', { class: 'sub' }, 'Butonul „Descarcă CSV” exportă selecția curentă (toate înregistrările care corespund filtrelor, nu doar pagina afișată). Fișierul este UTF-8 cu BOM. O celulă cu mai multe valori le separă prin „ | ”. Un zero rămâne 0; o valoare necunoscută rămâne goală. Textele care încep cu = + - @ primesc în față un apostrof, ca să nu fie interpretate drept formule în Excel.')));
-    }
-    const warn = $('about-warn');
-    if (capped && capped.length) warn.textContent = ' ⚠';
-    let aboutFrom = null;
-    const openAbout = (from, target) => { aboutFrom = from; buildAbout(); about.showModal(); $(target).focus(); };
-    on($('about-btn'), 'click', () => openAbout($('about-btn'), 'about-title'));
-    on($('about-foot'), 'click', () => openAbout($('about-foot'), 'about-title'));
-    on($('a11y-foot'), 'click', () => openAbout($('a11y-foot'), 'a11y'));
-    on(about, 'click', e => { if (e.target === about) about.close(); });
-    on(about, 'close', () => (aboutFrom || $('about-btn')).focus());
+    if (capped && capped.length) $('about-warn').textContent = ' ⚠';
 
     /* ---------- source filter: checkbox dropdown + intersection / cumulative switch ---------- */
     const srcBox = $('src');

@@ -26,6 +26,9 @@
   h1, h2, h3 { line-height: var(--g2-line-height-heading); }
   .g2-header .title { gap: var(--g2-space-2) var(--g2-space-4); }
   .g2-header .grow { flex: 1; }
+  .txtbtn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--g2-space-2); color: rgb(var(--g2-color-on-header)); font-size: var(--g2-font-size-meta); font-weight: 600; text-decoration: none; }
+  .txtbtn:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+  .g2-footer a.org-gh { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; vertical-align: middle; }
   .g2-wordmark span.org-wm { font-weight: 700; }
   main { padding-block: var(--g2-space-5) var(--g2-space-6); }
   .org-page > :not(.org-frame) { max-width: 46rem; }
@@ -100,10 +103,12 @@
     <a class="g2-wordmark" href="index.html" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/gx00.png" width="28" height="28" alt=""><span class="g2-ro-sweep org-wm">Instituții publice</span></a>
     <nav class="g2-nav" aria-label="Principal">
       <a href="index.html#v=stat">Structura statului</a>
-      <a href="index.html#v=fam">Tip → instituții</a>
+      <a href="index.html#v=fam">Domenii</a>
       <a href="index.html#v=list">Listă</a>
       <a href="organizare.html" aria-current="page">Cum e organizat statul</a>
     </nav>
+    <span class="grow"></span>
+    <a class="txtbtn" href="despre.html">Despre</a>
   </div>
 </header>
 <main id="main" class="g2-container" tabindex="-1">
@@ -247,8 +252,8 @@
 </main>
 <footer class="g2-footer">
   <div class="g2-footer-in g2-container">
-    <p>Date din surse publice: ANAF, ROePAS, Registrul Național, ANI. <a href="index.html">Explorator</a></p>
-    <p><a href="https://github.com/gov2-ro/institutii-publice">Cod sursă</a> · un proiect <a href="https://gov2.ro">gov2.ro</a></p>
+    <p>Date din surse publice: ANAF, ROePAS, Registrul Național, ANI. <a href="index.html">Explorator</a> · <a href="despre.html">Despre</a></p>
+    <p><a class="org-gh" href="https://github.com/gov2-ro/institutii-publice" aria-label="Cod sursă pe GitHub"><svg width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a> · un proiect <a href="https://gov2.ro">gov2.ro</a></p>
   </div>
 </footer>
 </body>

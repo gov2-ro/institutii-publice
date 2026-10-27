@@ -1,5 +1,44 @@
 # Activity log
 
+## 2026-10-27 — Landing round 4: "Domenii", page "Despre", jump links, map by domain (spec 2b)
+
+**Done**
+- `explorer/index.html`: (1) the search and "Unde locuiești?" sit in two columns from 1,024 px (`.org-top`); (2) jump buttons
+  "Sari la: Domenii · Structura statului" scroll to the section and focus its heading (`tabindex="-1"`; no hash change);
+  (3) the "Toate tipurile" box is now the full-width section "Domenii": 17 collapsible domain cards (4 columns on desktop,
+  2 on tablets, 1 on phones, all collapsed), the "Caută un tip" field with a flat result list, and a last row
+  "Alte instituții din domeniu" per domain; the tiles are back to 4 columns; the header link "Tip → instituții" is "Domenii"
+  (index and organizare); (4) the about dialog, its buttons, `buildAbout` and the accessibility statement are removed;
+  the header link "Despre" (with ⚠ when an ANI export is capped) and the footer link "Despre" open `despre.html`;
+  (5) above the map, the selects "Domeniu" and "Tip"; the map, the legend classes, the county list and a status line recompute.
+- `explorer/despre.html` (new): same header, footer, layers and `data-g2-scheme="auto"`; fetches only `metadata.json`; text of
+  the old dialog without the accessibility part. `explorer/organizare.html`: nav link, header link "Despre", footer.
+  GitHub mark (inline SVG, `currentColor`, 44 px link, `aria-label="Cod sursă pe GitHub"`) in the footer of all three pages.
+
+**Measured**
+- Domains: 17. For each domain, sum(type counts) + N (records without a type) = domain count: 17 of 17 hold, because a type is
+  counted by its records inside the domain (so a family that spans two categories shows its part in each). The domain count
+  is the number of records of the category (for example Educație 9,620, Justiție 815, Companii de stat 930).
+- Links: 234 domain links (217 type links and 17 "Alte instituții" rows) open a non-empty view; the stats counter equals the
+  count shown next to every link; the "Alte instituții" link opens the list with `cat=<category>` and `fam=(fără tip comun)`, so
+  its count equals N (the spec names `cat=` only; the list with `cat=` alone shows the whole domain, not the N records).
+- Map "Justiție" (all 815 records, website filter off), top counties: București 55, Bacău 31, Dolj 31, Timiș 30, Argeș 28
+  and Cluj 28. All are seats of a court of appeal (Bacău, Craiova, Timișoara, Pitești, Cluj, București); the median
+  county has about 17.
+- Landing height at 390 px, all collapsed: 3,957 px (round 3: 2,560 px; 17 domain rows replace one box row). At 1,440 px:
+  4,139 px (was 3,574 px). `despre.html`: 2,857 px at 390 px. No horizontal scroll at 320, 390, 768, 1,024 and 1,440 px in
+  both schemes on the three pages; no target under 44 px. Keyboard: Tab reaches the field, each domain toggle, the map
+  selects and every link with the DS focus; Enter on a jump button moves focus to the heading.
+- Tests: 44 pass; JS syntax check passes on the three pages; roots check true; legacy hashes unchanged.
+
+**Hard**
+- The Chrome extension was not connected; checks ran in Playwright with the local Chrome.
+
+**Decided**
+- Domain cards open on desktop as well (the spec says collapsible cards); an open card makes its row taller, so the grid uses
+  `align-items: start`. Cost of the alternative (all open): a 4,000 px page.
+- The map keeps its selection in memory only (no hash, no storage), as the spec says.
+
 ## 2026-10-27 — Review (Opus): "Toate tipurile" side box accepted
 
 **Decided**
