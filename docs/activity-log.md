@@ -20,8 +20,12 @@
 - The three tree tables of "Parlamentul" do not scroll sideways. Unit tests: OK.
 
 **Decided**
-- Breadcrumb steps stay buttons, not links, because they change the page state and the record dialog.
-  A local rule gives them the target and the colour of a DS breadcrumb link. A link would need a URL for each step.
+- Breadcrumb steps are links (`a.g2-link-quiet`), not buttons. The first build used buttons with a local rule;
+  g2-ds answered that a breadcrumb step is a link with its own URL, and the DS will not style buttons there.
+  `hrefFor(patch, id)` builds each href from the current state (`browseParams`), so a step can be shared,
+  reloaded and opened in a new tab. A plain click still runs the in-place action; a modified click follows the href.
+  Measured: hrefs `#v=stat`, `#v=stat&n=guvern&k=Cluj`, `#v=fam`, `#k=Cluj&id=A4266669`. A click changes the hash,
+  Back restores it, and loading a record href opens that record. Links are 39 px tall.
 - The main list table does not use `.g2-table-stacked`: the phone layout already hides the contact column.
 - `.lt-wrap` keeps `overflow-x: auto` and is not a `.g2-table-wrap`. No measured table scrolls, and a focusable
   region for each tree table adds a tab stop for each table. Assumed, not measured, for all nodes.

@@ -216,10 +216,8 @@
   .link:hover { text-decoration-thickness: 3px; }
   .link.acc { color: var(--link); }
   .kids { padding-bottom: 2px; }
-  /* breadcrumbs: the DS .g2-breadcrumbs. The steps are buttons, because they change the page state.
-     They get the target and the colour of a DS breadcrumb link (.g2-link-quiet). */
+  /* breadcrumbs: the DS .g2-breadcrumbs */
   .g2-breadcrumbs { margin: 0 0 var(--g2-space-3); }
-  .g2-breadcrumbs .link { padding-block: var(--g2-space-2); color: rgb(var(--g2-color-text)); }
   .more.small { margin: var(--g2-space-1) 0 var(--g2-space-1) 36px; }
   /* institutions inside a tree node: compact table */
   .lt-wrap { margin: 2px 0 var(--g2-space-3) 18px; overflow-x: auto; }
@@ -796,14 +794,27 @@
       S.node = id === STAT ? '' : stateTarget(id);
       setView('stat'); window.scrollTo(0, 0);
     }
-    /* DS breadcrumbs. A step is [text, action]; a step without an action is the current item. */
+    /* the hash of the current state with some fields changed, and optionally a record open */
+    function hrefFor(patch, id) {
+      const saved = {};
+      for (const k in patch) { saved[k] = S[k]; S[k] = patch[k]; }
+      const p = browseParams();
+      Object.assign(S, saved);
+      if (id) p.set('id', id);
+      return '#' + (p.toString() || 'v=list');
+    }
+    /* DS breadcrumbs. A step is [text, href, action]; the last step is the current item.
+       A plain click runs the action in place; a modified click opens the href. */
     const breadcrumbs = (label, steps) => h('nav', { class: 'g2-breadcrumbs', 'aria-label': label },
-      h('ol', null, steps.map(([text, go]) => go
-        ? h('li', null, h('button', { class: 'link', type: 'button', onclick: go }, text))
-        : h('li', { 'aria-current': 'page' }, text))));
+      h('ol', null, steps.map(([text, href, go], i) => i === steps.length - 1 ? h('li', { 'aria-current': 'page' }, text)
+        : h('li', null, href ? h('a', { class: 'g2-link-quiet', href, onclick: e => {
+            if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            e.preventDefault(); go(); } }, text) : text))));
+    const statHref = (x, target = stateTarget) => hrefFor({ view: 'stat', node: x === STAT ? '' : target(x) });
     function crumbs(id) {
       const ids = chain(id);
-      return breadcrumbs('Poziția în structură', ids.map((x, i) => [labelOf(x), i < ids.length - 1 && (() => focusNode(x))]));
+      return breadcrumbs('Poziția în structură', ids.map((x, i) => i < ids.length - 1
+        ? [labelOf(x), statHref(x), () => focusNode(x)] : [labelOf(x)]));
     }
 
     /* the context for a tree: which records have which visible children. A matching record is linked under each of its
@@ -934,7 +945,7 @@
       const matchSet = new Set(items);
       if (S.fam && !directory) {
         const nav = breadcrumbs('Poziția în tipuri',
-          [['Tipuri de instituții', () => { S.fam = ''; S.cat = ''; update(); }], [S.fam]]);
+          [['Tipuri de instituții', hrefFor({ fam: '', cat: '' }), () => { S.fam = ''; S.cat = ''; update(); }], [S.fam]]);
         const tree = h('div', { class: 'tree' }), ctx = buildCtx(items, isFiltered());
         const sorted = items.slice().sort((a, b) => coll.compare(a.county, b.county) || coll.compare(a.n, b.n));
         // A family is a peer group. Keep the focused results inside that group.
@@ -1344,7 +1355,8 @@
       const path = r.f ? chain(r.f) : [STAT, 'fara-anaf'];
       const stepTo = id => { closeDialogSilently(); S.node = id === STAT ? '' : id; setView('stat'); };
       const steps = path.map((x, i) => r.f && i === path.length - 1 ? [r.n]
-        : [labelOf(x), () => vnode.has(x) ? stepTo(x) : openRecord(byCif.get(x))]);
+        : vnode.has(x) ? [labelOf(x), statHref(x, y => y), () => stepTo(x)]
+        : byCif.has(x) ? [labelOf(x), hrefFor({}, byCif.get(x).id), () => openRecord(byCif.get(x))] : [labelOf(x)]);
       if (!r.f) steps.push([r.n]);
       const crumb = breadcrumbs('Poziția în structură', steps);
       const note = r.f && noteOf.get(r.f);
