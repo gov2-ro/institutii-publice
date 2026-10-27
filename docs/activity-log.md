@@ -1,5 +1,14 @@
 # Activity log
 
+## 2026-10-27 — 12 more court links
+
+**Done**
+- stiri named courts without an exact-name partner. All 12 have one A4... record in the same county, city and street
+  (parents 4265841 vs 4340587): 8 tribunals (Iasi, Vaslui, Braila, Vrancea, Maramures, Caras-Severin, Gorj, Ilfov),
+  Sibiu, Valcea, and CA and Tribunal Alba. Linked with `same_body_as`; now 41 links.
+- Found: the earlier 29 used the 47373... series only. The 47372... series has 15 more courts, not linked
+  (outside the operator decision; backlog).
+
 ## 2026-10-27 — DS v0.16.0: the civtech title sweep
 
 **Done**
