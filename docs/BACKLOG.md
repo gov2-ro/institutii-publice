@@ -92,6 +92,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Cultură). Check `pretty` / the network-family key for truncated tokens.
 - [x] (Section removed, 2026-10-28) Despre: the source files show local paths and raw export names ("Lens Visualization [2026-10-19…] 3.csv").
       Show a readable name per source and keep the path in a detail line.
+- [ ] Refine the county profiles (`#v=loc&k=<county>`): owner request 2026-10-28, deferred. Scope to agree first.
+- [ ] Publish the landing v2 work to org.gov2.ro for the limited preview (owner): `sh scripts/publish_pages.sh`,
+      then check the share preview of `og.png` in a share debugger.
 - [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
 
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)
