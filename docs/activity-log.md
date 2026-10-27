@@ -1,5 +1,13 @@
 # Activity log
 
+## 2026-10-27 — Review (Opus): landing round 4 accepted
+
+**Decided**
+- Accepted cb8e87d + 85088c3 (Domenii section, Despre page, GitHub footer, map compare by domain, review fixes)
+  from screenshots. Accepted the deviation: "Alte instituții din domeniu" links `fam=(fără tip comun)`, so it
+  opens the N records, not the whole domain.
+- Phone landing: 3,373 px at 390 px collapsed (round 3: 2,560 px). The cost of the Domenii section; accepted.
+
 ## 2026-10-27 — Landing round 4, review corrections (Opus: accepted with 5 corrections)
 
 **Done**

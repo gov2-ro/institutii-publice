@@ -86,6 +86,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       issue with the record id prefilled), a short form, an e-mail address. Decide the channel and who reads it.
 - [ ] Map: a "pe hartă" link per need tile ("De ce ai nevoie?"), kept apart from the domain selects (spec 2b.5).
 - [ ] Map: counts per 10,000 inhabitants (needs INS population per county; licence and date to record).
+- [ ] A family label is cut off: "Centrul național pentru conservarea și promovarea culturii t" (seen in Domenii,
+      Cultură). Check `pretty` / the network-family key for truncated tokens.
 - [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
 
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)
