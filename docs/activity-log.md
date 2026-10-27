@@ -1,5 +1,13 @@
 # Activity log
 
+## 2026-10-27 — Review round 2 (Opus): landing v2 and `organizare.html` accepted
+
+**Decided**
+- Accepted 9fa0cae against the brief and the round 1 corrections. Checked from screenshots at 390 and 1,440 px,
+  light and dark. The legal citations on the diagram match the Constitution text (art. 1, 32, 61, 65, 102, 116,
+  117, 120–124, 126, 131, 140–142).
+- Not published: the owner reviews the screenshots first.
+
 ## 2026-10-27 — County council alias rows approved
 
 **Done**

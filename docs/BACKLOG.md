@@ -73,6 +73,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       administrativă" as a legal term; the Legea 544/2001 guide link.
 - [ ] Add a check that every link of `organizare.html` opens a non-empty view (the build has none; this run used a
       Playwright script outside the repo).
+- [ ] Review and publish landing v2 and `organizare.html` (owner): screenshots, then `sh scripts/publish_pages.sh`.
+- [ ] The "Guvernul" and "Ministere" card counts (7,907 and 7,654) include the 6,000 schools funded through the
+      Ministerul Educației. Consider a note or a count of direct subordinates only.
 - [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
 
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)
