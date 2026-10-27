@@ -53,10 +53,10 @@
   .g2-header .grow { flex: 1; }
   .txtbtn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--g2-space-2); color: rgb(var(--g2-color-on-header)); font-size: var(--g2-font-size-meta); font-weight: 600; text-decoration: none; }
   .txtbtn:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
-  #about-warn:not(:empty) { margin-left: .3em; }
   .g2-footer .org-credit { display: flex; align-items: center; gap: var(--g2-space-2); }
   .g2-footer a.org-gh { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
   .g2-wordmark span.org-wm { font-weight: 700; }
+  .org-beta { margin-left: var(--g2-space-2); align-self: center; text-transform: uppercase; letter-spacing: .04em; font-size: .6875rem; }
   main { padding-block: var(--g2-space-5) var(--g2-space-6); }
   .org-page > :not(.org-frame) { max-width: 46rem; }
   .org-page h1 { margin: 0 0 var(--g2-space-3); }
@@ -141,9 +141,8 @@
 <header class="g2-header">
   <span class="g2-ro-corner" aria-hidden="true"></span>
   <div class="g2-header-in g2-container title">
-    <a class="g2-wordmark" href="index.html" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/g2-0-negative-64.png" width="50" height="30" alt=""><span class="g2-ro-sweep org-wm">Instituții publice</span></a>
+    <a class="g2-wordmark" href="index.html" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/g2-0-negative-64.png" width="50" height="30" alt=""><span class="g2-ro-sweep org-wm">Instituții publice</span></a><strong class="g2-tag org-beta" data-tone="progress" title="Versiune de test: datele și paginile se schimbă">beta</strong>
     <span class="grow"></span>
-    <a class="txtbtn" href="despre.html" aria-current="page">Despre<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></a>
   </div>
 </header>
 <main id="main" class="g2-container" tabindex="-1">
@@ -185,7 +184,6 @@
   const box = document.getElementById('ds');
   fetch('metadata.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(D => {
     const DS = D.dataset, inputs = (DS && DS.inputs) || [], capped = inputs.filter(i => i.capped);
-    if (capped.length) { const w = document.getElementById('about-warn'); w.textContent = '⚠'; w.setAttribute('role', 'img'); w.setAttribute('aria-label', 'Un export ANI a atins limita de rânduri'); }
     box.replaceChildren(...(DS ? [
       h('p', null, DS.generated_at ? ['Setul a fost generat la ', h('strong', null, when(DS.generated_at)), '.'] : null),
       capped.length ? h('p', { class: 'flag' }, `Atenție: ${capped.length === 1 ? 'un export ANI a atins' : capped.length + ' exporturi ANI au atins'} limita de 10.000 de rânduri. Datele pot fi incomplete.`) : null,

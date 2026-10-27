@@ -1,5 +1,17 @@
 # Activity log
 
+## 2026-10-28 — "Despre" in the menu, beta tag (Opus, small change)
+
+**Done**
+- index: "Despre" (with the ANI ⚠) moved from the header into the "Opțiuni" menu, after "Cum e organizat statul".
+  organizare and despre have no menu, so their header link is removed; the footer keeps "Despre" on every page.
+- A DS tag `.g2-tag[data-tone=progress]` "beta" next to the title on the three pages (local size rule `.org-beta`).
+- Fixed on the way: on phones the "Opțiuni" panel was cut off at the left edge. It now opens under the header row,
+  full width.
+
+**Measured**
+- Menu links are 44 px high. No horizontal scroll at 390 and 1,440 px; no page errors; JS syntax and 44 tests pass.
+
 ## 2026-10-28 — Despre sources note, negative logo (Opus, small change)
 
 **Done**
