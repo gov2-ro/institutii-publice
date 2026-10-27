@@ -404,18 +404,27 @@ def declaratii_id(name, county):
     return "D" + hashlib.sha1(f"{fold(name)}|{fold(county)}".encode()).hexdigest()[:8]
 
 
+PLACE_WORDS = {"municipiul", "orasul", "comuna", "sectorul", "al", "municipiului", "bucuresti"}
+COMMON_DF = 50           # a token in 50+ record names is a kind-of-body word, not a proper noun
+
+
 def unique_aliases(records):
     """Set `aliases_unique` on each record: the aliases whose folded text is not the name or alias of any other
     record, not the record's own name, and not a bare kind of body ("Inspectoratul de Jandarmi"). -> number of
     records with at least one."""
-    owners = Counter()
+    owners, df = Counter(), Counter()
     for r in records:
+        df.update(set(fold(r["name"]).split()))
         for f in {fold(r["name"]), *map(fold, r.get("aliases", []))}:
             owners[f] += 1
     n = 0
     for r in records:
+        own = set(fold(r["name"]).split())
+        place = set(fold(f"{r.get('county') or ''} {r.get('uat') or ''}").split()) - PLACE_WORDS
         keep = [a for a in r.get("aliases", [])
-                if fold(a) and fold(a) != fold(r["name"]) and owners[fold(a)] == 1 and not generic_name(fold(a))]
+                if fold(a) and fold(a) != fold(r["name"]) and owners[fold(a)] == 1 and not generic_name(fold(a))
+                and not (set(fold(a).split()) < own and not set(fold(a).split()) & place
+                         and min(df[t] for t in fold(a).split()) >= COMMON_DF)]
         r["aliases_unique"] = keep
         n += bool(keep)
     return n

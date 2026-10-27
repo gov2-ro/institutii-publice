@@ -1,5 +1,19 @@
 # Activity log
 
+## 2026-10-27 — Three small stiri requests after the v0.35.0 pin
+
+**Done**
+- A4192545 (JUDETUL ILFOV) absorbed G26022 (CONSILIUL JUDETEAN ILFOV) by a curated merge. 24,982 -> 24,981 records.
+- Alias row for A11364678: "Agenția Județeană pentru Ocuparea Forței de Muncă Ilfov", `full_name`, `proposed`
+  (the operator reviews it).
+- `aliases_unique` drops an alias that is a proper subset of the record's name, holds no place word (county or UAT) and only
+  common words (every token in 50+ record names). "Inspectoratul de Jandarmi" is gone from A4240995.
+
+**Measured**
+- A first rule (any subset) dropped 473 aliases, among them good short names ("Colegiul National Vasile Goldis"). A
+  second (common words only) dropped "Directia de Sanatate Publica Bacau". The final rule changes 20 records, of which
+  A4192545 gains the council aliases. A few kept names are debatable ("Biblioteca Judeteana Mihai Eminescu" is gone).
+
 ## 2026-10-27 — Review round 2 (Opus): landing v2 and `organizare.html` accepted
 
 **Decided**

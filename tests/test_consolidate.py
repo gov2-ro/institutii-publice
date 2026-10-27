@@ -352,6 +352,15 @@ class UniqueAliases(unittest.TestCase):
                          (["Consiliul Judetean Alba"], ["Consiliul Judetean Arad"], 2))
 
 
+class UniqueAliasesShortForm(unittest.TestCase):
+
+    def test_placeless_short_form_of_the_name_is_dropped(self):
+        recs = [{"id": f"A{i}", "name": f"INSPECTORATUL DE JANDARMI JUDETEAN C{i}", "county": f"C{i}", "uat": "",
+                 "aliases": []} for i in range(60)]
+        recs[0]["aliases"] = ["Inspectoratul de Jandarmi", "Inspectoratul de Jandarmi Judetean C0 Nord"]
+        c.unique_aliases(recs)
+        self.assertEqual(recs[0]["aliases_unique"], ["Inspectoratul de Jandarmi Judetean C0 Nord"])
+
 class PrefixTier(unittest.TestCase):
     ANAF = "AGENTIA NATIONALA A MEDICAMENTULUI SI A DISPOZITIVELOR MEDICALE DIN ROMANIA"
 
