@@ -2,7 +2,7 @@
 
 For: Sonnet. Spec: [../specs/landing-v2-organizare.md](../specs/landing-v2-organizare.md). Read the spec first,
 then `CLAUDE.md` (explorer, DS rules) and the DS `COMPONENTS.md` (Fields, Tile, Buttons).
-Start only after the owner has answered the decisions in spec section 4. Apply the answers as written.
+The owner accepted all five recommendations of spec section 4 (2026-10-27). Build them as written.
 
 ## Tasks
 1. **`explorer/index.html`, landing (`renderHome`)**

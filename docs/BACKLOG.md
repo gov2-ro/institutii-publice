@@ -61,8 +61,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Add a light/dark toggle like civtech's footer control. The page follows only `prefers-color-scheme` now.
 
 ## Explorer: landing v2 and "Cum e organizat statul" (spec: specs/landing-v2-organizare.md)
-- [ ] Owner: answer the five decisions in spec section 4 (landing search, headings, state row, remembered
-      county, separate page).
+- [x] Owner: answer the five decisions in spec section 4 (landing search, headings, state row, remembered
+      county, separate page). All five accepted, 2026-10-27.
 - [ ] Build landing v2 and `explorer/organizare.html` ([brief](briefs/landing-v2-organizare.md)). Brief ready 2026-10-27.
 - [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
 

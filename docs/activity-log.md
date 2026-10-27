@@ -1,5 +1,13 @@
 # Activity log
 
+## 2026-10-27 — Owner decisions: landing v2 and "Cum e organizat statul"
+
+**Decided**
+- Owner accepted all five recommendations of spec section 4: search on the landing page, short section headings,
+  six state cards replace the inline state row, the county is remembered in `localStorage` (owner: "useful"),
+  and `explorer/organizare.html` is a separate page. The first two reverse choices of 2026-10-26.
+- Spec status: accepted. Brief ready for Sonnet.
+
 ## 2026-10-27 — Spec and brief: landing v2, page "Cum e organizat statul"
 
 **Done**

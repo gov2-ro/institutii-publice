@@ -1,6 +1,6 @@
 # Spec: landing v2 and the page "Cum e organizat statul"
 
-Status: draft, 2026-10-27. Waits for the owner decisions in section 4. Brief: [../briefs/landing-v2-organizare.md](../briefs/landing-v2-organizare.md).
+Status: accepted, 2026-10-27. The owner accepted all five recommendations in section 4. Brief: [../briefs/landing-v2-organizare.md](../briefs/landing-v2-organizare.md).
 
 Owner request (2026-10-27): improve the landing page from the visitor's point of view, with the India web
 directory as inspiration. Add a separate page that explains how the Romanian state is organised, like the
@@ -144,7 +144,7 @@ The page uses `gov2.css`, the same header and footer as `index.html`, and `@laye
 - Simple words first, the legal term after it in italics: "birourile ministerelor din județe (*servicii publice
   deconcentrate*)".
 
-## 4. Decisions for the owner
+## 4. Owner decisions (2026-10-27: all five recommendations accepted)
 
 1. **Search on the landing page.** The 2026-10-26 refactor made search result-only. Visitors expect a search
    field first. *Recommendation:* show it on the landing page. *Cost:* the landing page is longer by one row.
