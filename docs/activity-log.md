@@ -1,5 +1,13 @@
 # Activity log
 
+## 2026-10-27 — Courts register check, regional ADR aliases
+
+**Done**
+- Courts check: 4 ANAF requests, report `docs/reports/2026-10-27-courts-cif-check.md`. Identical identity data under
+  both CIFs; no merge (see report).
+- Operator decision relayed by stiri: bare `ADR` = the digitalization authority; "ADR" + region = regional
+  development agency. 21 alias rows for 7 agencies, status `reviewed`. ADR Vest has no record (backlog).
+
 ## 2026-10-27 — DS v0.15.0: the select control
 
 **Done**

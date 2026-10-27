@@ -118,6 +118,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Cross-source duplicates reported by stiri (2026-10-27): sector-relaxed same-name key, nationwide pass for
       Bucuresti bodies, `curation/merges.csv`, sector suffix removed from source-only names. Tag v0.15.0.
 - [x] Alias master `curation/aliases.csv` (105 rows from stiri, ids checked against each build).
+- [x] Courts check done 2026-10-27 ([report](reports/2026-10-27-courts-cif-check.md)): the register shows the same
+      name, address and phone under both CIFs; not merged. Open: model a "same body, second CIF" link (29 pairs).
+- [ ] ADR Vest (Timisoara) has no record in any source. stiri counts 7 mentions. Add a curated record, then alias rows.
 - [ ] Same-name pairs reported by stiri (2026-10-27), unresolved. Courts have two ANAF records with one name and
       address but different parent CIFs: A17019105 / A47373006 (Curtea de Apel Bucuresti), A4340633 / A47373014
       (Tribunalul Bucuresti), and the same pattern for Dolj, Maramures, Harghita, Timis, Constanta, Valcea. The
