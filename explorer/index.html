@@ -111,18 +111,6 @@
   .ov-g > span { min-width: 0; max-width: 100%; }
   .ov-g a { overflow-wrap: anywhere; }
   .ov-g .count { margin-left: 4px; }
-  .cat-tabs { display: flex; flex-wrap: wrap; gap: 0 var(--g2-space-4); border-bottom: 1px solid var(--line); }
-  .cat-tab { display: inline-flex; gap: 6px; align-items: baseline; min-height: 44px; padding: 10px 0 8px; margin-bottom: -1px; border: 0;
-             border-bottom: 4px solid transparent; background: none; color: var(--link); font: inherit; font-size: var(--g2-font-size-meta); cursor: pointer;
-             text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .15em; }
-  .cat-tab:hover { text-decoration-thickness: 3px; }
-  .cat-tab[aria-expanded=true] { color: var(--text); border-bottom-color: var(--text); font-weight: 600; text-decoration: none; }
-  .cat-panel { padding-top: var(--g2-space-3); }
-  .cat-panel[hidden] { display: none; }
-  .cat-panel .famgrid { margin: 0; }
-  .famgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--g2-space-1) var(--g2-space-4); margin: var(--g2-space-1) 0 var(--g2-space-2) 18px; font-size: var(--g2-font-size-meta); }
-  .famgrid .it { display: flex; gap: var(--g2-space-2); align-items: baseline; min-width: 0; }
-  .famgrid .link { min-width: 0; overflow-wrap: anywhere; }
   .directory { margin: 0; padding: 0; list-style: none; }
   .directory li { border-bottom: 1px solid var(--line); }
   .directory a { display: flex; gap: var(--g2-space-3); align-items: baseline; min-height: 44px; padding: 10px 4px; color: var(--text); text-decoration: none; }
@@ -292,9 +280,34 @@
   .org-cdet > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
   .org-selform { display: flex; gap: var(--g2-space-2); align-items: flex-end; margin-top: auto; padding-top: var(--g2-space-2); }
   .org-selform .g2-field { flex: 1; min-width: 0; }
+  /* "Toate tipurile": the complete index of types. Desktop: a right column beside the tiles; narrow: one collapsed row. */
+  .org-types { min-width: 0; margin: 0 0 var(--g2-space-6); padding: 0 var(--g2-space-3); border: 1px solid var(--line); border-top: 5px solid rgb(var(--g2-color-brand)); }
+  .org-types > h2 { margin: 0; font-size: 1.125rem; }
+  .org-types > h2:not(:has(button)) { padding-block: var(--g2-space-3) var(--g2-space-2); }
+  .org-types-body { padding-bottom: var(--g2-space-3); }
+  .org-types .org-tbody { gap: var(--g2-space-2); }
+  .org-types .g2-input { min-height: 44px; }
+  .org-cats { margin: 0; padding: 0; list-style: none; }
+  .org-cats > li { border-bottom: 1px solid var(--line); }
+  .org-cats > li:last-child { border-bottom: 0; }
+  .org-cat { display: flex; gap: var(--g2-space-2); align-items: center; width: 100%; min-height: 44px; padding: 0; border: 0; background: none; color: inherit;
+             font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+  .org-cat .count { margin-left: auto; font-weight: 400; }
+  .org-cats .org-links { padding-left: var(--g2-space-3); }
+  .org-cats .org-links[hidden] { display: none; }
+  .org-flat { margin: 0; padding: 0; list-style: none; }
+  .org-flat li { align-items: center; padding-block: 2px; }
+  .org-flat .org-tl { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .org-flat .org-tl > a { min-height: 32px; display: inline-flex; align-items: center; overflow-wrap: anywhere; }
+  .org-flat .org-tl > .sub { margin: 0 0 4px; }
   .org-after { margin: var(--g2-space-3) 0 0; }
   .org-after a { display: inline-block; min-height: 44px; padding-top: 10px; }
 
+  @media (min-width: 1024px) {
+    .org-needs { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--g2-space-5); align-items: start; }
+    .org-needs .org-tasks { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .org-types { position: sticky; top: var(--g2-space-3); max-height: calc(100vh - 2 * var(--g2-space-3)); overflow-y: auto; }
+  }
   @media (max-width: 760px) {
     .cprof { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "map" "tree"; }
     .cprof-map { position: static; margin-bottom: var(--g2-space-3); }
@@ -1351,7 +1364,8 @@
     const HOME_EXAMPLES = ['Municipiul Iași', 'Spital Cluj', '4541580'];
     const HOME_COUNTY_KEY = 'org-home-county';
     const homePhone = matchMedia('(max-width: 760px)'), homeOpen = new Set();   // phone: the open tiles and cards (by title)
-    homePhone.addEventListener('change', () => { if (S.view === 'acasa') update(); });
+    const homeNarrow = matchMedia('(max-width: 1023px)');
+    for (const mq of [homePhone, homeNarrow]) mq.addEventListener('change', () => { if (S.view === 'acasa') update(); });
     const famKnown = new Set(fams), homeWarned = new Set();
     const homeWarn = label => { if (!homeWarned.has(label)) { homeWarned.add(label); console.warn('[org] HOME_TASKS: absent family', label); } };
     const icon = id => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1360,12 +1374,10 @@
     const readHomeCounty = () => { try { const c = localStorage.getItem(HOME_COUNTY_KEY); return counties.includes(c) ? c : ''; } catch (e) { return ''; } };
     const saveHomeCounty = c => { try { c ? localStorage.setItem(HOME_COUNTY_KEY, c) : localStorage.removeItem(HOME_COUNTY_KEY); } catch (e) {} };
     let homeCounty = readHomeCounty();                       // the remembered county (memory only when storage is blocked)
-    let homeCat = '';                                        // the open category tab on the landing page
+    let homeOpenCat = new Set(), homeTypesOpen = false;      // "Toate tipurile": the open categories; the box on narrow screens
     const countyName = c => c === 'Bucuresti' ? 'București' : c;
     function renderHome(items) {
       const ctx = buildCtx(items, isFiltered());
-      const byFam = new Map();
-      for (const r of items) if (r.fam) { if (!byFam.has(r.fam)) byFam.set(r.fam, []); byFam.get(r.fam).push(r); }
       // tiles and cards ignore the website filter (owner, 2026-10-27); every other filter applies
       const allRows = rows.filter(r => pass(r, 'web')), ctxAll = buildCtx(allRows, isFiltered());
       const allByFam = new Map(), allByCat = new Map(), allById = new Map();
@@ -1375,7 +1387,6 @@
         allByCat.set(r.cat, (allByCat.get(r.cat) || 0) + 1);
       }
       const noWeb = () => { S.web = false; el.web.checked = false; };
-      const families = [...byFam].sort((a, b) => b[1].length - a[1].length || coll.compare(a[0], b[0]));
       const familyHref = (f, list, k, nw) => list.length === 1 && !k && !nw ? browseHref({ id: list[0].id }) : browseHref({ v: 'fam', fam: f, cat: '', k, web: nw ? '0' : '' });
       const familyLink = (f, list, cls, k, nw) => browseLink(f, familyHref(f, list, k, nw), () => {
         if (nw && list.length > 1) noWeb();               // one record opens in the dialog; the filter stays
@@ -1422,7 +1433,8 @@
           h('button', { class: 'g2-btn', type: 'submit' }, 'Arată'), clear));
 
       /* 3. needs: tiles scoped to the remembered county */
-      const tasksBox = h('div', { class: 'org-grid' });
+      let refreshTypes = null;
+      const tasksBox = h('div', { class: 'org-grid org-tasks' });
       function buildTiles() {
         const k = homeCounty;
         return HOME_TASKS.map(tk => {
@@ -1453,7 +1465,7 @@
         } else head = h('h3', null, ...ttl);
         return h('div', { class: 'g2-tile org-tile' }, head, body);
       }
-      function refreshTasks() { tasksBox.replaceChildren(...buildTiles()); }
+      function refreshTasks() { tasksBox.replaceChildren(...buildTiles()); if (refreshTypes) refreshTypes(); }
       refreshTasks();
       const tasksSec = h('section', { class: 'home-sec', 'aria-labelledby': 'h-tasks' }, h('h2', { id: 'h-tasks' }, 'De ce ai nevoie?'), tasksBox);
 
@@ -1497,32 +1509,60 @@
         h('div', { class: 'org-grid' }, cards),
         h('p', { class: 'org-after' }, h('a', { href: 'organizare.html' }, 'Cum funcționează fiecare ramură →')));
 
-      /* 5. type tabs (unchanged) */
-      const byCat = new Map();
-      for (const [f, list] of families) {
-        const cat = famCat.get(f);
-        if (!byCat.has(cat)) byCat.set(cat, []);
-        byCat.get(cat).push([f, list]);
+      /* 5. "Toate tipurile": the complete index of types, beside the tiles (or one collapsed row on narrow screens).
+         Counts follow the tile rule: the website filter is ignored, the remembered county applies. */
+      const typesBody = h('div', { class: 'org-tbody org-types-body', id: 'org-types-body' });
+      const tIn = h('input', { class: 'g2-input', id: 'home-tq', type: 'search', autocomplete: 'off', oninput: () => drawTypes() });
+      const typesHead = h('span', { class: 'org-tt-l' }, 'Toate tipurile');
+      const typeLink = (f, list) => h('li', null, familyLink(f, list, 'link acc', homeCounty, true), h('span', { class: 'count' }, fmt(list.length)));
+      function typeIndex() {                                  // [[category, [[family, records]], total]], biggest first
+        const k = homeCounty, byCat = new Map();
+        for (const [f, all] of allByFam) {
+          const list = k ? all.filter(r => r.county === k) : all;
+          if (!list.length) continue;
+          const c = famCat.get(f);
+          if (!byCat.has(c)) byCat.set(c, []);
+          byCat.get(c).push([f, list]);
+        }
+        return [...byCat].map(([c, l]) => [c, l.sort((x, y) => y[1].length - x[1].length || coll.compare(x[0], y[0])), l.reduce((n, e) => n + e[1].length, 0)])
+          .sort((x, y) => y[2] - x[2] || coll.compare(x[0], y[0]));
       }
-      const catN = list => list.reduce((n, [, records]) => n + records.length, 0);
-      // categories as a row of tabs; the open one lists its types in the panel under the row
-      const cats = [...byCat].sort((a, b) => catN(b[1]) - catN(a[1]));
-      if (!byCat.has(homeCat)) homeCat = '';
-      const panel = h('div', { class: 'cat-panel', id: 'cat-panel', role: 'region' });
-      const tabs = cats.map(([cat, list]) => h('button', { class: 'cat-tab', type: 'button', 'aria-controls': 'cat-panel',
-        title: plural(list.length, 'tip', 'tipuri'), onclick: () => { homeCat = homeCat === cat ? '' : cat; showCat(); } },
-        h('span', null, cat), h('span', { class: 'count' }, fmt(catN(list)))));
-      function showCat() {
-        cats.forEach(([cat], i) => tabs[i].setAttribute('aria-expanded', cat === homeCat));
-        const list = byCat.get(homeCat);
-        panel.hidden = !list;
-        panel.setAttribute('aria-label', homeCat);
-        panel.replaceChildren(list ? h('div', { class: 'famgrid' }, list.map(([f, records]) => h('div', { class: 'it' },
-          familyLink(f, records, 'link acc'), h('span', { class: 'count' }, fmt(records.length))))) : '');
+      function drawTypes() {
+        const idx = typeIndex(), nTypes = idx.reduce((n, e) => n + e[1].length, 0);
+        typesHead.textContent = `Toate tipurile (${fmt(nTypes)})`;
+        const q = fold(tIn.value).trim();
+        if (q) {
+          const hits = idx.flatMap(([c, l]) => l.filter(([f]) => fold(f).includes(q)).map(e => [c, ...e]))
+            .sort((x, y) => y[2].length - x[2].length || coll.compare(x[1], y[1]));
+          typesRes.textContent = hits.length ? `${plural(hits.length, 'tip găsit', 'tipuri găsite')}` : 'Niciun tip nu corespunde.';
+          typesList.replaceChildren(...hits.slice(0, 100).map(([c, f, list]) => h('li', null, h('span', { class: 'org-tl' }, familyLink(f, list, 'link acc', homeCounty, true), h('span', { class: 'sub' }, c)),
+            h('span', { class: 'count' }, fmt(list.length)))), ...(hits.length > 100 ? [h('li', { class: 'sub' }, `… și încă ${fmt(hits.length - 100)}. Scrie mai mult.`)] : []));
+          typesList.className = 'org-links org-flat';
+        } else {
+          typesRes.textContent = '';
+          typesList.className = 'org-cats';
+          typesList.replaceChildren(...idx.map(([c, l, n], i) => {
+            const id = `org-cat${i}`, open = homeOpenCat.has(c);
+            const panel = h('ul', { class: 'org-links', id, hidden: !open }, l.map(([f, list]) => typeLink(f, list)));
+            return h('li', null, h('button', { class: 'org-cat', type: 'button', 'aria-expanded': String(open), 'aria-controls': id, onclick: e => {
+              const on = panel.hidden; panel.hidden = !on; e.currentTarget.setAttribute('aria-expanded', String(on)); on ? homeOpenCat.add(c) : homeOpenCat.delete(c); } },
+              h('span', { class: 'org-tt-l' }, c), h('span', { class: 'count' }, fmt(n)), h('span', { class: 'org-chev', 'aria-hidden': 'true' })), panel);
+          }));
+        }
       }
-      showCat();
-      const types = h('section', { class: 'home-sec', 'aria-label': 'Tipuri de instituții' },
-        cats.length ? h('div', { class: 'cat-tabs' }, tabs) : emptyMsg(), panel);
+      const typesRes = h('p', { class: 'sub', role: 'status' }), typesList = h('ul');
+      typesBody.append(h('div', { class: 'g2-field' }, h('label', { class: 'g2-label', for: 'home-tq' }, 'Caută un tip'), tIn), typesRes, typesList);
+      refreshTypes = drawTypes;
+      drawTypes();
+      const narrow = homeNarrow.matches;
+      let typesTitle;
+      if (narrow) {
+        typesBody.hidden = !homeTypesOpen;
+        typesTitle = h('h2', { id: 'h-types' }, h('button', { class: 'org-tt', type: 'button', 'aria-expanded': String(homeTypesOpen), 'aria-controls': 'org-types-body', onclick: e => {
+          const on = typesBody.hidden; typesBody.hidden = !on; homeTypesOpen = on; e.currentTarget.setAttribute('aria-expanded', String(on)); } },
+          typesHead, h('span', { class: 'org-chev', 'aria-hidden': 'true' })));
+      } else typesTitle = h('h2', { id: 'h-types' }, typesHead);
+      const typesBox = h('aside', { class: 'org-types', 'aria-labelledby': 'h-types' }, typesTitle, typesBody);
       // county map + a plain list of counties with counts (the non-map route)
       const counts = countyCounts(), mapBox = h('div', null, h('p', { class: 'sub', role: 'status' }, 'Se încarcă harta…'));
       const noCounty = items.filter(r => !r.county).length;
@@ -1537,7 +1577,7 @@
         h('div', { class: 'maprow' }, h('div', { class: 'mapcol' }, mapBox), h('div', { class: 'mapside' }, homePhone.matches
           ? h('details', { class: 'org-cdet' }, h('summary', null, `Lista județelor (${counties.length})`), list) : list)));
       countyMap(mapBox);
-      return h('div', null, searchSec, placeSec, tasksSec, stateSec, types, sec3);
+      return h('div', null, searchSec, placeSec, h('div', { class: 'org-needs' }, tasksSec, typesBox), stateSec, sec3);
     }
 
     /* ---------- detail dialog ---------- */

@@ -1,5 +1,38 @@
 # Activity log
 
+## 2026-10-27 — Landing: "Toate tipurile" side box replaces the category tabs (spec section 2, item 5)
+
+**Done**
+- `explorer/index.html`: the category tabs and panel are removed from `renderHome` (and their CSS). The new box
+  `Toate tipurile (N)` lists the categories (biggest first, collapsed; a button with `aria-expanded` opens one in place)
+  and their types with counts. The field "Caută un tip" (label + `.g2-input`) filters the type names folded; while it has
+  text the box shows a flat list with the category in grey (first 100 hits). Type links are the tile links: family view,
+  `web=0`, `k=<county>` when a county is remembered. The box follows the remembered county ("Șterge" included).
+- Desktop (1,024 px and wider): a 300 px right column beside "De ce ai nevoie?", tiles in 3 columns, `position: sticky`
+  with `max-height` and inner scroll (it sticks at 12 px from the top; the box is 876 px tall at a 900 px viewport).
+  Below 1,024 px: one collapsed row after the tiles, with the same button pattern as the tiles.
+  A second media query (`homeNarrow`) re-renders the landing when the width crosses 1,024 px.
+
+**Measured**
+- N = 176 types in 17 categories (no county, website filter ignored). 176 of 176 type links open a non-empty view
+  and all carry `web=0`. With county Cluj, every type link and every search hit carries `k=Cluj`; after "Șterge" none does.
+- Search: "spital" lists 5 types (Spital (alte tipuri), clinic, orășenesc, municipal, județean); "scoala" lists 4 types
+  of "Școală".
+- Category count = sum of its type counts in every category (by construction). It differs from the number of records
+  of the category: 5,272 of 24,981 records have no family, and a family counts in its main category only. Examples
+  (box / records of the category / records with no family): Educație 9,436 / 9,620 / 204; Servicii publice locale și
+  regii 898 / 763 / 119; Companii de stat 10 / 930 / 914; Altele 182 / 1,235 / 956; Agricultură, mediu și păduri
+  432 / 936 / 482.
+- Landing height at 390 px, all collapsed: 2,560 px (was 2,909 px); 320 px: 2,771 px. At 1,440 px: 3,574 px (was 3,468 px).
+  No horizontal scroll at 320, 390, 768, 1,024 and 1,440 px, both schemes. No control in the box under 44 px.
+- Keyboard: Tab from the field reaches each category toggle with the DS yellow focus; Enter opens one; the next Tab
+  reaches its first type link. 44 tests pass; JS syntax check passes; roots check true; legacy hashes unchanged.
+
+**Decided**
+- The box counts every record of a family once, under the family's main category, so that the category count equals
+  the sum of its types. Cost of the alternative (count records per category): the number would not match the list
+  under it.
+
 ## 2026-10-27 — AJOFM Ilfov alias row approved
 
 **Done**
