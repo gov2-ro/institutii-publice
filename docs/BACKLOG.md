@@ -133,6 +133,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       442 records stay under "Sector necunoscut" (mostly schools and kindergartens). Overrides could place the rest.
 
 ## Data quality
+- [ ] Short-form alias proposals (stiri, operator request, later): for the main public bodies, rows of kind `acronym` or
+      `short_name` ("AJOFM Ilfov", "ISU Maramures", "Prefectura Galati"), status `proposed`, reviewed in batches by the
+      operator. Not part of any tag yet. Start from the family heads (`FAMILY_HEADS`) and the county records.
 - [x] `aliases_unique` column built 2026-10-27 (5,239 records): aliases whose folded text no other record uses and that
       are not a bare kind of body. 41 rows "Consiliul Judetean X" added to `curation/aliases.csv` as `proposed`;
       the operator must review them (a row becomes `reviewed` on approval).

@@ -1,5 +1,10 @@
 # Activity log
 
+## 2026-10-27 — AJOFM Ilfov alias row approved
+
+**Done**
+- The operator approved A11364678 "Agenția Județeană pentru Ocuparea Forței de Muncă Ilfov" (relayed by stiri). `reviewed`.
+
 ## 2026-10-27 — Three small stiri requests after the v0.35.0 pin
 
 **Done**
