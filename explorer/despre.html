@@ -36,7 +36,7 @@
     --link: rgb(var(--g2-color-link)); --sunken: rgb(var(--g2-color-surface-sunken));
   }
   /* limited preview: logo tile, notice bar, one-row footer */
-  .g2-wordmark .g2-logo { box-sizing: content-box; width: 28px; height: 28px; padding: 3px; border-radius: 6px; background: rgb(var(--g2-color-on-header)); }
+  .g2-wordmark .g2-logo { width: 50px; height: 30px; }   /* the negative logo: white outline for the dark header */
   .g2-notice-bar > button { height: 44px; }
   .g2-header .g2-wordmark { min-height: 44px; }
   .org-foot .org-credit a:not(.org-gh) { display: inline-flex; align-items: center; min-height: 44px; }
@@ -113,9 +113,6 @@
   .org-page > :not(.org-frame) { max-width: 46rem; }
   .sub { color: var(--muted); font-size: var(--g2-font-size-meta); }
   .flag { display: block; margin: var(--g2-space-2) 0; padding: var(--g2-space-2) var(--g2-space-3); border-left: 5px solid rgb(var(--g2-color-warning-line)); background: rgb(var(--g2-color-warning-bg)); color: rgb(var(--g2-color-warning-ink)); font-size: var(--g2-font-size-meta); }
-  code { font-family: var(--g2-font-mono); font-size: .9em; overflow-wrap: anywhere; }
-  ul.plain { margin: 4px 0 0; padding-left: 20px; }
-  ul.plain li { overflow-wrap: anywhere; margin-bottom: var(--g2-space-3); }
   .g2-footer { margin-top: var(--g2-space-6); font-size: var(--g2-font-size-meta); }
 
   /* focus: the app layer wins over gov2.states, so these rules write the DS treatment again (see index.html) */
@@ -144,7 +141,7 @@
 <header class="g2-header">
   <span class="g2-ro-corner" aria-hidden="true"></span>
   <div class="g2-header-in g2-container title">
-    <a class="g2-wordmark" href="index.html" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/g2-0-64.png" width="28" height="28" alt=""><span class="g2-ro-sweep org-wm">Instituții publice</span></a>
+    <a class="g2-wordmark" href="index.html" aria-label="Instituții publice — Acasă"><img class="g2-logo" src="assets/img/g2-0-negative-64.png" width="50" height="30" alt=""><span class="g2-ro-sweep org-wm">Instituții publice</span></a>
     <span class="grow"></span>
     <a class="txtbtn" href="despre.html" aria-current="page">Despre<span id="about-warn" title="Un export ANI a atins limita de rânduri"></span></a>
   </div>
@@ -152,9 +149,16 @@
 <main id="main" class="g2-container" tabindex="-1">
 <div class="org-page">
 <h1>Despre date</h1>
+<p>Lista reunește patru surse publice:</p>
+<ul class="org-src">
+  <li><a href="https://data.gov.ro/dataset/listaentitatipublice/resource/9e6818e0-5bd1-48b1-b2ae-b774916d61ca">Lista entităților publice</a> (ANAF, pe data.gov.ro): CIF, adresă, UAT și instituția superioară.</li>
+  <li><a href="https://roepas.ro">ROePAS</a>: site, e-mail, telefon și proceduri.</li>
+  <li><a href="https://www.e-guvernare.ro/Registrul-National-al-Institutiilor-Publice-din-Romania.pdf">Registrul Național al Instituțiilor Publice din România</a> (PDF).</li>
+  <li>Declarațiile de integritate depuse la ANI, prin <a href="https://monitorul.ai/integritate">monitorul.ai/integritate</a>.</li>
+</ul>
 <p class="sub">Numerele sunt înregistrări din surse, nu entități juridice verificate. Prezența într-o sursă nu arată dacă o instituție este activă sau dacă site-ul ei funcționează.</p>
 <p class="sub">Numărul din ANI numără declarații depuse, nu angajați și nu instituții distincte.</p>
-<div id="ds"><p class="sub" role="status">Se încarcă informațiile despre fișiere…</p></div>
+<div id="ds"><p class="sub" role="status">Se încarcă…</p></div>
 <h2 id="contact">Contact</h2>
 <p>Ai găsit o problemă sau ai o sugestie? Scrie-ne ca <a href="https://github.com/gov2-ro/institutii-publice/issues">problemă pe GitHub</a> sau trimite un e-mail la <a href="mailto:cancelarie@gov2.ro">cancelarie@gov2.ro</a>.</p>
 <h2>Export CSV</h2>
@@ -171,12 +175,7 @@
 </footer>
 <script>
 (() => {
-  const srcLabel = { anaf: 'Lista entităților publice ANAF', roepas: 'ROePAS (roepas.ro)', registrul: 'Registrul Național al Instituțiilor Publice',
-    registru: 'Registrul Național al Instituțiilor Publice', ani: 'Declarații de integritate ANI', declaratii: 'Declarații de integritate ANI' };
-  const fmt = n => n.toLocaleString('ro-RO');
-  const plural = (n, one, many) => `${fmt(n)} ${n === 1 ? one : many}`;
   const when = s => { const d = new Date(s); return isNaN(d) ? String(s) : d.toLocaleString('ro-RO', { dateStyle: 'medium', timeStyle: 'short' }); };
-  const kb = n => n >= 1048576 ? `${(n / 1048576).toLocaleString('ro-RO', { maximumFractionDigits: 1 })} MB` : `${fmt(Math.round(n / 1024))} KB`;
   const h = (tag, props, ...kids) => {
     const el = document.createElement(tag);
     for (const [k, v] of Object.entries(props || {})) if (v != null && v !== false) el.setAttribute(k, v === true ? '' : v);
@@ -190,19 +189,8 @@
     box.replaceChildren(...(DS ? [
       h('p', null, DS.generated_at ? ['Setul a fost generat la ', h('strong', null, when(DS.generated_at)), '.'] : null),
       capped.length ? h('p', { class: 'flag' }, `Atenție: ${capped.length === 1 ? 'un export ANI a atins' : capped.length + ' exporturi ANI au atins'} limita de 10.000 de rânduri. Datele pot fi incomplete.`) : null,
-      h('h2', null, 'Fișiere sursă'),
-      h('ul', { class: 'plain' }, inputs.map(i => h('li', null,
-        (i.source === 'ani' || i.source === 'declaratii') ? h('strong', null, h('a', { href: 'https://monitorul.ai/integritate' }, srcLabel[i.source])) : h('strong', null, srcLabel[i.source] || i.source || 'sursă'), ' ', h('code', null, i.path || ''),
-        h('div', { class: 'sub' }, [
-          i.bytes != null ? kb(i.bytes) : null,
-          i.rows != null ? plural(i.rows, 'rând', 'rânduri') : null,
-          i.modified_at ? `fișier modificat la ${when(i.modified_at)} (data fișierului local, nu data verificării instituțiilor)` : null,
-          i.exported_at ? `export ANI din ${when(i.exported_at)}` : null,
-          i.capped ? 'a atins limita de 10.000 de rânduri' : null,
-        ].filter(Boolean).join(' · ')),
-        i.sha256 ? h('div', { class: 'sub', title: i.sha256 }, 'SHA-256: ', h('code', null, i.sha256.slice(0, 16) + '…')) : null)))]
-      : [h('p', null, 'Pentru acest set de date nu sunt disponibile informații despre fișierele sursă.')]));
-  }).catch(() => box.replaceChildren(h('p', { class: 'flag', role: 'alert' }, 'Informațiile despre fișierele sursă nu au putut fi încărcate.')));
+    ] : []));
+  }).catch(() => box.replaceChildren(h('p', { class: 'flag', role: 'alert' }, 'Data generării nu a putut fi încărcată.')));
 })();
 </script>
 </body>

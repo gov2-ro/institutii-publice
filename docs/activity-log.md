@@ -1,5 +1,18 @@
 # Activity log
 
+## 2026-10-28 — Despre sources note, negative logo (Opus, small change)
+
+**Done**
+- Despre: a note at the top lists the four public sources with their links (data.gov.ro ANAF list, roepas.ro, the
+  e-guvernare.ro PDF of the Registrul Național, monitorul.ai/integritate for ANI). The "Fișiere sursă" section and
+  its code are removed (owner); the curated websites file is not mentioned. The generation time and the ANI cap
+  warning stay.
+- Header logo: `assets/img/g2-0-negative-64.png` (106 × 64, from the owner's `g2-0-negative.png`), shown at 50 × 30
+  with no tile (owner: no white background).
+
+**Measured**
+- JS syntax on the three pages passes. No horizontal scroll at 390 and 1,440 px; no page errors.
+
 ## 2026-10-28 — Review (Opus): limited preview polish accepted
 
 **Decided**
