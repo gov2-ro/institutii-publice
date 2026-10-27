@@ -102,6 +102,43 @@ Icons: inline SVG, line style, `stroke="currentColor"`, `aria-hidden="true"`, on
 The DS has no icon set ("Not in the DS yet"), so the class is `org-icon`. Open a `ds-proposal` issue only when a
 second project needs the icons.
 
+## 2b. Round 4 changes (owner, 2026-10-27)
+
+These rules replace the parts of section 2 that they contradict.
+
+1. **Layout of the top.** On desktop (≥ 1,024 px) the search and "Unde locuiești?" sit side by side in two columns.
+   Below 1,024 px they stack, as now.
+2. **Jump links.** Under the top row: "Sari la: Domenii · Structura statului". They are buttons that scroll to the
+   section and move the focus to its heading. They are not `#` anchors, because the hash holds the view state.
+3. **"Domenii" section.** The "Toate tipurile" side box becomes a full-width section between "De ce ai nevoie?" and
+   "Cum e organizat statul", with the heading "Domenii". *Why "Domenii":* the 17 groups are fields of activity
+   (Educație, Sănătate); "Tip" is the level below and is too generic for a heading.
+   - The "Caută un tip" field stays at the top of the section, with its flat result list.
+   - Desktop: the domains are a grid of collapsible cards (3–4 columns), sorted by count. A card opens in place.
+     Phone: one column, collapsed, as the tiles.
+   - Each open domain ends with the row "Alte instituții din domeniu · N", for the records of the domain without a
+     type. The row opens the list view filtered by the category (`cat=<category>`, `web=0`). It is absent when N = 0.
+     The domain count is the number of records in the category, so it equals the list view count.
+   - The tiles go back to 4 columns on desktop.
+   - The header link "Tip → instituții" becomes "Domenii" (same view, `#v=fam`), in `index.html` and `organizare.html`.
+4. **Page "Despre"** (`explorer/despre.html`, a separate page in the same tab). It replaces the "Despre date" dialog.
+   - Content: the current dialog text (sources, generation time, source files from `metadata.json` `dataset`,
+     the ANI cap warning, the CSV export note). The page fetches only `metadata.json`.
+   - The header button "Despre date" becomes a link "Despre"; it keeps the ⚠ when an ANI export is capped.
+     The footer link "Despre date" becomes "Despre".
+   - Remove the accessibility statement and the footer link "Accesibilitate" (owner decision).
+   - Footer: replace the text "Cod sursă" with a GitHub icon link, `aria-label="Cod sursă pe GitHub"`, on all three pages.
+5. **County map: compare by domain.** Above the map, two selects: "Domeniu" (Toate + the 17 categories) and "Tip"
+   (Toate + the types of the chosen domain; disabled until a domain is chosen). The map, the legend classes and the
+   county list recompute for the selection.
+   - The map counts ignore the website filter, like the tiles and the domains. *Why:* websites are missing unevenly
+     across types (courts, schools), so a website-filtered map compares data coverage, not institutions.
+   - The selection is local to the map. It does not change the filters of the other sections or the hash.
+   - The need groups of "De ce ai nevoie?" are **not** in the map selects. *Why:* the tile "Sănătate" (6 types) and
+     the domain "Sănătate" (all records of the category) carry one word with two different counts. A visitor
+     cannot tell them apart in one list. Revisit as a separate "pe hartă" link per tile (backlog).
+   - Counts stay absolute. A per-inhabitant view needs population data (backlog).
+
 ## 3. Page "Cum e organizat statul" (`explorer/organizare.html`)
 
 A separate static page, not a view of `index.html`. *Why:* the text is mostly prose; search engines index a
