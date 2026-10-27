@@ -326,6 +326,14 @@ class AbsorbedIds(unittest.TestCase):
         c.check_absorbed_ids(recs, [("v1", old)])
         self.assertEqual(recs[0]["merged_ids"], ["D1"])
 
+    def test_id_listed_by_a_release_follows_its_survivor(self):
+        old = "id,name,merged_ids\nG1,X,D1\n"
+        recs = [{"id": "A9", "name": "X", "merged_ids": ["G1"]}]       # G1 was absorbed into A9; D1 was dropped on the way
+        c.check_absorbed_ids(recs, [("v1", old)])
+        self.assertEqual(recs[0]["merged_ids"], ["G1", "D1"])
+        with self.assertRaises(SystemExit):
+            c.check_absorbed_ids([{"id": "A9", "name": "X"}], [("v1", old)])
+
     def test_curated_merge_uses_survivor_of_absorbed_id(self):
         keep = {**source_rec("R9", "Ministerul X"), "id": "A1", "cif": "1", "sources": ["anaf"], "merged_ids": ["G5"]}
         sub = source_rec("R1", "Y")

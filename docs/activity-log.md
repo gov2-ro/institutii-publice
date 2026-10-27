@@ -1,5 +1,19 @@
 # Activity log
 
+## 2026-10-27 — Fix: AJOFM Ilfov split and a gap in the id check (found by stiri on v0.33.0)
+
+**Done**
+- Cause: the linker fix moved the ANI name rows of AJOFM Ilfov from county Ilfov to Bucuresti. G26002 (Ilfov) lost its
+  merged id Da0fede1c, and G10049 (Bucuresti) appeared: two records for one body. The check missed Da0fede1c because it
+  only looked at ids that were records, not at ids that earlier releases listed in `merged_ids`.
+- `curation/merges.csv`: G10049 and G26002 merged into A11364678 (the ANAF record; its name has "PT" for "PENTRU").
+- `check_absorbed_ids` now covers every `merged_ids` entry of every release from v0.15.0: the id must be a record or be
+  listed, else it follows its old survivor into whatever record absorbed that survivor, else the build stops.
+  A11364678 now lists G10049, D79db7f24, G26002, Da0fede1c.
+
+**Decided**
+- The check repairs a trail by inheritance. Cost: a survivor that vanished without a trace of its own stops the build.
+
 ## 2026-10-27 — Linker fix: county-less ANAF names (A4469183)
 
 **Done**

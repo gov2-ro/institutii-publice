@@ -378,6 +378,23 @@ def check_absorbed_ids(records, released=None, link_trail=None):
         if keep:
             keep["merged_ids"] = list(dict.fromkeys([*keep.get("merged_ids", []), i]))
             lost.remove(i)
+    # an id that any release listed in `merged_ids` must still be listed, or its old survivor must live on
+    # inside another record (then the id is added there)
+    alias_of = {m: r for r in records for m in r.get("merged_ids", [])}
+    listed = {x for r in records for x in r.get("merged_ids", [])}
+    covered = lambda m: m in ids or m in trail or m in listed
+    for tag, text in released:
+        for row in csv.DictReader(io.StringIO(text)):
+            for m in filter(None, (row.get("merged_ids") or "").split(" | ")):
+                if covered(m):
+                    continue
+                keep = by_id.get(row["id"]) or alias_of.get(row["id"])
+                if keep:
+                    keep["merged_ids"] = list(dict.fromkeys([*keep.get("merged_ids", []), m]))
+                    listed.add(m)
+                else:
+                    lost.append(f"{m} (in {tag})")
+    lost = sorted(set(lost))
     if back or lost:
         raise SystemExit(f"absorbed ids are records again {dict(sorted(back.items()))}; "
                          f"ids of {released[-1][0]} with no record and no trail {lost[:20]}")
