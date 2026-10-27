@@ -1,4 +1,4 @@
-/* gov2 — stilul comun pentru proiectele gov2.ro · v0.15.0 · 27.10.2026
+/* gov2 — stilul comun pentru proiectele gov2.ro · v0.16.0 · 27.10.2026
 
    Shared stylesheet for gov2.ro projects.
    Inspired by igov.ro's GOV.UK-derived theme (brand.css, 2026-10): Inter + Fragment Mono,
@@ -340,14 +340,14 @@ mark{background:rgb(var(--g2-color-highlight-bg));color:rgb(var(--g2-color-text)
    The only tricolour text, with two deliberate WCAG deviations: 2.2.2 (the loop has no pause control; the reduced-motion preference is the only stop)
    and 1.4.3 (a glyph under the band can fall below 4.5:1). A project that must meet WCAG AA does not use it.
    Put it on one inline element that holds only the title, inside .g2-wordmark or a heading of .g2-header. Use it once per page.
-   Cycle of 9s: the sweep lasts 3s, and the band is over the glyphs for about 2s of it. The text rests for the other 6s. At rest the glyphs have the colour of the host.
+   The civtech sweep (ADR 0010 amendment): a soft, wide, tilted band in a continuous 7s loop, with no rest. The first and last frames show the colour of the host.
    The text is plain without background-clip:text, under the reduced-motion preference, in forced colours and in print. The focus rule is in the states layer. */
 @supports((-webkit-background-clip:text) or (background-clip:text)){
 @media(prefers-reduced-motion:no-preference){
-.g2-ro-sweep{background:linear-gradient(90deg,currentColor 44%,rgb(var(--g2-color-ro-blue)) 44% 48%,rgb(var(--g2-color-ro-yellow)) 48% 52%,rgb(var(--g2-color-ro-red)) 52% 56%,currentColor 56%) 100% 0/300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:g2-ro-sweep 9s linear infinite}
+.g2-ro-sweep{background:linear-gradient(100deg,currentColor 0 34%,rgb(var(--g2-color-ro-blue)) 42%,rgb(var(--g2-color-ro-yellow)) 50%,rgb(var(--g2-color-ro-red)) 58%,currentColor 66% 100%) 100% 0/300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:g2-ro-sweep 7s linear infinite}
 }
 }
-@keyframes g2-ro-sweep{from{background-position:100% 0}33.33%{background-position:0 0}to{background-position:0 0}}
+@keyframes g2-ro-sweep{from{background-position:100% 0}to{background-position:0 0}}
 @media(forced-colors:active),print{.g2-ro-sweep{background:none;-webkit-text-fill-color:currentColor;animation:none}}
 .g2-nav{display:flex;flex-wrap:wrap;column-gap:var(--g2-space-1)}
 .g2-nav a{box-sizing:border-box;display:inline-flex;align-items:center;min-height:44px;padding:var(--g2-space-2) var(--g2-space-3);color:rgb(var(--g2-color-on-header));text-decoration:none;font-weight:600;font-size:var(--g2-font-size-meta)}

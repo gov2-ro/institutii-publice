@@ -1,5 +1,17 @@
 # Activity log
 
+## 2026-10-27 — DS v0.16.0: the civtech title sweep
+
+**Done**
+- Updated `explorer/assets/gov2/gov2.css` to DS tag v0.16.0. Only `.g2-ro-sweep` changes: a soft, wide band
+  tilted 100deg, in a continuous 7 s loop (ADR 0010, amendment of 2026-10-27). No **Breaking** item.
+- Rewrote the accessibility statement in "Despre date" → "Accesibilitate": a continuous 7 s loop, the band is over
+  the glyphs about 6.7 s of 7 s, and the lowest contrast is 1.54:1. Both deviations (WCAG 2.2.2 and 1.4.3) stay.
+
+**Measured** (headless Chrome)
+- Animation `g2-ro-sweep 7s infinite`. With reduced motion: no animation, no gradient, white text.
+- 5 views × light/dark × 1280/375: no errors, no overflow, roots OK, 0 contrast failures (the check skips the sweep).
+
 ## 2026-10-27 — Court pairs linked (`same_body_as`)
 
 **Done**
