@@ -121,6 +121,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       442 records stay under "Sector necunoscut" (mostly schools and kindergartens). Overrides could place the rest.
 
 ## Data quality
+- [ ] `aliases` column quality (stiri measurement, 2026-10-27). Matching on every alias gains 15,950 mentions (13,095 are
+      "Consiliul Judetean X" on "JUDETUL X" records; 48 of 50 read were right) but loses 2,554 correct ones and makes
+      743 ambiguous, because several records share an alias ("Inspectoratul de Jandarmi"). Owner decision needed:
+      (a) build marks or drops an alias shared by several records or naming only a kind of body (proposal: add a
+      column `aliases_unique` with the aliases whose folded text is not the name or alias of any other record);
+      (b) add "Consiliul Judetean X" as reviewed rows in `curation/aliases.csv` for the 41 county records.
 - [x] Cross-source duplicates reported by stiri (2026-10-27): sector-relaxed same-name key, nationwide pass for
       Bucuresti bodies, `curation/merges.csv`, sector suffix removed from source-only names. Tag v0.15.0.
 - [x] Alias master `curation/aliases.csv` (105 rows from stiri, ids checked against each build).
