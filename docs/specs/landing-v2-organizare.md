@@ -80,7 +80,18 @@ Search, the type tabs and the map keep the website default.
    - Companii și regii de stat: category "Companii de stat", family "Regie autonomă", category "Servicii
      publice locale și regii".
    A link under the cards opens the new page: "Cum funcționează fiecare ramură →".
-5. **Tipuri de instituții** — the category tabs of today, unchanged.
+5. **"Toate tipurile" side box** (owner, 2026-10-27; replaces the category tabs of the landing page). The tiles are
+   a curated selection (40 types); this box is the complete index (all types, all categories).
+   - Heading "Toate tipurile (N)", N = the number of types with at least one record.
+   - Categories sorted by count, collapsed. A category opens in place and lists its types with counts, sorted by
+     count. A type opens the family view, as the tile links do. A category with one type still lists it.
+   - A text field "Caută un tip" filters the type names as the visitor types (folded: no diacritics, no case).
+     While it has text, the box shows the matching types of all categories, flat, with the category in grey.
+   - Counts follow the tile rule: the website filter is ignored (`web=0`); the remembered county applies.
+   - Desktop (≥ 1,024 px): a right column, about 300 px wide, beside "De ce ai nevoie?". The tiles go to 3 columns.
+     The box is sticky while the tiles scroll, if it fits the viewport height; otherwise it scrolls inside.
+   - Below 1,024 px: one collapsed row "Toate tipurile (N)" after the tiles, like the other collapsed sections.
+   - The separate family view (`#v=fam`) keeps its own category display; only the landing page changes.
 6. **Județe** — the county map and the county list of today, unchanged.
 
 Phone (320–390 px): one column. Search, then the county selects, then the tiles in one column. On phones the
