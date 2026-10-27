@@ -1,5 +1,19 @@
 # Activity log
 
+## 2026-10-27 — Loose-name merge rule (owner decision)
+
+**Decided**
+- Owner: same county + same normalised name + not a local body = one body. `merge_loose_names` applies it after
+  the other merges. Survivor: the ANAF record, else ROePAS > Registrul > ANI, then the lowest id. A group with
+  two ANAF CIFs stays apart. Local bodies: `LOCAL_KIND_RE`, `SAME_NAME_NEVER`, generic names. Cost of the rule: a
+  wrong merge hides a body; the trail is `merged_ids`.
+- Owner: drop ADR Vest (no record added). Backlog item closed as dropped.
+
+**Measured**
+- 87 groups, 93 ids absorbed (24,988 records, was 25,081); 13 groups skipped for two ANAF CIFs. No absorbed id
+  without a trail. The review list showed 89 groups; 2 differ because of the stricter local-kind test.
+- Romsilva -> D4618737e, salt company -> G10849, IPJ Valcea -> G40002. 57 `same_body_as` links unchanged.
+
 ## 2026-10-27 — Same-name review list (read-only)
 
 **Done**

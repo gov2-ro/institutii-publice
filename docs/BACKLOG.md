@@ -123,11 +123,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] 12 more court pairs linked 2026-10-27 (partners found by hand; see `curation/same_body.csv`).
 - [x] 15 more A47372... courts linked 2026-10-27 (operator principle: two records of one court). 56 links in all.
 - [x] Review list of same-name groups outside courts built 2026-10-27: [report](reports/2026-10-27-same-name-review.md),
-      89 groups. Open: the operator confirms a rule or marks groups; then extend `merge_same_name`.
-- [ ] stiri, 32 ambiguous pairs: non-court ones (Romsilva D4618737e / G10796, 168 mentions, and others) need evidence
-      listed for the operator. Not linked.
-- [ ] ADR Vest (Timisoara) has no record in any source (checked ROePAS, Registrul, ANAF list 2026-10-27). A hand record needs a new id prefix
-      and a source bit in the explorer, and a verified CIF and address. Waiting for the owner. stiri counts 7 mentions. Add a curated record, then alias rows.
+      89 groups. Done 2026-10-27: owner rule applied by `merge_loose_names` (87 groups merged).
+- [x] stiri non-court ambiguous pairs (Romsilva, salt company, IPJ Valcea): merged by the loose-name rule.
+- [-] ADR Vest (Timisoara): dropped by the owner 2026-10-27. No source has it; a hand record would need a new id prefix and a verified CIF.
 - [ ] Same-name pairs reported by stiri (2026-10-27), unresolved. Courts have two ANAF records with one name and
       address but different parent CIFs: A17019105 / A47373006 (Curtea de Apel Bucuresti), A4340633 / A47373014
       (Tribunalul Bucuresti), and the same pattern for Dolj, Maramures, Harghita, Timis, Constanta, Valcea. The

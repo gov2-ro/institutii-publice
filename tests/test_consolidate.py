@@ -286,6 +286,26 @@ class SameBody(unittest.TestCase):
                 c.apply_same_body(recs, bad)
 
 
+class LooseNames(unittest.TestCase):
+
+    def test_spelling_and_same_source_twice_merge(self):
+        recs = [source_rec("G1", "INSPECTORATUL DE POLIŢIE JUDEŢEAN VALCEA", "Valcea"),
+                source_rec("G2", "Inspectoratul de Politie Judetean Valcea", "Valcea"),
+                source_rec("D1", "INSPECTORATUL DE POLITIE JUDETEAN VALCEA", "Valcea")]
+        stats = c.merge_loose_names(recs)
+        self.assertEqual((len(recs), recs[0]["id"], recs[0]["merged_ids"], stats["ids"]), (1, "G1", ["G2", "D1"], 2))
+
+    def test_local_and_two_anaf_stay_apart(self):
+        recs = [source_rec("G1", "Scoala Gimnaziala Ion Creanga", "Alba"), source_rec("D1", "Scoala Gimnaziala Ion Creanga", "Alba")]
+        c.merge_loose_names(recs)
+        self.assertEqual(len(recs), 2)
+        a1 = {**source_rec("R9", "Directia X"), "id": "A1", "cif": "1", "sources": ["anaf"]}
+        a2 = {**a1, "id": "A2", "cif": "2"}
+        recs = [a1, a2, source_rec("D1", "Directia X")]
+        c.merge_loose_names(recs)
+        self.assertEqual(len(recs), 3)
+
+
 class PrefixTier(unittest.TestCase):
     ANAF = "AGENTIA NATIONALA A MEDICAMENTULUI SI A DISPOZITIVELOR MEDICALE DIN ROMANIA"
 

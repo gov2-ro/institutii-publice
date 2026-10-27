@@ -1129,6 +1129,64 @@ def merge_same_name(records, nationwide=False):
     return stats
 
 
+LOCAL_KIND_RE = re.compile(
+    r"\b(scoala|gradinita|liceul|colegiul|grup scolar|biblioteca|caminul|parohia|casa de cultura|primaria|consiliul local|"
+    r"club|scolar|palatul copiilor|cantina|tribunal|tribunalul|curtea de apel|judecatoria)\b|\bsc |\bnr\.? ?\d")
+KEY_SMALL = {"de", "al", "a", "si", "pentru", "la", "din", "cu", "in"}
+
+
+def loose_key(rec):
+    """County + the folded name with punctuation, word order and small words ignored."""
+    toks = [t for t in fold_words(rec["name"]) if t not in KEY_SMALL]
+    return (fold(rec["county"]), " ".join(sorted(toks)))
+
+
+def fold_words(name):
+    return re.sub(r"[^a-z0-9 ]", " ", unicodedata.normalize("NFD", name.lower()).encode("ascii", "ignore").decode()).split()
+
+
+def merge_loose_names(records):
+    """Owner rule (2026-10-27): same county + same normalised name + not a local body = one body.
+    Local bodies: LOCAL_KIND_RE, SAME_NAME_NEVER, generic names. A group with two ANAF CIFs stays apart (ANAF
+    says they differ). The survivor is the ANAF record, else ROePAS > Registrul > ANI, then the lowest id.
+    The group may hold the same source twice. Mutates `records`; -> stats."""
+    groups = defaultdict(list)
+    for rec in records:
+        if rec["county"]:
+            groups[loose_key(rec)].append(rec)
+    stats = {"groups": 0, "ids": 0, "anaf": 0, "local": 0}
+    drop = set()
+    for key, grp in sorted(groups.items()):
+        if len(grp) < 2:
+            continue
+        f = fold(grp[0]["name"])
+        if LOCAL_KIND_RE.search(f) or SAME_NAME_NEVER.search(f) or generic_name(f):
+            stats["local"] += 1
+            continue
+        if sum(1 for r in grp if r["cif"]) >= 2:
+            stats["anaf"] += 1
+            continue
+        if len(set().union(*map(explicit_sectors, grp))) > 1 or any(r.get("same_body_as") for r in grp):
+            continue
+        order = lambda r: (not r["cif"], SRC_PRIORITY.get(r["sources"][0], -1) if not r["cif"] else -1, r["id"])
+        grp.sort(key=order)
+        keep, rest = grp[0], grp[1:]
+        cands = union_candidates(r.get("_cands", []) for r in grp)
+        for r in rest:
+            absorb(keep, r, "same_name")
+            drop.add(r["id"])
+        if not keep["cif"]:
+            keep["possible_duplicate_of"], multi = candidate_fields(cands)
+            keep["_cands"] = cands
+            keep.pop("match_candidates", None)
+            if multi:
+                keep["match_candidates"] = multi
+        stats["groups"] += 1
+        stats["ids"] += len(rest)
+    records[:] = [r for r in records if r["id"] not in drop]
+    return stats
+
+
 def infer_sectors(records):
     """Unify sector labels on non-ANAF records, then set the sector of a Bucuresti record without UAT when its
     name states exactly one sector (`uat_source` = "name"). -> stats."""
@@ -1283,6 +1341,7 @@ def main():
     merge_stats["groups"].update(national_stats["groups"])
     merge_stats["national"] = sum(national_stats["groups"].values())
     merge_stats["curated"] = apply_curated_merges(records, load_curated_merges())
+    merge_stats["loose"] = merge_loose_names(records)
     merge_stats["sector_names"] = strip_sector_suffix(records)
     check_aliases(records)
     merge_stats["same_body"] = apply_same_body(records)
@@ -1400,6 +1459,8 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
           file=sys.stderr)
     print(f"  of which nationwide (county ignored): {mg['national']} groups; curated: {dict(mg['curated'])}; "
           f"sector suffix removed from {mg['sector_names']} names; same_body_as links: {mg['same_body']}", file=sys.stderr)
+    print(f"  loose-name merges: {mg['loose']['groups']} groups, {mg['loose']['ids']} ids absorbed; skipped: "
+          f"{mg['loose']['anaf']} with two ANAF CIFs, {mg['loose']['local']} local or generic names", file=sys.stderr)
     for k, v in sorted(mg["groups"].items(), key=lambda kv: -kv[1]):
         print(f"  {k:28s} {v}", file=sys.stderr)
     prefix = sum(1 for v in links["declaratii"].values() for t, _ in v if t == "prefix")
