@@ -1,5 +1,15 @@
 # Activity log
 
+## 2026-10-27 — Court pairs linked (`same_body_as`)
+
+**Done**
+- Operator decision (via stiri): the 29 court pairs are one body each; no merge, keep both tax IDs.
+  `curation/same_body.csv` + new CSV column `same_body_as` on the A47373... record. Build stops on a bad id.
+- The regional ADR alias rows (20 new) were already in v0.21.0; this tag carries them too.
+
+**Decided**
+- A link instead of a merge: keeps both CIFs and the two parents. Cost: consumers must follow the link.
+
 ## 2026-10-27 — Courts register check, regional ADR aliases
 
 **Done**

@@ -33,3 +33,16 @@ one CIF and one parent link for 29 pairs (pairs with an A47373… CIF and the sa
 of its own (0 records name them as parent).
 Next step for the owner: choose a model, for example a `same_body_cif` link kept on both records. Until then stiri
 can treat A47373… as the same court as its A4… partner.
+
+## Operator decision (2026-10-27, relayed by the stiri session) and the build
+For the 29 pairs, the A4… record and its A47373… partner are the same body. No merge; both tax IDs stay.
+- `curation/same_body.csv` lists the 29 pairs with the evidence. The pairs are the A47373… records that share name
+  and county with one A4… record. Courts of different cities never link; a Court of Appeal and a Tribunal of one city
+  never link (different names).
+- `institutii.csv` has a new last column `same_body_as`: on the A47373… record, the id of its A4… partner. The A4…
+  record is canonical. All other records leave it empty.
+- Register-checked: 2 of the 29 pairs (Curtea de Apel București, Tribunalul București). The other 27 rest on the
+  same name and county in the ANAF list and on the operator decision.
+- Not linked: 8 A47373… records have no A4… partner under the same name and county (Tribunalul Iași, Vaslui, Brăila,
+  Vrancea, Maramureș, Caraș-Severin, Gorj, Ilfov). Their partner names differ or are missing; a manual check is open
+  in the backlog.

@@ -62,6 +62,7 @@ OUT_DIR = ROOT / "data/consolidated"
 CURATED_WEBSITES = ROOT / "curation/websites.csv"
 CURATED_MERGES = ROOT / "curation/merges.csv"
 CURATED_ALIASES = ROOT / "curation/aliases.csv"
+CURATED_SAME_BODY = ROOT / "curation/same_body.csv"
 
 # ---------------------------------------------------------------- text helpers
 
@@ -278,6 +279,24 @@ def apply_curated_merges(records, curated):
         stats[c["kind"]] += 1
     records[:] = [r for r in records if r["id"] not in drop]
     return stats
+
+
+def apply_same_body(records, path=None):
+    """curation/same_body.csv (id, same_body_as, name, decided_at, evidence): two records, two tax IDs, one body
+    (a court with a second CIF). Neither record is merged. `same_body_as` is set on `id`; the partner is the
+    canonical record. The build stops on an unknown id or a chain. -> number of links."""
+    path = path or CURATED_SAME_BODY
+    if not path.exists():
+        return 0
+    with path.open(encoding="utf-8", newline="") as fh:
+        links = {r["id"]: r["same_body_as"] for r in csv.DictReader(fh) if (r.get("id") or "").strip()}
+    by_id = {r["id"]: r for r in records}
+    bad = sorted(i for i, t in links.items() if i not in by_id or t not in by_id or t in links)
+    if bad:
+        raise SystemExit(f"{path}: unknown id or chained link: {bad}")
+    for i, t in links.items():
+        by_id[i]["same_body_as"] = t
+    return len(links)
 
 
 def check_aliases(records, path=None):
@@ -1266,6 +1285,7 @@ def main():
     merge_stats["curated"] = apply_curated_merges(records, load_curated_merges())
     merge_stats["sector_names"] = strip_sector_suffix(records)
     check_aliases(records)
+    merge_stats["same_body"] = apply_same_body(records)
     sector_stats = infer_sectors(records)
     sector_stats["unified"] += unified[True]
     for rec in records:
@@ -1282,7 +1302,7 @@ CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif
             "parent_names", "website", "website_url", "email", "phone", "fax", "lat", "lon", "sources",
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
-            "declaratii_count", "declaratii_group", "uat_source", "merged_ids", "website_source"]
+            "declaratii_count", "declaratii_group", "uat_source", "merged_ids", "website_source", "same_body_as"]
 
 
 def write_csv(path, records):
@@ -1379,7 +1399,7 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
           f"{mg['dup_source']} groups with a repeated name inside one source, {mg['sectors']} with different sectors",
           file=sys.stderr)
     print(f"  of which nationwide (county ignored): {mg['national']} groups; curated: {dict(mg['curated'])}; "
-          f"sector suffix removed from {mg['sector_names']} names", file=sys.stderr)
+          f"sector suffix removed from {mg['sector_names']} names; same_body_as links: {mg['same_body']}", file=sys.stderr)
     for k, v in sorted(mg["groups"].items(), key=lambda kv: -kv[1]):
         print(f"  {k:28s} {v}", file=sys.stderr)
     prefix = sum(1 for v in links["declaratii"].values() for t, _ in v if t == "prefix")

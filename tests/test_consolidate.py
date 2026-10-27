@@ -270,6 +270,22 @@ class SectorAndNationwide(unittest.TestCase):
         self.assertEqual(dict(stats), {"merge": 1, "parent": 1})
 
 
+class SameBody(unittest.TestCase):
+
+    def test_link_set_and_bad_ids_stop(self):
+        import tempfile, pathlib
+        recs = [{"id": "A1"}, {"id": "A2"}]
+        with tempfile.TemporaryDirectory() as d:
+            ok = pathlib.Path(d) / "ok.csv"
+            ok.write_text("id,same_body_as\nA2,A1\n", encoding="utf-8")
+            self.assertEqual(c.apply_same_body(recs, ok), 1)
+            self.assertEqual((recs[1]["same_body_as"], "same_body_as" in recs[0]), ("A1", False))
+            bad = pathlib.Path(d) / "bad.csv"
+            bad.write_text("id,same_body_as\nA2,A9\n", encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                c.apply_same_body(recs, bad)
+
+
 class PrefixTier(unittest.TestCase):
     ANAF = "AGENTIA NATIONALA A MEDICAMENTULUI SI A DISPOZITIVELOR MEDICALE DIN ROMANIA"
 
