@@ -1,5 +1,11 @@
 # Activity log
 
+## 2026-10-27 — Court link: Curtea de Apel Galati
+
+**Done**
+- A47377954 -> A17043103 (same street, number and postcode; parents 4340587 vs 4265841), reported by stiri. 57 links.
+  Checked: no other record under parent 4340587 is left unlinked.
+
 ## 2026-10-27 — 15 more court links
 
 **Done**
