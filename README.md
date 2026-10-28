@@ -40,6 +40,8 @@ exported as CSV (`Lens Visualization [...].csv`). Kibana keeps at most 10,000 va
 - more lists in [gDrive](https://drive.google.com/drive/folders/1G49s2zBOwop208Ge17T6_1qXLQfU2kgd?usp=drive_link) to consult later
 
 
+![org.gov2.ro screenshot](explorer/assets/img/org.gov2.ro-landing.png)
+
 ---
 
 Copyright (c) 2026 [gov2.ro](https://gov2.ro)
