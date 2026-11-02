@@ -267,6 +267,14 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Check the posturi badge, filter and employer link of the explorer in a browser. The builder checked only the
       script syntax (`node --check`).
 
+## Explorer issues from the 2026-10-28 review (gov2-ro/institutii-publice #1-#5)
+- [x] #1 — landing search and example links drop the website filter; `?q=` moves to the hash.
+- [x] #2 — the landing county row opens the profile without the website filter.
+- [x] #3 — "Caută un tip" uses `norm` and tokens.
+- [x] #4 — empty state shows the records hidden by the website filter; the landing counter shows the total.
+- [x] #5 — `institutii.csv` is published at the site root; the footer shows the link and the EUPL line. Publish to see it live.
+- [ ] The footer text "41 de coloane" is hard-coded. Update it when the CSV columns change.
+
 ## Verified limits
 - The ANAF parent link (ordonator principal de credite) is one level deep. It gives no middle level
   (for example, no ISJ between a school and the ministry). A middle level must come from grouping (family,

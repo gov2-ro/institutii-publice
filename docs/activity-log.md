@@ -1,5 +1,26 @@
 # Activity log
 
+## 2026-11-02 — explorer issues #1-#5 (Opus decisions, Sonnet build)
+
+**Done**
+- #1: `go()` calls `noWeb()`. The example links carry `web=0`. The landing placeholder equals the list placeholder.
+  A `?q=` URL (form without JavaScript) moves to `#v=list&q=…&web=0` on load.
+- #2: the landing county row calls `noWeb()` and opens the profile with `web: false`.
+- #3: "Caută un tip" uses `norm` and tokens. A per-type map holds the normalized names.
+- #4: the empty state counts the records that pass all filters except `web`. It shows the count and a button "Arată-le".
+  The landing header counter shows "N înregistrări" without the filter.
+- #5: `publish_pages.sh` copies `institutii.csv` to the site root and fails if it is missing. The footer links it, with the
+  generation date and the EUPL v1.2 line.
+- One commit per issue. 67 tests pass. The dry run of `publish_pages.sh` passes.
+
+**Hard**
+- The issue text says 35 columns. The real CSV has 41 (`csv.reader` on the header). The footer says 41.
+  The number is hard-coded; a backlog item records it.
+- I did not run the page in a browser. I checked the script syntax with `node --check` only.
+
+**Decided**
+- Only `institutii.csv` is published, not `institutii.json` (owner decision). The cost of the JSON: 2x the size on Pages.
+
 ## 2026-11-02 — name rules for posturi employers (DATA-ORG-03; Opus brief and reviews, Sonnet build)
 
 **Done**
