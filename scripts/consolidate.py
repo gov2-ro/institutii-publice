@@ -200,6 +200,32 @@ def load_posturi(path=None):
     return rows
 
 
+POSTURI_COUNTY_TAIL = re.compile(
+    r"(?:,\s*[^,]{1,40})?,\s*(?:jude[tțţ](?:ul)?|jud)\b\.?\s*[^,]{2,40}$", re.I)
+POSTURI_UAT_HEAD = re.compile(r"^\s*u\s*\.?\s*a\s*\.?\s*t\b\.?\s*[-:]?\s*", re.I)
+
+
+def posturi_clean(name):
+    """The name of a posturi employer, ready to link: no trailing ", județul X" / ", jud. X" (with an optional
+    ", <locality>" before it), no leading "U.A.T." / "UAT". -> (clean name, True when a U.A.T. head was removed).
+    The caller keeps the raw name in the record."""
+    n = squash(name)
+    n = POSTURI_COUNTY_TAIL.sub("", n).strip(" ,")
+    m = POSTURI_UAT_HEAD.match(n)
+    if m and n[m.end():].strip():
+        return n[m.end():].strip(), True
+    return n, False
+
+
+def posturi_link_name(name):
+    """-> the name that goes to Linker.link. A bare locality after "U.A.T." ("UAT Vultureni") is a local authority:
+    it gets "Comuna " in front, so `prep` classes it as `uat` and no school of that name can take it."""
+    clean, was_uat = posturi_clean(name)
+    if was_uat and not UAT_RE.match(fold(clean)):
+        clean = "Comuna " + clean
+    return clean
+
+
 def load_curated_websites(path=None):
     """Hand-checked websites keyed by CIF (curation/websites.csv: cif, website, checked_at, evidence).
     They fill or correct the ROePAS website of an ANAF record. A missing file means no curation."""
@@ -558,6 +584,19 @@ STOP = set("de la al a cu si din in pe nr sc sa ra pentru comuna comunei orasul 
            "municipiului judetean judetul judetului judeteana primaria".split())
 
 
+# Words that mean the same in every source: compared equal after `fold`. ANI-only rules stay in DECL_ABBREV.
+WORD_EQUIV = [(re.compile(p), r) for p, r in (
+    (r"\bspitalul\b", "spital"), (r"\bcomplexul\b", "complex"), (r"\btg\b", "targu"),
+    (r"\bdr\b", "doctor"), (r"\bc f\b", "cf"))]
+
+
+def equiv(f):
+    """A folded name with the equivalent words of WORD_EQUIV unified (spitalul = spital, tg = targu...)."""
+    for pat, rep in WORD_EQUIV:
+        f = pat.sub(rep, f)
+    return f
+
+
 def strip_suffix(name):
     """'Directia X Mures - Targu Mures' / '... - Sector 2' -> 'Directia X Mures'. Other suffixes with
     digits (U.M. 0319) are kept: those are distinct units."""
@@ -571,9 +610,9 @@ def strip_suffix(name):
 def prep(name):
     """-> (kind, canonical). kind 'uat' = local authority, collapsed to its locality name."""
     base = re.sub(r"\(.*?\)", " ", squash(name))
-    f = fold(base)
+    f = equiv(fold(base))
     if UAT_RE.match(f):
-        loc = UAT_RE.sub("", fold(re.split(r"\s-\s", base, maxsplit=1)[0]), count=1)   # drop " - village" suffixes
+        loc = UAT_RE.sub("", equiv(fold(re.split(r"\s-\s", base, maxsplit=1)[0])), count=1)   # drop " - village" suffixes
         loc = re.sub(r" al municipiului bucuresti$", "", loc)
         # a county council and the municipality of the same name are different authorities
         return "uat", ("uat:judet:" if COUNTY_RE.match(f) else "uat:") + loc
@@ -610,7 +649,7 @@ class Linker:
         df = Counter()
         for i, a in enumerate(anaf):
             a["_ck"] = fold(a["county"])
-            a["_f"] = fold(a["name"])
+            a["_f"] = equiv(fold(a["name"]))
             a["_kind"], a["_canon"] = prep(a["name"])
             a["_toks"] = self.tokens(a["_canon"])
             a["_nums"] = set(re.findall(r"\d+", a["_canon"]))
@@ -698,7 +737,7 @@ class Linker:
     def link(self, county, name, hint=None, prefix=False):
         src_geo = self.geo(fold(name))               # before strip_suffix drops "- Judetul Ilfov"
         name = strip_suffix(name)
-        ck, f = fold(county), fold(name)
+        ck, f = fold(county), equiv(fold(name))
         kind, canon = prep(name)
         for tier, idx in (("exact", self.exact.get((ck, f))), ("canonical", self.canon.get((ck, canon)))):
             if idx:
@@ -759,7 +798,7 @@ class Linker:
 
     def anywhere(self, name):
         """The one ANAF row with this exact/canonical name in any county, or None."""
-        for index, key in ((self.nat_exact, fold(name)), (self.nat_canon, prep(name)[1])):
+        for index, key in ((self.nat_exact, equiv(fold(name))), (self.nat_canon, prep(name)[1])):
             if len(index.get(key, [])) == 1:
                 return index[key][0]
         return None
@@ -780,7 +819,7 @@ DECL_AGGREGATE = re.compile(
 DECL_SPREAD = 10        # a name filed under this many counties is a dropdown label (see link_declaratii) or umbrella
 DECL_MIN_COUNT = 2      # an unlinked name needs this many declarations to become a record (singletons are mostly typos)
 DECL_ABBREV = [(re.compile(p), r) for p, r in (
-    (r"\btg\b", "targu"), (r"\brm\b", "ramnicu"), (r"\bmun\b", "municipiul"), (r"\bjud\b", "judetul"),
+    (r"\brm\b", "ramnicu"), (r"\bmun\b", "municipiul"), (r"\bjud\b", "judetul"),
     (r"\bu ?m\b", "unitatea militara"), (r"\bmutat din judetul \d+$", ""), (r"\bcod caen( \d+)*", ""))]
 
 
@@ -1428,7 +1467,7 @@ def main():
             else:
                 standalone[src].append((tier, idx, score, row, cands))
     for row in posturi:                  # no prefix tier: posturi names are not cut off
-        tier, idx, score, cands = linker.link(row["county"], row["name"], row["locality"])
+        tier, idx, score, cands = linker.link(row["county"], posturi_link_name(row["name"]), row["locality"])
         if tier in TIER_RANK:
             links["posturi"][idx[0]].append((tier, row))
             link_trail["P" + row["slug"]] = "A" + anaf[idx[0]]["cif"]
