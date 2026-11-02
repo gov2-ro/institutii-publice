@@ -1602,10 +1602,12 @@
         }
         return out.concat(wait);
       }
+      const normFam = new Map();                              // type -> norm(type), computed once
+      const famNorm = f => { let n = normFam.get(f); if (n === undefined) normFam.set(f, n = norm(f)); return n; };
       function drawDomains() {
-        const idx = domainIndex(), q = fold(tIn.value).trim();
-        if (q) {
-          const hits = idx.flatMap(([c, d]) => [...d.fams].filter(([f]) => fold(f).includes(q)).map(([f, l]) => [c, f, l]))
+        const idx = domainIndex(), toks = norm(tIn.value).split(' ').filter(Boolean);
+        if (toks.length) {
+          const hits = idx.flatMap(([c, d]) => [...d.fams].filter(([f]) => { const n = famNorm(f); return toks.every(t => n.includes(t)); }).map(([f, l]) => [c, f, l]))
             .sort((x, y) => y[2].length - x[2].length || coll.compare(x[1], y[1]));
           domMore.replaceChildren();
           domRes.textContent = hits.length ? plural(hits.length, 'tip găsit', 'tipuri găsite') : 'Niciun tip nu corespunde.';
