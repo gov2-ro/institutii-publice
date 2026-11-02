@@ -1,5 +1,47 @@
 # Activity log
 
+## 2026-11-03 — SEAP source, CIF identities, hosted-body aliases (Sonnet; stop condition hit)
+
+**Done**
+- `scripts/extract_seap.py`: reads the data.gov.ro "Achiziții publice" dump (xls, xlsx, ods, csv) into `data/seap/authorities.csv`,
+  `manifest.json` and a per-file cache. The same input files give byte-identical outputs (checked under `PYTHONHASHSEED` 7 and 99).
+  A resource with a valid cache and no local file gets the status `cached` (owner request: the dump will be deleted).
+- Measured on the dump of 2026-11-03: 291 resources: 178 read, 1 trusted (`38e601a9`, checked by hand), 62 `no_size` (2016-2019: no size
+  in `packages.json`), 46 missing, 4 `no_header` (2007-2016 `^`-separated files). 24,202,803 data rows, 12,477 rejected rows
+  (nearly all the placeholder `188390213601991`). 17,783 distinct authority CUIs.
+- `consolidate.py`: source `seap` (bit 32), `link_seap`, `seap_standalone` (`S<cui>`), rule `SEAP_PRIVATE`, `seap-review.csv`,
+  `curation/identities.csv` (`apply_curated_identities`, column `cif_source`). Explorer: SEAP source filter, badge, `S` id label.
+- Link: 13,379 of 17,783 CUIs (75.2%) by `cif` (13,234) or `cif_tva` (145). Not linked: 4,404 = 2,946 new records + 1,458 excluded
+  (association 991, church 246, foundation 127, tip 72, sports club 22). 795 review rows carry a CIF-less candidate.
+- Identities: 521 rows (512 exact-name, 9 INCD by hand). Aliases: 4 rows (`Consiliul Fiscal`, `CSAT`, `Consiliul Suprem de Aparare a Tarii`,
+  `Autoritatea de Audit`). The aliases also pull 1 ANI declaration into the Academia Română record.
+- Records 25,829 -> 28,775 (+2,946 `S`). By category (before -> after): Educație 10,046 -> 10,691; Companii de stat 1,002 -> 1,860;
+  Altele 1,302 -> 1,835; Asociații 482 -> 803; Agricultură 971 -> 1,270; Cultură 1,569 -> 1,631; Servicii publice locale 793 -> 877;
+  Asistență socială 758 -> 814; other categories change by 0 to 27. In the CSV only `sources` (13,329), `cif` (521), `family` (22),
+  `aliases_unique` (10), `aliases` (3) and `declaratii_count` (1) changed on old records. 97 tests; determinism passes.
+
+**Hard**
+- The brief said "column 0 is the name, column 1 is the CUI". The reports of 2018-2021 start with the bidder (`CASTIGATOR`,
+  `CASTIGATOR_CUI`). The first run read 97,107 CUIs, most of them bidders. The header rule is now: the CUI column is the first
+  one that is not a bidder column, and the cell before it must look like an authority name. A wrong header is `no_header`.
+- One 2022 file joins two reports (a second header at row 415,943). A header inside the data starts a new layout.
+- Two CSV styles: `|value|,|value|` (2022) and Windows-1250 text (2023). Typos seen in the CUI: `R 8468440`, `RO1883902 / J13/60/1`.
+- Each cache bump cost 15 minutes (the full read). Cache format 3 holds the period and report type for the `cached` status.
+
+**Decided**
+- The tip "Operatorii economici care beneficiază de finanțare din instrumente structurale" excludes a body only if the name is not
+  a company (SA, SRL, RA) and not a body of local authorities (ADI, zone metropolitane, AMR, UNCJR). The brief's text alone would
+  exclude UNCJR and ADI, which the brief itself keeps. Cost: 144 more rows kept than the literal rule.
+- SEAP and identities run after the sector steps. A record with a CIF counts as an ANAF record there, so the earlier order
+  changed 9 names and 12 sector labels of old records.
+- Identity seeding rule: same normalized name (case, diacritics, punctuation, legal form), 3 or more words, not a local kind,
+  one SEAP row and one CIF-less record only. 59 CUIs with two candidate records and 11 names with two SEAP rows got no row.
+
+**Stop and ask (open)**
+- The private-name rule excludes 33.1% of the unlinked rows (limit in the brief: 15%): 31.2% for CUIs last seen in 2026.
+  A sample of 20 standalone records: 13 public bodies, 2 borderline (a chamber of commerce, a water users' organization),
+  5 private or doubtful SRL. 910 of the 2,946 new records have a company-form name. The `data:` commit waits for the owner.
+
 ## 2026-11-02 — SEAP source and CIF identities: survey and brief (Opus)
 
 **Done**

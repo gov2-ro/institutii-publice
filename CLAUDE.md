@@ -11,6 +11,7 @@ Names, comments and UI text mix Romanian and English; the explorer UI is Romania
 No linter or build step. Four scripts, a static page and standard-library tests:
 
     uv run scripts/consolidate.py              # rebuild data/consolidated/ (needs openpyxl; inline uv script deps)
+    uv run scripts/extract_seap.py [--dump DIR] [--trust ID]  # SEAP dump -> data/seap/ (openpyxl, xlrd; minutes)
     python3 scripts/scrape_roepas.py [--workers 4] [--limit N]   # re-scrape roepas.ro -> data/roepas/ (requests, lxml)
     python3 scripts/build_uat_maps.py          # rebuild explorer/assets/gis/uat/ from docs/reference/gis/*.geojson (stdlib)
     python3 -m http.server                     # then open http://localhost:8000/explorer/
@@ -38,6 +39,20 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
   A linked row adds `posturi` to `sources` and its slugs to `posturi_slugs` (JSON `ps`; `posturi_postings`, `pp`).
   Standalone id `P<slug>`. Unlinked rows with the same county and name share one record. The review queue is
   `data/consolidated/posturi-review.csv`. A missing input file skips the source with a warning.
+- **SEAP contracting authorities** `data/seap/authorities.csv` (`cui, name, names, first_seen, last_seen, rows,
+  report_types, tip_autoritate, tip_activitate, locality, county`), made by `scripts/extract_seap.py` from the
+  data.gov.ro "Achiziții publice" dump (default `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-adr-achizitii-publice-dump`).
+  The script reads a file only if its size equals the size in `packages.json` (`--trust <id-prefix>` overrides). It caches
+  each file in `data/seap/cache/<resource-id>.csv` (key: size + SHA-256; the cache keeps name, CUI, 2023 columns, period and
+  report type). **The dump may be deleted:** a resource with a valid cache and no local file gets the status `cached` in
+  `manifest.json` and counts as read, so `authorities.csv` is rebuilt from the cache alone. Linked by `cif`, else `cif_tva`
+  equal to the CUI, never by name (tier `cif`/`cif_tva`). A linked row adds `seap` to `sources`. An unlinked row becomes a
+  record `S<cui>` (`cif_source` `seap`), unless the name rule `SEAP_PRIVATE` marks a private body. The review queue is
+  `data/consolidated/seap-review.csv` (decision `record` or `excluded`, plus the best CIF-less record as a proposal only).
+  The ignored inputs are `data/seap/`; the dump itself is not in the project.
+- **Curated identities** `curation/identities.csv` (tracked): `id, cif, checked_at, evidence`. A row sets the CIF of a
+  record that has none (CSV column `cif_source`: `anaf`, `curation` or `seap`). The script stops on an unknown id, a
+  duplicate id or CIF, a CIF that is not digits, a record that has a CIF, or a CIF of an ANAF record (use `merges.csv`).
 - **Curated websites** `curation/websites.csv` (tracked): `cif, website, checked_at, evidence`, checked by hand.
   A row fills or replaces the ROePAS website of the ANAF record with that CIF. CSV column `website_source`
   is `curation` or `roepas`. The script stops on a duplicate CIF or a value that is not a website.
@@ -80,7 +95,7 @@ Single self-contained vanilla-JS page (no build, no deps) that fetches `metadata
 served over HTTP, not opened as file://. Its look is the gov2 design system (see the next section): `assets/gov2/`
 holds `gov2.css` and the local Inter and Fragment Mono; `<html data-g2-scheme="auto">` turns on the DS dark scheme. Rows use the compact schema from `write_explorer_data`: short keys
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
-declaratii=8/posturi=16, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
+declaratii=8/posturi=16/seap=32, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
 candidates, `us` 1 = sector inferred from the name (`uat_source`), `mi` ids absorbed by a same-name merge, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
 `write_explorer_data` and the decoding in `index.html`.
 `metadata.json` also carries `dataset` (generation time; per input file the path, bytes, SHA-256, mtime, row count;

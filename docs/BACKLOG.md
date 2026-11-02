@@ -257,10 +257,11 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       A kindergarten never token-links to a school. 67 tests; determinism passes.
 - [x] Issue #6, parts done 2026-11-02: acronym aliases (ROTLD, INCAS, GeoEcoMar, IFIN-HH, INCDFM, ICI, CNAIR, ARACIP, ANMCS),
       alias rows now reach `aliases` for all id kinds, INCDFM and CNAIR duplicates merged.
-- [~] Issue #6: curated CIF identities for the INCDs, BNR, CNAIR, RAAPPS and Imprimeria BNR. Owner approved 2026-11-02:
-      `curation/identities.csv`, seeded from SEAP (brief: briefs/seap-authorities-source.md, tasks 4-5).
-- [~] Issue #6: absent bodies. Owner decided 2026-11-02: AMR and UNCJR come in via SEAP; Consiliul Fiscal, CSAT and
-      Autoritatea de Audit get an alias on the host body (brief: briefs/seap-authorities-source.md, task 6).
+- [x] Issue #6: curated CIF identities for the INCDs, BNR, RAAPPS and Imprimeria BNR. Built 2026-11-03: `curation/identities.csv`,
+      521 rows (512 by an exact-name rule, 9 INCD rows by hand). CNAIR has no row: two project records are candidates
+      (`R11040419`, `Dd8f2fa63`); see the SEAP section below.
+- [x] Issue #6: absent bodies. Built 2026-11-03: AMR and UNCJR come in via SEAP (the name rule keeps them); Consiliul Fiscal,
+      CSAT and Autoritatea de Audit have a `hosted_body` alias on the host body.
 - [ ] DATA-ORG-07 — posturi gives the posting county, not the seat, for national bodies. Five ABA bodies cannot link
       (Jiu in Gorj/Mehedinți, Crișuri in Hunedoara, Olt in Sibiu/Harghita, Prut-Bârlad in Galați/Botoșani/Vaslui,
       Buzău-Ialomița in Prahova). Scan the other national bodies. Decide between a national alias scope and a posturi fix.
@@ -282,10 +283,26 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [-] The footer text "41 de coloane" was hard-coded. Opus dropped the count from the footer instead (2026-11-02).
 
 ## SEAP contracting authorities as a source (owner request, 2026-11-02; brief: briefs/seap-authorities-source.md)
-- [ ] Phase 1: extractor, source `seap`, `S<cui>` records, `curation/identities.csv`, hosted-body aliases (Sonnet).
-- [ ] Re-run `scripts/extract_seap.py` when the dump download ends (2024 and most of 2023 TIII/TIV were missing on 2026-11-02).
+- [~] Phase 1: extractor, source `seap`, `S<cui>` records, `curation/identities.csv`, hosted-body aliases. Built 2026-11-03.
+      The data commit waits for the owner: the private-name rule excludes 33.1% of the unlinked rows (the brief's limit is 15%).
+- [ ] Owner decision: the private-name rule `SEAP_PRIVATE`. It excludes 1,458 of 4,404 unlinked rows (associations 991, churches 246,
+      foundations 127, tip 72, sports clubs 22) and keeps 910 company-form names, 260 of them with 5 rows or fewer. Options:
+      keep the rule, keep associations (991) as candidates, or add a minimum row count for SRL/SA.
+- [ ] Re-run `scripts/extract_seap.py` when the dump download ends (2021 TIII/TIV, 2024 TIII/TIV and others were missing on 2026-11-03).
+      The dump will be deleted after the full run: the cache in `data/seap/cache/` then rebuilds `authorities.csv`.
+- [ ] 62 files of 2016-2019 have no size in `packages.json` (status `no_size`, not read). Decide whether to read them
+      (add an option such as `--trust-no-size`). 4 files of 2007-2016 (`^`-separated, columns `AutoritateContractanta`,
+      `AutoritateContractantaCUI`) have no supported header (status `no_header`).
+- [ ] The "Structura statului" list of unclassified roots grew from 2 to 3,463 (2,946 `S` records and 517 records that gained a CIF
+      have no parent). Check `explorer.reachableRoots()` against `expectedRoots()` in a browser, then decide whether the tree
+      should hide the `S` records.
+- [ ] 59 CUIs have two candidate project records (unmerged duplicates, for example `R11040419` and `Dd8f2fa63` for CNAIR;
+      `Ddf110eaa` "BANCA NATIONALA" and `R11040493` for BNR). Merge them in `curation/merges.csv`, then add the identity.
+- [ ] `curation/merges.csv` cannot name an `S<cui>` id (the records are created after the merges). Add it if a merge is needed.
 - [ ] Phase 2: spike on the e-licitatie.ro authority profiles for contacts (access, terms, fields), then a brief.
-- [ ] `packages.json` resource `38e601a9` has the name and size of `e40a48ed`. Check the local file by hand.
+- [x] `packages.json` resource `38e601a9` has the size and file name of `e40a48ed`. Checked by hand 2026-11-03: the file is a valid
+      zip, 72,644 rows, header `Numar notificare`: it is the report "Notificări de atribuire la cumpărarea directă TII 2025".
+      The extractor reads it with `--trust 38e601a9`.
 
 ## Verified limits
 - The ANAF parent link (ordonator principal de credite) is one level deep. It gives no middle level
