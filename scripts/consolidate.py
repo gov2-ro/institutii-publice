@@ -313,8 +313,9 @@ def absorb(keep, rec, how):
     keep["merged_ids"] = list(dict.fromkeys([*keep.get("merged_ids", []), rec["id"], *rec.get("merged_ids", [])]))
 
 
-def apply_curated_merges(records, curated):
-    """Apply curation/merges.csv. Stops on an unknown id. -> stats."""
+def apply_curated_merges(records, curated, linked=None):
+    """Apply curation/merges.csv. Stops on an unknown id. A row whose id a tier or a curated alias now links into
+    an ANAF record (`linked`, the link trail) has nothing left to merge: it counts as `redundant`. -> stats."""
     by_id = {r["id"]: r for r in records}
     for r in records:                       # a row may name an id that an earlier merge absorbed: use its survivor
         for m in r.get("merged_ids", []):
@@ -328,6 +329,9 @@ def apply_curated_merges(records, curated):
             rec["aliases"] = sorted({*rec.get("aliases", []), squash(rec["name"])})
             rec["name"] = squash(c["new_name"])
             stats["rename"] += 1
+            continue
+        if not rec and c["kind"] == "merge" and c["id"] in (linked or {}):
+            stats["redundant"] += 1
             continue
         if not rec or not target:
             raise SystemExit(f"{CURATED_MERGES}: {c['id']} or {c['target_id']} matches no record")
@@ -434,7 +438,7 @@ def check_absorbed_ids(records, released=None, link_trail=None):
     alias_of = {m: r for r in records for m in r.get("merged_ids", [])}
     listed = {x for r in records for x in r.get("merged_ids", [])}
     covered = lambda m: m in ids or m in trail or m in listed
-    for tag, text in released:
+    for tag, text in reversed(released):         # newest first: a newer survivor makes an older chain resolvable
         for row in csv.DictReader(io.StringIO(text)):
             for m in filter(None, (row.get("merged_ids") or "").split(" | ")):
                 if covered(m):
@@ -479,6 +483,17 @@ def unique_aliases(records):
         r["aliases_unique"] = keep
         n += bool(keep)
     return n
+
+
+def load_curated_aliases(path=None):
+    """The reviewed rows of curation/aliases.csv for ANAF records -> [(cif, alias)]. The linker reads them as exact
+    names. Rows for G, R and D ids are not linker targets (they are source-only records)."""
+    path = path or CURATED_ALIASES
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        return [(r["institution_id"][1:], squash(r["alias"])) for r in csv.DictReader(fh)
+                if r["status"] == "reviewed" and r["institution_id"].startswith("A") and squash(r["alias"])]
 
 
 def check_aliases(records, path=None):
@@ -641,7 +656,7 @@ class Linker:
     same " - suffix" structure as the source name (plain or with suffix) wins when it is the only one. A county name in the source name that differs from every county
     name in a candidate's name makes that candidate ineligible (DSP Ilfov is not DSP Bucuresti)."""
 
-    def __init__(self, anaf):
+    def __init__(self, anaf, aliases=()):
         self.anaf = anaf
         self.county_tokens = {t for a in anaf for t in fold(a["county"]).split()}
         names = sorted({fold(a["county"]) for a in anaf if fold(a["county"])}, key=lambda c: (-len(c), c))
@@ -663,6 +678,12 @@ class Linker:
             df.update(a["_written"])                  # IDF counts the words as written
             for t in a["_toks"]:
                 self.tokidx[a["_ck"]][t].add(i)
+        self.alias = defaultdict(list)              # curated aliases: one more exact name, in the county of its record
+        by_cif = {a["cif"]: i for i, a in enumerate(anaf)}
+        for cif, alias in aliases:
+            i = by_cif.get(cif)
+            if i is not None and i not in self.alias[(anaf[i]["_ck"], equiv(fold(alias)))]:
+                self.alias[(anaf[i]["_ck"], equiv(fold(alias)))].append(i)
         self.idf = {t: math.log(len(anaf) / (1 + n)) for t, n in df.items()}
         for a in anaf:
             a["_tw"] = self.weights(a["_toks"], a["_written"])
@@ -756,7 +777,7 @@ class Linker:
         name = strip_suffix(name)
         ck, f = fold(county), equiv(fold(name))
         kind, canon = prep(name)
-        for tier, idx in (("exact", self.exact.get((ck, f))), ("canonical", self.canon.get((ck, canon)))):
+        for tier, idx in (("exact", self.exact.get((ck, f)) or self.alias.get((ck, f))), ("canonical", self.canon.get((ck, canon)))):
             if idx:
                 pick = idx[0] if len(idx) == 1 else self.by_hint(idx, hint)
                 if pick is None and tier == "canonical":
@@ -1458,7 +1479,7 @@ def main():
     curated = load_curated_websites()
     print(f"sources: anaf={len(anaf)} registrul={len(registrul)} roepas={len(roepas)} "
           f"declaratii={len(declaratii)} posturi={len(posturi)}", file=sys.stderr)
-    linker = Linker(anaf)
+    linker = Linker(anaf, load_curated_aliases())
     county_display = {fold(a["county"]): a["county"] for a in anaf}
     county_of = lambda c: county_display.get(fold(c)) or squash(c).title()
     by_cif = {a["cif"]: a for a in anaf}
@@ -1483,8 +1504,7 @@ def main():
             tier, idx, score, cands = linker.link(row["county"], row["name"], row.get("city"))
             if tier in TIER_RANK:
                 links[src][idx[0]].append((tier, row))
-                if src == "registrul":
-                    link_trail["G" + row["num"]] = "A" + anaf[idx[0]]["cif"]
+                link_trail[("G" + row["num"]) if src == "registrul" else "R" + str(row["id"])] = "A" + anaf[idx[0]]["cif"]
             else:
                 standalone[src].append((tier, idx, score, row, cands))
     for row in posturi:                  # no prefix tier: posturi names are not cut off
@@ -1609,7 +1629,7 @@ def main():
     merge_stats["groups"].update(national_stats["groups"])
     merge_stats["national"] = sum(national_stats["groups"].values())
     merge_stats["loose"] = merge_loose_names(records)
-    merge_stats["curated"] = apply_curated_merges(records, load_curated_merges())
+    merge_stats["curated"] = apply_curated_merges(records, load_curated_merges(), link_trail)
     merge_stats["sector_names"] = strip_sector_suffix(records)
     check_aliases(records)
     check_absorbed_ids(records, link_trail=link_trail)

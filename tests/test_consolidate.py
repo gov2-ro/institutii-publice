@@ -540,6 +540,14 @@ class PosturiNameRules(unittest.TestCase):
         tier, idx, _, _ = L.link("Gorj", "GRADINITA CONSTANTIN BRANCUSI TARGU JIU")
         self.assertEqual((tier in c.TIER_RANK, L.anaf[idx[0]]["cif"]), (True, "2"))
 
+    def test_curated_alias_is_one_more_exact_name(self):
+        rows = [row(7, "AUTORITATEA PENTRU DIGITALIZAREA ROMANIEI", "Bucuresti", "Municipiul Bucuresti")]
+        L = c.Linker(rows + linker([]).anaf, [("7", "ADR")])
+        tier, idx, _, _ = L.link("București", "ADR")
+        self.assertEqual((tier, L.anaf[idx[0]]["cif"]), ("exact", "7"))
+        self.assertIsNone(L.link("Cluj", "ADR")[0])          # an alias holds in the county of its record
+        self.assertIsNone(c.Linker(rows + linker([]).anaf).link("București", "ADR")[0])
+
     def test_equiv_is_shared_by_prep(self):
         self.assertEqual(c.prep("Primaria Orasul Tg. Frumos"), c.prep("Orasul Targu Frumos"))
         self.assertEqual(c.equiv("spitalul dr x"), "spital doctor x")
