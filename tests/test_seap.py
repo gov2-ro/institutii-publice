@@ -144,8 +144,8 @@ class CachedWithoutDump(unittest.TestCase):
 
 
 class PrivateNames(unittest.TestCase):
-    def rule(self, name, tip=""):
-        return c.seap_private(name, tip)
+    def rule(self, name, tip="", rows=None):
+        return c.seap_private(name, tip, rows)
 
     def test_each_kind_is_excluded(self):
         self.assertEqual(self.rule("PAROHIA ORTODOXA SF. NICOLAE"), "church")
@@ -162,11 +162,27 @@ class PrivateNames(unittest.TestCase):
         self.assertIsNone(self.rule("Asociatia Municipiilor din Romania"))
         self.assertIsNone(self.rule("UNIUNEA NATIONALA A CONSILIILOR JUDETENE DIN ROMANIA",
                                     "Operatorii economici care beneficiază de finanțare din instrumente structurale"))
-        self.assertIsNone(self.rule("SC SEPSI REKREATIV SA", "Operatorii economici care beneficiază de finanțare din instrumente structurale"))
+        self.assertIsNone(self.rule("ASOCIATIA DE DEZVOLTARE INTRACOMUNITARA ALFA"))               # the typo is accepted
         self.assertIsNone(self.rule("CLUBUL SPORTIV MUNICIPAL ALFA"))
         self.assertIsNone(self.rule("CLUBUL SPORTIV SCOLAR BETA"))
         self.assertIsNone(self.rule("CLUBUL SPORTIV UNIVERSITAR GAMMA"))
         self.assertIsNone(self.rule("CLUBUL SPORTIV AL ARMATEI STEAUA"))
+
+    def test_company_with_the_structural_funds_tip_is_excluded(self):
+        tip = "Operatorii economici care beneficiază de finanțare din instrumente structurale"
+        self.assertEqual(self.rule("SC SEPSI REKREATIV SA", tip), "company")
+        self.assertEqual(self.rule("SERVICII DE GOSPODARIRE ALFA SRL", tip, 5000), "company")
+
+    def test_small_company_without_a_public_service_marker_is_excluded(self):
+        self.assertEqual(self.rule("EUROBAC S.R.L.", "", 99), "company")
+        self.assertEqual(self.rule("SC MAJUTEX SRL", "", 1), "company")
+        self.assertIsNone(self.rule("EUROBAC S.R.L.", "", 100))                      # 100 rows or more: kept
+        self.assertIsNone(self.rule("TRANSURB S.A. GALATI", "", 13973))             # high volume: kept
+        self.assertIsNone(self.rule("ALFA SERVICII COMUNALE SRL", "", 3))           # a marker: kept
+        self.assertIsNone(self.rule("APA CANAL BETA SA", "", 3))
+        self.assertIsNone(self.rule("EUROBAC S.R.L.", "", None))                    # rows unknown: kept
+        self.assertEqual(self.rule("ECOSERV SRL", "", 3), "company")                # "ecoserv" is not "serv..." at a word start
+        self.assertIsNone(self.rule("SCOALA GIMNAZIALA NR 3", "", 3))               # not a company form
 
     def test_companies_and_public_bodies_are_kept(self):
         for name in ("SERVICIUL PUBLIC DE ALIMENTARE CU APA ALFA SRL", "TERMOENERGETICA ALFA SA", "SCOALA GIMNAZIALA NR 1",
@@ -225,6 +241,17 @@ class Identities(unittest.TestCase):
     def test_two_rows_for_one_survivor_stop(self):
         with self.assertRaisesRegex(SystemExit, "are one record"):
             identities([("R2", "361684"), ("R7", "361685")], [rec("R2", "Beta", merged_ids=["R7"])])
+
+
+class Pairs(unittest.TestCase):
+    def test_two_records_and_two_seap_rows(self):
+        recs = [rec("R1", "Alfa Beta Gamma SA"), rec("D2", "ALFA BETA GAMMA"), rec("R3", "Delta Epsilon Zeta SRL")]
+        rows = [{"cui": "10", "name": "Alfa Beta Gamma S.A."}, {"cui": "20", "name": "Delta Epsilon Zeta"},
+                {"cui": "21", "name": "DELTA EPSILON ZETA SA"}, {"cui": "30", "name": "Unu Doi Trei"}]
+        out = c.seap_pairs(recs, rows, {"10", "20", "21", "30"})
+        self.assertEqual([(x["cui"], x["kind"]) for x in out],
+                         [("10", "two_records"), ("20", "two_seap_rows"), ("21", "two_seap_rows")])
+        self.assertEqual(out[0]["candidate_ids"], "D2 | R1")
 
 
 class LinkSeap(unittest.TestCase):

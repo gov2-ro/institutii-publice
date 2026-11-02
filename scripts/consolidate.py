@@ -1172,7 +1172,7 @@ LOCAL_ROOT_RE = re.compile(r"^(municipiul|oras|orasul|comuna|judetul|sectorul|pr
 def state_tree(records):
     """The `state` block of metadata.json: virtual nodes, CIF -> node mapping, attach rules, and the roots
     the page cannot place (UATs go to the local-administration branch, the rest to "Neclasificate")."""
-    roots = {r["cif"]: r for r in records if r["cif"] and not r["parents"]}
+    roots = {r["cif"]: r for r in records if r["cif"] and not r["parents"] and r.get("cif_source", "anaf") == "anaf"}
     mapped = {c for c, _, _ in STATE_MEMBERS} | {c for c, _ in STATE_ATTACH}
     is_uat = lambda r: r["category"] == LOCAL or LOCAL_ROOT_RE.match(fold(r["name"]))
     uat = sorted(c for c, r in roots.items() if c not in mapped and is_uat(r))
@@ -1509,26 +1509,37 @@ SEAP_PRIVATE = [  # (rule, regex, exception regex or None)
     ("sports club", re.compile(r"^(clubul?|cs|c s|acs|asc|afc|fc|asd)\b|\bclubul? sportiv\b"),
      re.compile(r"\b(municipal\w*|scolar\w*|universitar\w*|armatei|armata|militar\w*|copiilor|elevilor|studentesc\w*)\b")),
 ]
-# Kept although a rule above or the 2023 type says "private": associations of local authorities (ADI, zone
-# metropolitane, AMR, UNCJR: owner decision 2026-11-02) and companies (SA, SRL, RA: many are municipal).
-SEAP_PUBLIC_KIND = re.compile(r"\b(dezvoltare|dezvoltarii) intercomunitar|\bmetropolitan|"
+# Kept although a rule above or the 2023 type says "private": bodies of local authorities (ADI and its typo
+# "intracomunitara", zone metropolitane, AMR, UNCJR: owner decision 2026-11-02).
+SEAP_PUBLIC_KIND = re.compile(r"\b(dezvoltare|dezvoltarii) int(?:er|ra)comunitar|\bmetropolitan|"
                               r"\b(municipiilor|oraselor|comunelor|consiliilor judetene) din romania\b|^uniunea nationala a consiliilor")
 SEAP_COMPANY = re.compile(r"\b(s a|sa|s r l|srl|r a|ra)\b")
 SEAP_PRIVATE_TIPS = ("operatorii economici care beneficiaza de finantare",)
+SEAP_COMPANY_MIN_ROWS = 100     # a company with no public-service marker and fewer rows is taken as private
+# A word that starts like one of these marks a public service (matched on the folded name, at the start of a word).
+SEAP_PUBLIC_COMPANY = re.compile(
+    r"\b(?:servic|gospodar|apa\b|apei|ape\b|canal|salubr|transport|termo|termic|energ|ocol|silvic|romsilva|compani|"
+    r"administrati|regi[ae]\b|piet|parc|ilumin|drumur|locativ|public|comunal|municipal|local|judetean|national|metrou|"
+    r"aeroport|port|cfr|hidro|electrica|nuclear|posta|radio|imprimeri|monetari|loteri|spital|medical|policlinic|urban|"
+    r"edil|domeniu|patrimoniu|turism|agrement|cimitir|ecarisaj|infrastructur)")
 
 
-def seap_private(name, tip=""):
-    """The rule (a SEAP_PRIVATE label, or "tip") by which a SEAP authority is a private body; None if it is not.
-    A body of local authorities (SEAP_PUBLIC_KIND) is kept. The 2023 type "Operatorii economici care beneficiaza de
-    finantare din instrumente structurale" excludes a body only if its name is not a company (SEAP_COMPANY)."""
+def seap_private(name, tip="", rows=None):
+    """The rule (a SEAP_PRIVATE label, "tip" or "company") by which a SEAP authority is a private body; None if it
+    is not. A body of local authorities (SEAP_PUBLIC_KIND) is kept. The 2023 type "Operatorii economici care
+    beneficiaza de finantare din instrumente structurale" excludes a body ("company" if the name has a company form).
+    A company with no public-service marker (SEAP_PUBLIC_COMPANY) and fewer than SEAP_COMPANY_MIN_ROWS rows is excluded."""
     f = fold(name)
     if SEAP_PUBLIC_KIND.search(f):
         return None
     for rule, pat, exception in SEAP_PRIVATE:
         if pat.search(f) and not (exception and exception.search(f)):
             return rule
-    if any(t in fold(tip) for t in SEAP_PRIVATE_TIPS) and not SEAP_COMPANY.search(f):
-        return "tip"
+    company = bool(SEAP_COMPANY.search(f))
+    if any(t in fold(tip) for t in SEAP_PRIVATE_TIPS):
+        return "company" if company else "tip"
+    if company and rows is not None and rows < SEAP_COMPANY_MIN_ROWS and not SEAP_PUBLIC_COMPANY.search(f):
+        return "company"
     return None
 
 
@@ -1661,7 +1672,7 @@ def seap_standalone(rows, county_of, uat_of):
     is excluded."""
     recs, excluded = [], []
     for row in rows:
-        rule = seap_private(row["name"], row["tip_autoritate"])
+        rule = seap_private(row["name"], row["tip_autoritate"], row["rows"])
         if rule:
             excluded.append((row, rule))
             continue
@@ -1692,6 +1703,51 @@ def write_seap_review(path, recs, excluded, rows, candidates):
         w.writeheader()
         w.writerows(out)
     return out
+
+
+SEAP_PAIRS_COLS = ["cui", "seap_name", "kind", "candidate_ids", "candidate_names"]
+LEGAL_FORM = re.compile(r"\b(sa|s a|srl|s r l|ra|r a|sc|s c|scrl|s c r l|snc|cn|c n|sn|s n|ca)\b")
+
+
+def seap_name_key(name):
+    """A name without case, diacritics, punctuation and legal form: the key of an identity seed."""
+    return re.sub(r"\s+", " ", LEGAL_FORM.sub(" ", fold(name))).strip()
+
+
+def seap_pairs(records, rows, kept):
+    """The SEAP rows that could be an identity but name two project records (`two_records`) or share their name with
+    another SEAP row (`two_seap_rows`). `kept`: the CUIs that became records. Only names of 3 or more words that are
+    not a local kind. These get no row in curation/identities.csv until a person decides. -> rows, sorted by CUI."""
+    cands = defaultdict(dict)
+    for r in records:
+        if not r["cif"]:
+            for n in [r["name"], *r.get("aliases", [])]:
+                cands[seap_name_key(n)][r["id"]] = r
+    same = defaultdict(list)
+    for row in rows:
+        same[seap_name_key(row["name"])].append(row["cui"])
+    out = []
+    for row in rows:
+        if row["cui"] not in kept:
+            continue
+        key, f = seap_name_key(row["name"]), fold(row["name"])
+        if len(key.split()) < 3 or SAME_NAME_NEVER.search(f) or generic_name(f) or LOCAL_KIND_RE.search(f) or not cands.get(key):
+            continue
+        recs = sorted(cands[key].values(), key=lambda r: r["id"])
+        kind = "two_seap_rows" if len(same[key]) > 1 else "two_records" if len(recs) > 1 else None
+        if kind:
+            out.append({"cui": row["cui"], "seap_name": row["name"], "kind": kind,
+                        "candidate_ids": " | ".join(r["id"] for r in recs),
+                        "candidate_names": " | ".join(r["name"] for r in recs)})
+    out.sort(key=lambda x: int(x["cui"]))
+    return out
+
+
+def write_seap_pairs(path, pairs):
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=SEAP_PAIRS_COLS, lineterminator="\n")
+        w.writeheader()
+        w.writerows(pairs)
 
 
 def report_seap(rows, linked, recs, excluded, review):
@@ -1881,6 +1937,10 @@ def main():
     seap_recs, seap_excl = seap_standalone(seap_rest, county_of, uat_of)
     seap_review = write_seap_review(OUT_DIR / "seap-review.csv", seap_recs, seap_excl, seap_rest,
                                     seap_candidates(records, seap_rest)) if seap else []
+    if seap:
+        seap_pairs_rows = seap_pairs(records, seap, {r["cif"] for r in seap_recs})
+        write_seap_pairs(OUT_DIR / "seap-pairs.csv", seap_pairs_rows)
+        print(f"seap-pairs.csv: {Counter(x['kind'] for x in seap_pairs_rows)}", file=sys.stderr)
     records.extend(seap_recs)
     for rec in records:
         rec.pop("_cands", None)
@@ -1973,7 +2033,7 @@ def write_explorer_data(out_dir, records):
             "m": fi.get(r["family"]), "dc": r.get("declaratii_count"), "ld": r["link"].get("declaratii"),
             "dg": r.get("declaratii_group"), "dk": r.get("declaratii_by_county"),
             "mc": [c["cif"] for c in r.get("match_candidates", [])],
-            "us": 1 if r.get("uat_source") else None, "mi": r.get("merged_ids"),
+            "us": 1 if r.get("uat_source") else None, "nc": 1 if r["cif"] and r.get("cif_source", "anaf") != "anaf" else None, "mi": r.get("merged_ids"),
             "ps": r.get("posturi_slugs"), "pp": r.get("posturi_postings"), "lp": r["link"].get("posturi"),
         }
         for k, v in optional.items():

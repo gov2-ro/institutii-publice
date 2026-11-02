@@ -984,8 +984,8 @@
 
     /* console checks: `reachableRoots() === expectedRoots()`, and `descendantVisibility().failures` empty */
     window.explorer = {
-      reachableRoots: () => [...subtree(STAT)].filter(r => r.f && !(r.p && r.p.length)).length,
-      expectedRoots: () => rows.filter(r => r.f && !(r.p && r.p.length)).length,
+      reachableRoots: () => [...subtree(STAT)].filter(r => r.f && !r.nc && !(r.p && r.p.length)).length,
+      expectedRoots: () => rows.filter(r => r.f && !r.nc && !(r.p && r.p.length)).length,
       /* every record below an attached root: a search for its CIF must show the whole path, and the record must stay
          visible when the view is focused on any record or virtual group above it */
       descendantVisibility: () => {
