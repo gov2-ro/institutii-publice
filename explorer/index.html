@@ -1449,15 +1449,15 @@
       const goList = patch => { noWeb(); Object.assign(S, patch); S.node = ''; setView('list'); window.scrollTo(0, 0); };
 
       /* 1. search */
-      const go = q => { q = (q || '').trim(); if (!q) return; S.q = q; el.q.value = q; leaveHome(); update(); window.scrollTo(0, 0); };
-      const qIn = h('input', { class: 'g2-input', id: 'home-q', type: 'search', name: 'q', autocomplete: 'off', placeholder: homePhone.matches ? 'Nume, localitate sau CIF' : 'Caută o instituție, o localitate sau un CIF',
+      const go = q => { q = (q || '').trim(); if (!q) return; noWeb(); S.q = q; el.q.value = q; leaveHome(); update(); window.scrollTo(0, 0); };
+      const qIn = h('input', { class: 'g2-input', id: 'home-q', type: 'search', name: 'q', autocomplete: 'off', placeholder: 'Caută: nume, CIF, localitate, site…',
         'aria-label': 'Caută o instituție, o localitate sau un CIF', 'aria-describedby': 'home-q-hint' });
       // no visible headings or labels in the top row (owner, 2026-10-27): the controls carry aria-label
       const searchSec = h('section', { class: 'home-sec org-search', 'aria-label': 'Caută' },
         h('form', { class: 'org-searchform', role: 'search', onsubmit: e => { e.preventDefault(); go(qIn.value); } }, qIn,
           h('button', { class: 'g2-btn', type: 'submit' }, 'Caută')),
         h('p', { class: 'sub', id: 'home-q-hint' }, 'De exemplu: ', HOME_EXAMPLES.flatMap((q, i) => [i ? ', ' : '',
-          browseLink(q, browseHref({ v: 'list', q }), () => go(q), 'link acc')]), '.'));
+          browseLink(q, browseHref({ v: 'list', q, web: '0' }), () => go(q), 'link acc')]), '.'));
 
       /* 2. place */
       const cSel = h('select', { class: 'g2-input', id: 'home-county', 'aria-label': 'Județ' }, h('option', { value: '' }, 'Alege județul'),
@@ -2044,6 +2044,8 @@
     on(window, 'popstate', onNav);
     on(window, 'hashchange', onNav);
 
+    { const sq = new URLSearchParams(location.search).get('q');   // no-JS form fallback: ?q=… becomes #q=…
+      if (sq && location.hash.length <= 1) try { history.replaceState(null, '', location.pathname + '#' + new URLSearchParams({ v: 'list', q: sq, web: '0' })); } catch (e) {} }
     applyHash();
     update();
     wires.forEach(f => f());
