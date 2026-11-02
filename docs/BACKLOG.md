@@ -283,21 +283,18 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [-] The footer text "41 de coloane" was hard-coded. Opus dropped the count from the footer instead (2026-11-02).
 
 ## SEAP contracting authorities as a source (owner request, 2026-11-02; brief: briefs/seap-authorities-source.md)
-- [~] Phase 1: extractor, source `seap`, `S<cui>` records, `curation/identities.csv`, hosted-body aliases. Built 2026-11-03.
-      The data commit waits for the owner: the private-name rule excludes 33.1% of the unlinked rows (the brief's limit is 15%).
-- [ ] Owner decision: the private-name rule `SEAP_PRIVATE`. It excludes 1,458 of 4,404 unlinked rows (associations 991, churches 246,
-      foundations 127, tip 72, sports clubs 22) and keeps 910 company-form names, 260 of them with 5 rows or fewer. Options:
-      keep the rule, keep associations (991) as candidates, or add a minimum row count for SRL/SA.
+- [x] Phase 1: extractor, source `seap`, `S<cui>` records, `curation/identities.csv`, hosted-body aliases. Built 2026-11-03.
+      Opus decisions of 2026-11-03 applied (see the activity log): rule accepted, company rule added, state tree fixed.
+- [ ] Review `data/consolidated/seap-pairs.csv`: 56 CUIs with two candidate records (`two_records`) and 11 CUIs whose name
+      two SEAP rows share (`two_seap_rows`). Merge duplicates in `curation/merges.csv`, then add the identity.
 - [ ] Re-run `scripts/extract_seap.py` when the dump download ends (2021 TIII/TIV, 2024 TIII/TIV and others were missing on 2026-11-03).
       The dump will be deleted after the full run: the cache in `data/seap/cache/` then rebuilds `authorities.csv`.
-- [ ] 62 files of 2016-2019 have no size in `packages.json` (status `no_size`, not read). Decide whether to read them
-      (add an option such as `--trust-no-size`). 4 files of 2007-2016 (`^`-separated, columns `AutoritateContractanta`,
-      `AutoritateContractantaCUI`) have no supported header (status `no_header`).
-- [ ] The "Structura statului" list of unclassified roots grew from 2 to 3,463 (2,946 `S` records and 517 records that gained a CIF
-      have no parent). Check `explorer.reachableRoots()` against `expectedRoots()` in a browser, then decide whether the tree
-      should hide the `S` records.
-- [ ] 59 CUIs have two candidate project records (unmerged duplicates, for example `R11040419` and `Dd8f2fa63` for CNAIR;
-      `Ddf110eaa` "BANCA NATIONALA" and `R11040493` for BNR). Merge them in `curation/merges.csv`, then add the identity.
+- [-] 62 files of 2016-2019 stay unread. Reason: `packages.json` has no size for them (status `no_size`), so a partial download
+      cannot be told from a full one; the authorities are old. Owner decision (Opus, 2026-11-03).
+- [-] 4 files of 2007-2016 stay unread. Reason: they are `^`-separated with other column names (`AutoritateContractanta`,
+      `AutoritateContractantaCUI`) and the authorities are old (status `no_header`). Owner decision (Opus, 2026-11-03).
+- [ ] Check `explorer.reachableRoots()` against `expectedRoots()` in a browser. The builder checked only that the root CIFs of
+      `rows.json` equal the CIFs placed in `metadata.state` (3,296 both) and the page script syntax (`node --check`).
 - [ ] `curation/merges.csv` cannot name an `S<cui>` id (the records are created after the merges). Add it if a merge is needed.
 - [ ] Phase 2: spike on the e-licitatie.ro authority profiles for contacts (access, terms, fields), then a brief.
 - [x] `packages.json` resource `38e601a9` has the size and file name of `e40a48ed`. Checked by hand 2026-11-03: the file is a valid

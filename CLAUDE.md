@@ -47,7 +47,7 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
   report type). **The dump may be deleted:** a resource with a valid cache and no local file gets the status `cached` in
   `manifest.json` and counts as read, so `authorities.csv` is rebuilt from the cache alone. Linked by `cif`, else `cif_tva`
   equal to the CUI, never by name (tier `cif`/`cif_tva`). A linked row adds `seap` to `sources`. An unlinked row becomes a
-  record `S<cui>` (`cif_source` `seap`), unless the name rule `SEAP_PRIVATE` marks a private body. The review queue is
+  record `S<cui>` (`cif_source` `seap`), unless the name rule `SEAP_PRIVATE` marks a private body (church, foundation, association, sports club, a structural-funds beneficiary, or a company with no public-service marker and fewer than 100 rows; bodies of local authorities are exempt). Records with a `cif_source` other than `anaf` are not roots of the state tree (row key `nc` = 1). CUIs with two candidate records are in `data/consolidated/seap-pairs.csv`. The review queue is
   `data/consolidated/seap-review.csv` (decision `record` or `excluded`, plus the best CIF-less record as a proposal only).
   The ignored inputs are `data/seap/`; the dump itself is not in the project.
 - **Curated identities** `curation/identities.csv` (tracked): `id, cif, checked_at, evidence`. A row sets the CIF of a
