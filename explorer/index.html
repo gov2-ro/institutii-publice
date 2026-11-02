@@ -697,8 +697,12 @@
     const siteLink = r => !r.w ? '' : isHttp(r.w)
       ? h('a', { href: r.w, target: '_blank', rel: 'noopener noreferrer', title: r.w, onclick: e => e.stopPropagation() }, domain(r.w))
       : domain(r.w);
-    const emptyMsg = () => h('div', { class: 'empty' }, h('p', null, 'Nicio instituție nu corespunde filtrelor.'),
-      h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => { clearFilters(); update(); } }, 'Resetează filtrele'));
+    const emptyMsg = () => {
+      const hidden = S.web ? rows.filter(r => pass(r, 'web')).length : 0;   // records that pass every filter except "are site"
+      return h('div', { class: 'empty' }, h('p', null, 'Nicio instituție nu corespunde filtrelor.'),
+        hidden ? h('p', null, `${fmt(hidden)} ${hidden === 1 ? 'înregistrare corespunde' : 'înregistrări corespund'}, dar nu au site. `,
+          h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => { S.web = false; el.web.checked = false; update(); } }, 'Arată-le')) : null,
+        h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => { clearFilters(); update(); } }, 'Resetează filtrele')); };
     const rowKey = (r, open) => e => { if (e.key === 'Enter') open(r); };
 
     /* append `items` in pages of `size`; the "more" button lives in btnHost (default: the container itself) */
@@ -1913,8 +1917,9 @@
       const nAct = !!S.cat + !!S.fam + !!S.county + !!S.uat + (S.srcs.size ? 1 : 0) + S.web + S.review;
       $('fcount').textContent = nAct || '';
       $('ftoggle').setAttribute('aria-label', nAct ? `Filtre, ${nAct} active` : 'Filtre');
-      $('stats').textContent = `${fmt(items.length)} din ${fmt(rows.length)}`;
-      $('stats').title = `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
+      const homeStats = S.view === 'acasa';                  // the landing counts ignore the website filter
+      $('stats').textContent = homeStats ? `${fmt(rows.length)} înregistrări` : `${fmt(items.length)} din ${fmt(rows.length)}`;
+      $('stats').title = homeStats ? `${fmt(rows.length)} înregistrări` : `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
       $('csv-msg').textContent = '';
       $('toolbar').hidden = S.view === 'acasa';
       $('filters').hidden = S.view === 'acasa';
