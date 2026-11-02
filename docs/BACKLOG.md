@@ -251,9 +251,14 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       (`a97d412`…`25b0b88`), not published. The export script is `ops/export-employers-for-org.py` in posturi.gov.ro.
       Measured on the posturi export of 2026-10-18: 4,443 of 5,901 employers link (75.3%; 76.5% of postings),
       1,172 `P` records in `posturi-review.csv`, 11 with 10 or more postings. Records 24,981 → 26,153; no old id lost.
-- [ ] DATA-ORG-03 — name rules for posturi names (suffix `, județul X`, `U.A.T.` prefix, spital/tg/dr/cf
-      equivalents, no commune-to-school token link, acronym aliases): [brief](briefs/posturi-name-rules.md).
-      Do this before DATA-ORG-02.
+- [x] DATA-ORG-03 — name rules for posturi names: [brief](briefs/posturi-name-rules.md). Merged 2026-11-02
+      (`5c78f09`…`0742bf7`), not published. Posturi linked 4,443 → 4,661 (79.0%; 81.1% of postings); queue 1,172 → 945,
+      6 with 10 or more postings. The linker now reads the reviewed rows of `curation/aliases.csv` (139 + 21 new acronym rows).
+      A kindergarten never token-links to a school. 67 tests; determinism passes.
+- [ ] DATA-ORG-07 — posturi gives the posting county, not the seat, for national bodies. Five ABA bodies cannot link
+      (Jiu in Gorj/Mehedinți, Crișuri in Hunedoara, Olt in Sibiu/Harghita, Prut-Bârlad in Galați/Botoșani/Vaslui,
+      Buzău-Ialomița in Prahova). Scan the other national bodies. Decide between a national alias scope and a posturi fix.
+- [ ] "A.B.A." does not fold to "aba", so the ABA alias rows do not catch that spelling.
 - [ ] DATA-ORG-04 — re-run with a fresh full posturi export from the VPS (`--db` on a full export, not the
       active-only deploy file), then rebuild.
 - [ ] DATA-ORG-02 — review `data/consolidated/posturi-review.csv` after DATA-ORG-03 and -04. Decisions go to

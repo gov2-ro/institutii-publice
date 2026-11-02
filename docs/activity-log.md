@@ -1,5 +1,36 @@
 # Activity log
 
+## 2026-11-02 — name rules for posturi employers (DATA-ORG-03; Opus brief and reviews, Sonnet build)
+
+**Done**
+- `posturi_clean()` strips `, județul X` and `U.A.T.`. A bare „UAT X” is read as „Comuna X”.
+- Shared word equivalents, for all sources: spital/spitalul, complex/complexul, tg/târgu, dr/doctor, cf. The `tg` rule
+  moved out of `DECL_ABBREV`.
+- A kindergarten never token-links to a school.
+- The linker reads the `status=reviewed` rows of `curation/aliases.csv`. 21 acronym rows were added (USAMV, DGASPC, ABA).
+- 9 commits; 67 tests; determinism passes.
+
+**Measured**
+- Posturi linked: 4,443 → 4,661 (75.3% → 79.0%; 81.1% of postings). Tokens links: 1,616 → 778; exact: 1,932 → 2,631.
+- Review queue: 1,172 → 945; with 10 or more postings: 11 → 6. The 22 „U.A.T. X” → school links now go to the commune.
+- Alias wiring changed 222 old-source links, mostly canonical → exact. The agent hand-checked a sample of 40: none worse.
+
+**Hard**
+- The stop rule fired twice. Each time the agent stopped before it committed the data.
+  - Unifying the words changed the IDF, and Penitenciarul Poarta Albă linked to the prison hospital. Fix: a unified
+    token keeps the IDF of its written form. A first attempt, the IDF over written forms only, lost two good links.
+  - A kindergarten in Tg Jiu linked to a school. The cause was the `tg` rule, which now applies to both sides, not the IDF.
+    The first diagnosis was wrong.
+- The alias wiring needed two build fixes:
+  - a curated merge that a tier now links counts as `redundant`;
+  - `check_absorbed_ids` walks the releases newest first.
+
+**Decided**
+- The kindergarten guard is narrow: only „gradinita” against anything else. A broad head-word rule would block real
+  renames such as „Grup școlar” → „Liceul Tehnologic”.
+- Alias rows are scoped to their record's county, so the ABA bodies with a wrong posturi county stay unlinked (DATA-ORG-07).
+  A national scope would let an alias link in a county where a different body has the same acronym.
+
 ## 2026-11-02 — posturi.gov.ro employers as a source (DATA-ORG-01; Opus brief, Sonnet build)
 
 **Done**
