@@ -203,6 +203,7 @@
          font: var(--g2-font-size-label)/1.5 var(--g2-font-mono); }
   .src.a { color: rgb(var(--g2-color-info-ink)); } .src.r { color: rgb(var(--g2-color-success-ink)); }
   .src.g { color: rgb(var(--g2-color-warning-ink)); } .src.d { color: rgb(var(--g2-color-progress-ink)); }
+  .src.p { color: rgb(var(--g2-color-neutral-ink)); }
   td > .g2-tag { margin-left: 6px; vertical-align: 2px; }
   /* a warning paragraph: the DS inset with the warning tone */
   .flag { display: block; margin: var(--g2-space-2) 0; padding: var(--g2-space-2) var(--g2-space-3); border-left: 5px solid rgb(var(--g2-color-warning-line));
@@ -627,9 +628,9 @@
       return set;
     }
 
-    const SOURCES = [['anaf', 'ANAF'], ['roepas', 'ROePAS'], ['reg', 'Registru'], ['decl', 'Declarații ANI'], ['nocif', 'Fără corespondent ANAF']];
+    const SOURCES = [['anaf', 'ANAF'], ['roepas', 'ROePAS'], ['reg', 'Registru'], ['decl', 'Declarații ANI'], ['posturi', 'posturi.gov.ro'], ['nocif', 'Fără corespondent ANAF']];
     const srcTest = {
-      anaf: r => r.s & 1, roepas: r => r.s & 2, reg: r => r.s & 4, decl: r => r.s & 8, nocif: r => !r.f,
+      anaf: r => r.s & 1, roepas: r => r.s & 2, reg: r => r.s & 4, decl: r => r.s & 8, posturi: r => r.s & 16, nocif: r => !r.f,
     };
     const needsReview = r => !!(r.d || (r.mc && r.mc.length));
 
@@ -689,6 +690,7 @@
       (r.s & 2) > 0 && h('span', { class: 'src r', title: 'Portalul ROePAS' }, 'ROePAS'),
       (r.s & 4) > 0 && h('span', { class: 'src g', title: 'Registrul Național al Instituțiilor Publice' }, 'Registru'),
       (r.s & 8) > 0 && h('span', { class: 'src d', title: `Declarații de avere și interese (ANI): ${fmt(r.dc || 0)} declarații` }, 'ANI'),
+      (r.s & 16) > 0 && h('span', { class: 'src p', title: `Angajator în anunțuri pe posturi.gov.ro: ${fmt(r.pp || 0)} anunțuri` }, 'posturi'),
     ];
     const where = r => [r.u, r.county].filter(Boolean).join(', ');
     const domain = u => u.replace(/^https?:\/\//i, '').replace(/\/$/, '');
@@ -1688,7 +1690,7 @@
       unit: 'același număr de unitate militară', national: 'nume identic, instituție centrală (depusă din alt județ)',
       elsewhere: 'nume identic, unic în țară (depusă din alt județ)',
       prefix: 'nume trunchiat, început al unui nume ANAF', same_name: 'același nume și județ, combinat din surse fără ANAF' };
-    const srcOfId = { R: 'ROePAS', G: 'Registru', D: 'ANI' };
+    const srcOfId = { R: 'ROePAS', G: 'Registru', D: 'ANI', P: 'posturi.gov.ro' };
     const peerBtn = rr => h('button', { class: 'link acc', type: 'button', onclick: () => openRecord(rr) }, rr.n);
 
     function renderDialog(r) {
@@ -1747,6 +1749,9 @@
             pair('Combinat din', r.mi && h('ul', { class: 'plain' }, r.mi.map(m => h('li', null, `${m} (${srcOfId[m[0]] || 'sursă'})`)))),
             pair('Legătură ROePAS', r.lr && tierText[r.lr]), pair('Legătură Registru', r.lg && tierText[r.lg]),
             pair('Declarații ANI', r.dc && `${fmt(r.dc)}${r.ld ? ` · ${tierText[r.ld]}` : ''}`),
+            pair('Anunțuri posturi.gov.ro', r.pp != null && `${fmt(r.pp)}${r.lp ? ` · ${tierText[r.lp]}` : ''}`),
+            pair('Angajator posturi.gov.ro', r.ps && h('a', { href: `https://posturi.gov2.ro/angajator/${encodeURIComponent(r.ps[0])}/`,
+              target: '_blank', rel: 'noopener noreferrer' }, 'pagina angajatorului')),
             pair('Grupă în formularul ANI', r.dg),
             pair('Declarații pe județe', r.dk && r.dk.slice(0, 8).map(([c, n]) => `${c} ${fmt(n)}`).join(' · ')
               + (r.dk.length > 8 ? ` · … încă ${r.dk.length - 8}` : ''))),
@@ -1853,7 +1858,7 @@
     /* ---------- CSV export of the current selection ---------- */
     const CSV_COLS = ['id', 'name', 'category', 'family', 'county', 'uat', 'cif', 'parent_cifs', 'website_url', 'email', 'phone',
       'sources', 'possible_duplicate_of', 'match_candidate_cifs', 'declaratii_count', 'procedures_count', 'online_procedures_count'];
-    const SRC_NAMES = [[1, 'anaf'], [2, 'roepas'], [4, 'registrul'], [8, 'declaratii']];
+    const SRC_NAMES = [[1, 'anaf'], [2, 'roepas'], [4, 'registrul'], [8, 'declaratii'], [16, 'posturi']];
     /* matching records only; in a focused state view only those inside the focused subtree; each id once */
     function selection() {
       let list = items;
