@@ -32,6 +32,12 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
 - **ANI declarații de integritate** `data/declaratii-integritate/Lens Visualization*.csv` (Kibana exports,
   `NAME|COUNTY` + count). Merged into `declaratii.csv` as a side effect. Standalone id `D<sha1[:8]>`.
   Exports cap at 10,000 rows; the script warns when a file hits the cap. Overlapping exports are deduped by max.
+- **posturi.gov.ro employers** `data/posturi/employers.csv` (`slug, name, county, locality, postings, first_seen,
+  last_seen`), made by `ops/export-employers-for-org.py` in the posturi repo from a SQLite file with all postings
+  (not the active-only deploy file). Linked by the tiers `exact`, `canonical`, `unit`, `tokens`; never `prefix`.
+  A linked row adds `posturi` to `sources` and its slugs to `posturi_slugs` (JSON `ps`; `posturi_postings`, `pp`).
+  Standalone id `P<slug>`. Unlinked rows with the same county and name share one record. The review queue is
+  `data/consolidated/posturi-review.csv`. A missing input file skips the source with a warning.
 - **Curated websites** `curation/websites.csv` (tracked): `cif, website, checked_at, evidence`, checked by hand.
   A row fills or replaces the ROePAS website of the ANAF record with that CIF. CSV column `website_source`
   is `curation` or `roepas`. The script stops on a duplicate CIF or a value that is not a website.
@@ -73,7 +79,7 @@ Single self-contained vanilla-JS page (no build, no deps) that fetches `metadata
 served over HTTP, not opened as file://. Its look is the gov2 design system (see the next section): `assets/gov2/`
 holds `gov2.css` and the local Inter and Fragment Mono; `<html data-g2-scheme="auto">` turns on the DS dark scheme. Rows use the compact schema from `write_explorer_data`: short keys
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
-declaratii=8, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
+declaratii=8/posturi=16, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
 candidates, `us` 1 = sector inferred from the name (`uat_source`), `mi` ids absorbed by a same-name merge, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
 `write_explorer_data` and the decoding in `index.html`.
 `metadata.json` also carries `dataset` (generation time; per input file the path, bytes, SHA-256, mtime, row count;
