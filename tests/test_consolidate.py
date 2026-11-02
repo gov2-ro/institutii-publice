@@ -149,7 +149,7 @@ class Categories(unittest.TestCase):
 
 def source_rec(id_, name, county="Alba", **extra):
     """A source-only record in the shape main() builds (only the fields merge_same_name and infer_sectors read)."""
-    src = {"R": "roepas", "G": "registrul", "D": "declaratii"}[id_[0]]
+    src = {"R": "roepas", "G": "registrul", "D": "declaratii", "P": "posturi"}[id_[0]]
     return {"id": id_, "name": name, "county": county, "uat": None, "cif": None, "category": c.OTHER,
             "sources": [src], "link": {}, "possible_duplicate_of": None, "_cands": [],
             **({"registrul_nums": [id_[1:]]} if src == "registrul" else {}),
@@ -437,6 +437,93 @@ class Provenance(unittest.TestCase):
         name = "Lens Visualization [2026-10-19T20_26_13.348+03_00] 3.csv"
         self.assertEqual(c.kibana_export_time(name), "2026-10-19T20:26:13.348+03:00")
         self.assertIsNone(c.kibana_export_time("other.csv"))
+
+
+class PosturiTiers(unittest.TestCase):
+    """Names from the posturi export (data/posturi/employers.csv), linked through the existing tiers."""
+
+    def test_each_tier_links_a_posturi_name(self):
+        L = linker([row(1, "COMUNA BOD", "Brasov", "Comuna Bod"),
+                    row(2, "ORAS LIVADA", "Satu Mare", "Orasul Livada"),
+                    row(3, "UNITATEA MILITARA 01470", "Vrancea", "Municipiul Focsani"),
+                    row(4, "LICEUL DE MARINA CONSTANTA", "Constanta", "Municipiul Constanta")])
+        cases = [("Brașov", "Comuna Bod", "exact", "1"), ("Satu Mare", "Orașul Livada", "canonical", "2"),
+                 ("Vrancea", "U.M. 01470", "unit", "3"), ("Constanța", "Liceul de Marină", "tokens", "4")]
+        for county, name, tier, cif in cases:
+            got, idx, _, _ = L.link(county, name)
+            self.assertEqual((got, L.anaf[idx[0]]["cif"]), (tier, cif), name)
+
+    def test_weak_candidate_is_not_merged(self):
+        common = [row(100 + k, f"SCOALA GIMNAZIALA COMUNA ZZ{k}", "Alba") for k in range(1500)]   # common words get a low IDF
+        L = linker([row(5, "SCOALA GIMNAZIALA COMUNA DAROVA", "Timis", "Comuna Darova")] + common)
+        tier, idx, score, cands = L.link("Timiș", "UAT DAROVA", "")
+        self.assertEqual((tier, [x["cif"] for x in cands]), ("weak", ["5"]))
+        self.assertNotIn(tier, c.TIER_RANK)
+        self.assertEqual(c.candidate_fields(cands)[0], "5")
+
+    def test_name_without_candidate_is_standalone(self):
+        L = linker([row(1, "COMUNA BOD", "Brasov", "Comuna Bod")])
+        name = "Societatea LIMANU VERDE SERVICII DE CURĂȚENIE S.R.L."
+        self.assertEqual(L.link("Constanța", name), (None, [], 0.0, []))
+
+    def test_row_without_county_does_not_link_by_name(self):
+        L = linker([row(1, "COMUNA BOD", "Brasov", "Comuna Bod")])
+        self.assertIsNone(L.link("", "COMUNA BOD")[0])
+
+
+class PosturiRecords(unittest.TestCase):
+    def prow(self, slug, name, county="Teleorman", locality="", postings=1):
+        return (None, [], 0.0, {"slug": slug, "name": name, "county": county, "locality": locality,
+                                "postings": postings}, [])
+
+    def test_slugs_of_one_body_make_one_record(self):
+        rows = [self.prow("dgaspc-teleorman", "Directia Generala de Asistenta Sociala si Protectia Copilului Teleorman",
+                          postings=2),
+                self.prow("dgaspc-teleorman-3", "Direcția Generală de Asistență Socială și Protecția Copilului Teleorman",
+                          locality="Roșiorii de Vede", postings=5)]
+        (tier, idx, score, r, cands), = c.posturi_standalone(rows)
+        self.assertEqual((r["slugs"], r["postings"], r["id_slug"], r["locality"]),
+                         (["dgaspc-teleorman-3", "dgaspc-teleorman"], 7, "dgaspc-teleorman", "Roșiorii de Vede"))
+
+    def test_local_kinds_with_different_localities_stay_apart(self):
+        rows = [self.prow("a", "Școala Gimnazială", "Cluj", "Turda"), self.prow("b", "Școala Gimnazială", "Cluj", "Dej")]
+        self.assertEqual(len(c.posturi_standalone(rows)), 2)
+
+    def test_other_county_stays_apart(self):
+        rows = [self.prow("a", "Spitalul Municipal", "Cluj"), self.prow("b", "Spitalul Municipal", "Dolj")]
+        self.assertEqual(len(c.posturi_standalone(rows)), 2)
+
+    def test_posturi_record_merges_by_name_and_keeps_slugs(self):
+        recs = [source_rec("G5", "Spitalul General CF Simeria", "Hunedoara"),
+                {**source_rec("Pspitalul-general-cf-simeria", "SPITALUL GENERAL CF SIMERIA", "Hunedoara",
+                              sources=["posturi"]), "posturi_slugs": ["spitalul-general-cf-simeria"],
+                 "posturi_postings": 4}]
+        c.merge_same_name(recs)
+        self.assertEqual([r["id"] for r in recs], ["G5"])
+        r = recs[0]
+        self.assertEqual((r["sources"], r["posturi_slugs"], r["posturi_postings"], r["merged_ids"]),
+                         (["registrul", "posturi"], ["spitalul-general-cf-simeria"], 4,
+                          ["Pspitalul-general-cf-simeria"]))
+
+    def test_review_queue_lists_standalone_records_by_postings(self):
+        import tempfile
+        mk = lambda i, n, p, dup=None: {**source_rec(i, n, sources=["posturi"]), "posturi_postings": p,
+                                         "possible_duplicate_of": dup}
+        recs = [mk("Pa", "Alfa", 2), mk("Pb", "Beta", 9, "7"), source_rec("G1", "Gama"), mk("Pc", "Delta", 9)]
+        with tempfile.TemporaryDirectory() as d:
+            out = c.write_posturi_review(Path(d) / "r.csv", recs, {"7": {"name": "BETA ANAF"}})
+        self.assertEqual([r["id"] for r in out], ["Pb", "Pc", "Pa"])
+        self.assertEqual((out[0]["candidate_name"], out[1]["candidate_name"]), ("BETA ANAF", None))
+
+    def test_loader_skips_a_missing_file_and_rejects_a_duplicate_slug(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(c.load_posturi(Path(d) / "none.csv"), [])
+            f = Path(d) / "e.csv"
+            f.write_text("slug,name,county,locality,postings,first_seen,last_seen\n"
+                         "a,Alfa,Cluj,,1,,\na,Alfa,Cluj,,1,,\n", encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                c.load_posturi(f)
 
 
 if __name__ == "__main__":

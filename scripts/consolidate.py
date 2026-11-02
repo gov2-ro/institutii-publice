@@ -9,6 +9,10 @@ sources are linked onto it by county + name:
   - ROePAS scrape (data/roepas/institutii.json): website, email, phone, coordinates, procedures
   - National Register of Public Institutions (docs/reference/*.csv, a damaged PDF extraction):
     register number
+  - posturi.gov.ro employers (data/posturi/employers.csv, made by ops/export-employers-for-org.py in the
+    posturi repo): every employer of a public-sector job posting, with its county, locality and posting count.
+    An employer that no tier links becomes a record of its own (`P<slug>`) and goes to the review queue
+    data/consolidated/posturi-review.csv. The prefix tier is not used for this source.
   - ANI integrity declarations (data/declaratii-integritate/, Kibana exports): number of declarations
     filed per institution, a rough proxy for its size, and names missing from ANAF (state-owned
     companies especially). Umbrella entries of the ANI form are left out, unless a specific name
@@ -59,6 +63,7 @@ REGISTRUL_CSV = ROOT / "docs/reference/Registrul-National-al-Institutiilor-Publi
 ROEPAS_JSON = ROOT / "data/roepas/institutii.json"
 DECLARATII_DIR = ROOT / "data/declaratii-integritate"
 DECLARATII_MERGED = DECLARATII_DIR / "declaratii.csv"
+POSTURI_CSV = ROOT / "data/posturi/employers.csv"
 OUT_DIR = ROOT / "data/consolidated"
 CURATED_WEBSITES = ROOT / "curation/websites.csv"
 CURATED_MERGES = ROOT / "curation/merges.csv"
@@ -178,6 +183,23 @@ def load_roepas():
     return rows
 
 
+def load_posturi(path=None):
+    """posturi.gov.ro employers: slug, name, county, locality, postings, first_seen, last_seen. A missing file
+    gives no rows (the input is not in git). An employer with no county cannot link by county."""
+    path = path or POSTURI_CSV
+    if not path.exists():
+        print(f"warning: {path} not found, posturi source skipped", file=sys.stderr)
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = [{**r, "postings": int(r["postings"] or 0)} for r in csv.DictReader(fh)]
+    slugs = Counter(r["slug"] for r in rows)
+    dup = sorted(s for s, n in slugs.items() if n > 1)
+    if dup or any(not r["slug"] or not squash(r["name"]) for r in rows):
+        raise SystemExit(f"{path}: empty or duplicate slug or name: {dup[:5]}")
+    record_input("posturi", path, len(rows))
+    return rows
+
+
 def load_curated_websites(path=None):
     """Hand-checked websites keyed by CIF (curation/websites.csv: cif, website, checked_at, evidence).
     They fill or correct the ROePAS website of an ANAF record. A missing file means no curation."""
@@ -254,6 +276,9 @@ def absorb(keep, rec, how):
         for k in ("declaratii_count", "declaratii_group", "declaratii_by_county"):
             if keep.get(k) in (None, "", []):
                 keep[k] = rec.get(k)
+    if "posturi" in rec["sources"]:
+        keep["posturi_slugs"] = sorted({*keep.get("posturi_slugs", []), *rec.get("posturi_slugs", [])})
+        keep["posturi_postings"] = (keep.get("posturi_postings") or 0) + (rec.get("posturi_postings") or 0)
     if keep["category"] == OTHER and rec["category"] != OTHER:
         keep["category"] = rec["category"]
     if fold(rec["name"]) != fold(keep["name"]):
@@ -1192,8 +1217,8 @@ def declaratii_standalone(rows, aggregate):
 # The other DECL_LOCAL_KIND kinds (hospitals, colleges, street administrations...) are unique per locality, so
 # a name with a proper noun combines (the brief's own example is "Administratia domeniului public sector 1").
 SAME_NAME_NEVER = re.compile(r"^(scoala|gradinita|grup scolar|biblioteca|caminul|parohia|casa de cultura)\b")
-SRC_ORDER = ["anaf", "roepas", "registrul", "declaratii"]
-SRC_PRIORITY = {"roepas": 0, "registrul": 1, "declaratii": 2}       # the surviving id of a same-name group
+SRC_ORDER = ["anaf", "roepas", "registrul", "declaratii", "posturi"]
+SRC_PRIORITY = {"roepas": 0, "registrul": 1, "declaratii": 2, "posturi": 3}       # the surviving id of a same-name group
 
 
 def generic_name(f):
@@ -1214,7 +1239,7 @@ def explicit_sectors(rec):
 
 
 def merge_same_name(records, nationwide=False):
-    """Combine source-only records (ROePAS, Registrul, ANI) with the same folded name and county across
+    """Combine source-only records (ROePAS, Registrul, ANI, posturi) with the same folded name and county across
     different sources. Skipped: village-level kinds (SAME_NAME_NEVER), generic names, a group where any source holds the name more than once,
     a group whose names state different sectors, and a county-less record. A name with a sector ("- Sector 2") matches the
     same name without one. The surviving id follows ROePAS > Registrul > ANI.
@@ -1222,7 +1247,7 @@ def merge_same_name(records, nationwide=False):
     a national body under its seat or under a wrong county). Mutates `records`; -> stats."""
     groups = defaultdict(list)
     for rec in records:
-        if rec["sources"] in (["roepas"], ["registrul"], ["declaratii"]) and rec["county"]:
+        if rec["sources"] in (["roepas"], ["registrul"], ["declaratii"], ["posturi"]) and rec["county"]:
             k = same_name_key(rec)
             groups[k[1] if nationwide else k].append(rec)
     stats = {"groups": Counter(), "ids": 0, "dup_source": 0, "generic": 0, "sectors": 0}
@@ -1264,6 +1289,30 @@ LOCAL_KIND_RE = re.compile(
     r"\b(scoala|gradinita|liceul|colegiul|grup scolar|biblioteca|caminul|parohia|casa de cultura|primaria|consiliul local|"
     r"club|scolar|palatul copiilor|cantina|tribunal|tribunalul|curtea de apel|judecatoria)\b|\bsc |\bnr\.? ?\d")
 KEY_SMALL = {"de", "al", "a", "si", "pentru", "la", "din", "cu", "in"}
+
+
+def posturi_standalone(rows):
+    """Unlinked posturi rows -> one entry per body. posturi gives one employer several slugs when the spelling
+    differs ("... Teleorman", "Direcția ... Teleorman"). Rows with the same county and folded name make one record
+    (slugs by postings, postings added), or `merge_same_name` would skip the whole group as a repeated name.
+    A local kind (schools, clubs: LOCAL_KIND_RE, SAME_NAME_NEVER, a generic name) also needs the same locality
+    or none. The id follows the shortest slug, so a new export keeps it. -> [(tier, idx, score, row, cands)]."""
+    groups = defaultdict(list)
+    for t in rows:
+        r = t[3]
+        f = fold(strip_suffix(r["name"]))
+        local = bool(LOCAL_KIND_RE.search(f) or SAME_NAME_NEVER.search(f) or generic_name(f))
+        groups[(fold(r["county"]), f, fold(r["locality"]) if local else "")].append(t)
+    out = []
+    for _, grp in sorted(groups.items()):
+        grp.sort(key=lambda t: (-t[3]["postings"], t[3]["slug"]))
+        top = grp[0]
+        slugs = [t[3]["slug"] for t in grp]
+        row = {**top[3], "slugs": slugs, "id_slug": min(slugs, key=lambda x: (len(x), x)),
+               "postings": sum(t[3]["postings"] for t in grp),
+               "locality": next((t[3]["locality"] for t in grp if t[3]["locality"]), "")}
+        out.append((top[0], top[1], top[2], row, union_candidates(t[4] for t in grp)))
+    return out
 
 
 def loose_key(rec):
@@ -1345,9 +1394,10 @@ TIER_RANK = {"exact": 0, "canonical": 1, "unit": 1, "tokens": 2, "prefix": 2, "n
 def main():
     PROVENANCE.clear()
     anaf, registrul, roepas, declaratii = load_anaf(), load_registrul(), load_roepas(), load_declaratii()
+    posturi = load_posturi()
     curated = load_curated_websites()
     print(f"sources: anaf={len(anaf)} registrul={len(registrul)} roepas={len(roepas)} "
-          f"declaratii={len(declaratii)}", file=sys.stderr)
+          f"declaratii={len(declaratii)} posturi={len(posturi)}", file=sys.stderr)
     linker = Linker(anaf)
     county_display = {fold(a["county"]): a["county"] for a in anaf}
     county_of = lambda c: county_display.get(fold(c)) or squash(c).title()
@@ -1365,8 +1415,9 @@ def main():
         return label
 
     link_trail = {}              # id a source row would have had as a record -> id of the ANAF record it joined
-    links = {"roepas": defaultdict(list), "registrul": defaultdict(list), "declaratii": defaultdict(list)}
-    standalone = {"roepas": [], "registrul": [], "declaratii": []}
+    links = {"roepas": defaultdict(list), "registrul": defaultdict(list), "declaratii": defaultdict(list),
+             "posturi": defaultdict(list)}
+    standalone = {"roepas": [], "registrul": [], "declaratii": [], "posturi": []}
     for src, rows in (("roepas", roepas), ("registrul", registrul)):
         for row in rows:
             tier, idx, score, cands = linker.link(row["county"], row["name"], row.get("city"))
@@ -1376,6 +1427,13 @@ def main():
                     link_trail["G" + row["num"]] = "A" + anaf[idx[0]]["cif"]
             else:
                 standalone[src].append((tier, idx, score, row, cands))
+    for row in posturi:                  # no prefix tier: posturi names are not cut off
+        tier, idx, score, cands = linker.link(row["county"], row["name"], row["locality"])
+        if tier in TIER_RANK:
+            links["posturi"][idx[0]].append((tier, row))
+            link_trail["P" + row["slug"]] = "A" + anaf[idx[0]]["cif"]
+        else:
+            standalone["posturi"].append((tier, idx, score, row, cands))
     county_re = re.compile(r"\b(" + "|".join(sorted(county_display, key=len, reverse=True)) + r")\b")
     aggregate, labels = [], umbrella_labels(declaratii)
     spread = Counter(fold(r["name"]) for r in declaratii)
@@ -1432,6 +1490,12 @@ def main():
             rec["sources"].append("declaratii")
             rec["link"]["declaratii"] = sorted(dec, key=lambda t: TIER_RANK[t[0]])[0][0]
             rec["declaratii_count"] = sum(r["count"] for _, r in dec)
+        pos = sorted(links["posturi"].get(i, []), key=lambda t: (-t[1]["postings"], t[1]["slug"]))
+        if pos:
+            rec["sources"].append("posturi")
+            rec["link"]["posturi"] = min((t for t, _ in pos), key=TIER_RANK.get)
+            rec["posturi_slugs"] = [r["slug"] for _, r in pos]
+            rec["posturi_postings"] = sum(r["postings"] for _, r in pos)
         records.append(rec)
 
     def standalone_link(cands):
@@ -1468,6 +1532,15 @@ def main():
             "declaratii_count": r["count"], "declaratii_group": group and group.upper(),
             "declaratii_by_county": r.get("by_county")})
 
+    for tier, idx, score, r, cands in posturi_standalone(standalone["posturi"]):
+        records.append({
+            "id": "P" + r["id_slug"], "name": r["name"], "county": county_of(r["county"]) if r["county"] else None,
+            "uat": uat_of(r["county"], r["locality"]) if r["locality"] else None, "address": None,
+            "cif": None, "cif_tva": None, "parents": [], "category": categorize(r["name"]),
+            "sources": ["posturi"], "link": {}, **standalone_link(cands),
+            "posturi_slugs": r["slugs"], "posturi_postings": r["postings"],
+            **({"merged_ids": ["P" + x for x in r["slugs"] if x != r["id_slug"]]} if len(r["slugs"]) > 1 else {})})
+
     curation_stats = apply_curated_websites(records, curated)
     merge_stats = merge_same_name(records)
     national_stats = merge_same_name(records, nationwide=True)
@@ -1491,14 +1564,38 @@ def main():
     (OUT_DIR / "institutii.json").write_text(json.dumps(records, ensure_ascii=False), encoding="utf-8")
     write_csv(OUT_DIR / "institutii.csv", records)
     write_explorer_data(OUT_DIR, records)
-    report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats, curation_stats)
+    review = write_posturi_review(OUT_DIR / "posturi-review.csv", records, by_cif)
+    report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats, curation_stats,
+           posturi, review)
 
 
 CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif", "cif_tva", "parent_cifs",
             "parent_names", "website", "website_url", "email", "phone", "fax", "lat", "lon", "sources",
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
-            "declaratii_count", "declaratii_group", "uat_source", "merged_ids", "website_source", "same_body_as", "aliases", "aliases_unique"]
+            "declaratii_count", "declaratii_group", "link_posturi", "posturi_slugs", "posturi_postings", "uat_source", "merged_ids", "website_source", "same_body_as", "aliases", "aliases_unique"]
+
+
+REVIEW_COLS = ["id", "name", "county", "locality", "postings", "possible_duplicate_of", "candidate_name"]
+
+
+def write_posturi_review(path, records, by_cif):
+    """The review queue: every posturi employer that no tier linked and no merge absorbed, most postings first.
+    A reviewed decision goes to curation/merges.csv or curation/aliases.csv. -> the rows written."""
+    rows = []
+    for r in records:
+        if not r["id"].startswith("P") or r["sources"] != ["posturi"]:
+            continue
+        cif = r.get("possible_duplicate_of")
+        rows.append({"id": r["id"], "name": r["name"], "county": r["county"], "locality": r["uat"],
+                     "postings": r.get("posturi_postings") or 0, "possible_duplicate_of": cif,
+                     "candidate_name": by_cif[cif]["name"] if cif in by_cif else None})
+    rows.sort(key=lambda x: (-x["postings"], x["id"]))
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=REVIEW_COLS)
+        w.writeheader()
+        w.writerows(rows)
+    return rows
 
 
 def write_csv(path, records):
@@ -1512,11 +1609,12 @@ def write_csv(path, records):
             row["parent_names"] = flat([p["name"] for p in r["parents"]])
             row["link_roepas"], row["link_registrul"] = r["link"].get("roepas"), r["link"].get("registrul")
             row["link_declaratii"] = r["link"].get("declaratii")
+            row["link_posturi"] = r["link"].get("posturi")
             row["match_candidate_cifs"] = flat([c["cif"] for c in r.get("match_candidates", [])])
             w.writerow(row)
 
 
-SRC_BIT = {"anaf": 1, "roepas": 2, "registrul": 4, "declaratii": 8}
+SRC_BIT = {"anaf": 1, "roepas": 2, "registrul": 4, "declaratii": 8, "posturi": 16}
 
 
 def dataset_block():
@@ -1549,6 +1647,7 @@ def write_explorer_data(out_dir, records):
             "dg": r.get("declaratii_group"), "dk": r.get("declaratii_by_county"),
             "mc": [c["cif"] for c in r.get("match_candidates", [])],
             "us": 1 if r.get("uat_source") else None, "mi": r.get("merged_ids"),
+            "ps": r.get("posturi_slugs"), "pp": r.get("posturi_postings"), "lp": r["link"].get("posturi"),
         }
         for k, v in optional.items():
             if v is None or v == "" or v == []:           # a known 0 (pc, po) stays: it differs from unknown
@@ -1562,7 +1661,8 @@ def write_explorer_data(out_dir, records):
     (out_dir / "rows.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
-def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats, curation_stats):
+def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats, curation_stats,
+           posturi=(), review=()):
     n = Counter(tuple(r["sources"]) for r in records)
     print(f"\nconsolidated records: {len(records)}", file=sys.stderr)
     for k, v in sorted(n.items(), key=lambda kv: -kv[1]):
@@ -1589,6 +1689,8 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
     print(f"  records of their own: {len(own)} ({sum(1 for r in own if r['possible_duplicate_of'])} weak, "
           f"{sum(1 for r in own if r.get('match_candidates'))} ambiguous), "
           f"{sum(r['declaratii_count'] for r in own)} declarations", file=sys.stderr)
+    if posturi:
+        report_posturi(records, links, standalone, posturi, review)
     mg = merge_stats
     print(f"\nsame-name merges (source-only records of different sources): {sum(mg['groups'].values())} groups, "
           f"{mg['ids']} ids absorbed; skipped: {mg['generic']} generic or village-level names, "
@@ -1616,6 +1718,26 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
     print("\ncategories:", file=sys.stderr)
     for k, v in Counter(r["category"] for r in records).most_common():
         print(f"  {k:40s} {v}", file=sys.stderr)
+
+
+def report_posturi(records, links, standalone, posturi, review):
+    """Summary lines of the posturi source: rows, links by tier, weak candidates, standalone records."""
+    linked = [r for v in links["posturi"].values() for _, r in v]
+    tiers = Counter(t for v in links["posturi"].values() for t, _ in v)
+    weights = sum(r["postings"] for r in posturi) or 1
+    print(f"posturi: {len(posturi)} employers ({sum(1 for r in posturi if not r['county'])} without a county)",
+          file=sys.stderr)
+    print(f"  linked to ANAF: {len(linked)} ({100 * len(linked) / len(posturi):.1f}% of employers, "
+          f"{100 * sum(r['postings'] for r in linked) / weights:.1f}% of postings) onto "
+          f"{len(links['posturi'])} records; by tier {dict(tiers)}", file=sys.stderr)
+    weak = sum(1 for t, *_ in standalone["posturi"] if t == "weak")
+    amb = sum(1 for t, *_ in standalone["posturi"] if t == "ambiguous")
+    print(f"  not linked: {len(standalone['posturi'])} ({weak} weak candidates, {amb} ambiguous, "
+          f"{len(standalone['posturi']) - weak - amb} with no candidate)", file=sys.stderr)
+    absorbed = sum(1 for r in records if any(m.startswith("P") for m in r.get("merged_ids", [])))
+    big = sum(1 for r in review if r["postings"] >= 10)
+    print(f"  records of their own (review queue): {len(review)}, {big} with 10 or more postings; "
+          f"{absorbed} records absorbed a posturi row by name", file=sys.stderr)
 
 
 if __name__ == "__main__":
