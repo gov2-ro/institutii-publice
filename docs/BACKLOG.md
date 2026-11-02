@@ -257,9 +257,10 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       A kindergarten never token-links to a school. 67 tests; determinism passes.
 - [x] Issue #6, parts done 2026-11-02: acronym aliases (ROTLD, INCAS, GeoEcoMar, IFIN-HH, INCDFM, ICI, CNAIR, ARACIP, ANMCS),
       alias rows now reach `aliases` for all id kinds, INCDFM and CNAIR duplicates merged.
-- [ ] Issue #6: curated CIF identities for the INCDs, BNR, CNAIR, RAAPPS and Imprimeria BNR (`curation/entities.csv` or
-      an extension of `websites.csv`). Needs a spec and an owner decision.
-- [ ] Issue #6: absent bodies Consiliul Fiscal, CSAT, Autoritatea de Audit, AMR and UNCJR. The owner decides the record form.
+- [~] Issue #6: curated CIF identities for the INCDs, BNR, CNAIR, RAAPPS and Imprimeria BNR. Owner approved 2026-11-02:
+      `curation/identities.csv`, seeded from SEAP (brief: briefs/seap-authorities-source.md, tasks 4-5).
+- [~] Issue #6: absent bodies. Owner decided 2026-11-02: AMR and UNCJR come in via SEAP; Consiliul Fiscal, CSAT and
+      Autoritatea de Audit get an alias on the host body (brief: briefs/seap-authorities-source.md, task 6).
 - [ ] DATA-ORG-07 — posturi gives the posting county, not the seat, for national bodies. Five ABA bodies cannot link
       (Jiu in Gorj/Mehedinți, Crișuri in Hunedoara, Olt in Sibiu/Harghita, Prut-Bârlad in Galați/Botoșani/Vaslui,
       Buzău-Ialomița in Prahova). Scan the other national bodies. Decide between a national alias scope and a posturi fix.
@@ -279,6 +280,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] #4 — empty state shows the records hidden by the website filter; the landing counter shows the total.
 - [x] #5 — `institutii.csv` is published at the site root; the footer shows the link and the EUPL line. Publish to see it live.
 - [-] The footer text "41 de coloane" was hard-coded. Opus dropped the count from the footer instead (2026-11-02).
+
+## SEAP contracting authorities as a source (owner request, 2026-11-02; brief: briefs/seap-authorities-source.md)
+- [ ] Phase 1: extractor, source `seap`, `S<cui>` records, `curation/identities.csv`, hosted-body aliases (Sonnet).
+- [ ] Re-run `scripts/extract_seap.py` when the dump download ends (2024 and most of 2023 TIII/TIV were missing on 2026-11-02).
+- [ ] Phase 2: spike on the e-licitatie.ro authority profiles for contacts (access, terms, fields), then a brief.
+- [ ] `packages.json` resource `38e601a9` has the name and size of `e40a48ed`. Check the local file by hand.
 
 ## Verified limits
 - The ANAF parent link (ordonator principal de credite) is one level deep. It gives no middle level

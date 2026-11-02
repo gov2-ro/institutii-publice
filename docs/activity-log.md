@@ -1,5 +1,24 @@
 # Activity log
 
+## 2026-11-02 — SEAP source and CIF identities: survey and brief (Opus)
+
+**Done**
+- Sonnet surveyed the SEAP dump (data.gov.ro, ADR). 2026: 21 files, 2.9 M rows, 14,126 authority CUIs; 12,418 match a
+  `cif`, 92 only a `cif_tva`, 1,616 nothing. The dump was still downloading: 2024 and most 2023 TIII/TIV files are missing.
+- Brief `docs/briefs/seap-authorities-source.md`: extractor with a per-file cache, source `seap` linked by CUI,
+  standalone `S<cui>` records, `curation/identities.csv`, hosted-body aliases.
+
+**Hard**
+- SEAP has no contact data: only the authority name and CUI. The owner asked for contacts; they need a phase-2 scrape.
+
+**Decided**
+- Link SEAP by CUI only, never by name. A name match is a proposal in `seap-review.csv`. A wrong name link would
+  attach a CUI to the wrong body; the cost is manual review of the CIF-less matches.
+- Unmatched authorities become records, except obvious private bodies (owner). Cost: some municipal SRL/SA and ADI
+  enter as records with no parent in "Structura statului".
+- Curated identities set a CIF only on a record without one. A CIF of an ANAF record must go to `merges.csv`.
+- Consiliul Fiscal, CSAT, Autoritatea de Audit: aliases on the host body, no record (owner). AMR, UNCJR: via SEAP.
+
 ## 2026-11-02 — issue #6: acronym aliases, ROTLD, two duplicate pairs (Sonnet)
 
 **Done**
