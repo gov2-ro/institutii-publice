@@ -519,6 +519,13 @@ class PosturiNameRules(unittest.TestCase):
             tier, idx, _, _ = L.link(county, name)
             self.assertEqual((tier, L.anaf[idx[0]]["cif"]), ("exact", cif), name)
 
+    def test_unified_word_keeps_the_weight_of_its_written_form(self):
+        rows = [row(i, f"SPITALUL ZZ{i}", "Alba") for i in range(30)] + [row(99, "SPITAL ABC", "Alba")]
+        L = linker(rows)
+        written = L.tokens(c.prep("SPITALUL ABC", unify=False)[1])
+        w = L.weights(L.tokens(c.prep("SPITALUL ABC")[1]), written)
+        self.assertEqual(w["spital"], L.idf["spitalul"])      # not the IDF of "spital" (30 rows vs 1)
+
     def test_equiv_is_shared_by_prep(self):
         self.assertEqual(c.prep("Primaria Orasul Tg. Frumos"), c.prep("Orasul Targu Frumos"))
         self.assertEqual(c.equiv("spitalul dr x"), "spital doctor x")

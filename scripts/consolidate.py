@@ -607,12 +607,14 @@ def strip_suffix(name):
     return squash(name)
 
 
-def prep(name):
-    """-> (kind, canonical). kind 'uat' = local authority, collapsed to its locality name."""
+def prep(name, unify=True):
+    """-> (kind, canonical). kind 'uat' = local authority, collapsed to its locality name.
+    `unify` False skips WORD_EQUIV: the words stay as written."""
     base = re.sub(r"\(.*?\)", " ", squash(name))
-    f = equiv(fold(base))
+    eq = equiv if unify else (lambda x: x)
+    f = eq(fold(base))
     if UAT_RE.match(f):
-        loc = UAT_RE.sub("", equiv(fold(re.split(r"\s-\s", base, maxsplit=1)[0])), count=1)   # drop " - village" suffixes
+        loc = UAT_RE.sub("", eq(fold(re.split(r"\s-\s", base, maxsplit=1)[0])), count=1)   # drop " - village" suffixes
         loc = re.sub(r" al municipiului bucuresti$", "", loc)
         # a county council and the municipality of the same name are different authorities
         return "uat", ("uat:judet:" if COUNTY_RE.match(f) else "uat:") + loc
@@ -652,15 +654,18 @@ class Linker:
             a["_f"] = equiv(fold(a["name"]))
             a["_kind"], a["_canon"] = prep(a["name"])
             a["_toks"] = self.tokens(a["_canon"])
+            a["_written"] = self.tokens(prep(a["name"], unify=False)[1])
             a["_nums"] = set(re.findall(r"\d+", a["_canon"]))
             a["_geo"] = self.geo(a["_f"]) or frozenset({a["_ck"]})      # a name without a county sits in its row's county
             a["_plain"] = " - " not in squash(a["name"])
             self.exact[(a["_ck"], a["_f"])].append(i)
             self.canon[(a["_ck"], a["_canon"])].append(i)
-            df.update(a["_toks"])
+            df.update(a["_written"])                  # IDF counts the words as written
             for t in a["_toks"]:
                 self.tokidx[a["_ck"]][t].add(i)
         self.idf = {t: math.log(len(anaf) / (1 + n)) for t, n in df.items()}
+        for a in anaf:
+            a["_tw"] = self.weights(a["_toks"], a["_written"])
         self.units = defaultdict(list)              # military unit numbers are unique nationwide
         for i, a in enumerate(anaf):
             m = UNIT_RE.search(a["_f"])
@@ -685,10 +690,22 @@ class Linker:
         ts = {t for t in canon.replace("uat:", "").split() if t not in STOP and len(t) > 1 and not t.isdigit()}
         return (ts - self.county_tokens) or ts
 
-    def score(self, t1, t2):
-        w = lambda t: self.idf.get(t, 4.0)
-        union = sum(w(t) for t in sorted(t1 | t2))   # sorted: float sums must not depend on the hash seed
-        return sum(w(t) for t in sorted(t1 & t2)) / union if union else 0.0
+    def weights(self, toks, written):
+        """{unified token: IDF}. A unified word keeps the IDF of the form as written (tg = targu): WORD_EQUIV
+        must not change the weights, only which words match."""
+        out = {}
+        for t in sorted(written):
+            out[equiv(t)] = max(out.get(equiv(t), 0.0), self.idf.get(t, 4.0))
+        for t in toks:
+            out.setdefault(t, self.idf.get(t, 4.0))
+        return out
+
+    def score(self, t1, t2, w1=None, w2=None):
+        """IDF-weighted overlap. A shared word counts the lower of its two weights, a word in the union the higher."""
+        w1 = w1 if w1 is not None else self.weights(t1, t1)
+        w2 = w2 if w2 is not None else self.weights(t2, t2)
+        union = sum(max(w1.get(t, 0.0), w2.get(t, 0.0)) for t in sorted(t1 | t2))   # sorted: float sums must not depend on the hash seed
+        return sum(min(w1[t], w2[t]) for t in sorted(t1 & t2)) / union if union else 0.0
 
     def by_hint(self, idx, hint):
         """The one row of `idx` whose UAT ends with the locality hint, or None when none or several do."""
@@ -758,10 +775,11 @@ class Linker:
                 return "unit", [pick], 1.0, []
             return "ambiguous", sorted(pool), 1.0, self.cands([(i, 1.0) for i in pool], "unit")
         toks = self.tokens(canon)
+        tw = self.weights(toks, self.tokens(prep(name, unify=False)[1]))
         nums = set(re.findall(r"\d+", canon))
         cand = set()
         for t in toks:
-            if self.idf.get(t, 4.0) > 2.0:           # skip very common words when generating candidates
+            if tw[t] > 2.0:           # skip very common words when generating candidates
                 cand |= self.tokidx[ck].get(t, set())
         strong, weak = [], []
         for i in sorted(cand):                       # eligibility first, then the best of the eligible rows
@@ -772,7 +790,7 @@ class Linker:
                 continue                             # names another county: "DSP Ilfov" is not "DSP Bucuresti"
             if nums and a["_nums"] and nums != a["_nums"]:
                 continue                             # "Scoala nr 1" is not "Scoala nr 2"
-            s = self.score(toks, a["_toks"])
+            s = self.score(toks, a["_toks"], tw, a["_tw"])
             if s >= 0.75 and nums == a["_nums"]:
                 strong.append((i, s))
             elif s >= 0.5:
@@ -1339,7 +1357,7 @@ def posturi_standalone(rows):
     groups = defaultdict(list)
     for t in rows:
         r = t[3]
-        f = fold(strip_suffix(r["name"]))
+        f = fold(strip_suffix(posturi_clean(r["name"])[0]))
         local = bool(LOCAL_KIND_RE.search(f) or SAME_NAME_NEVER.search(f) or generic_name(f))
         groups[(fold(r["county"]), f, fold(r["locality"]) if local else "")].append(t)
     out = []
