@@ -272,3 +272,6 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
   (for example, no ISJ between a school and the ministry). A middle level must come from grouping (family,
   county), not from ANAF.
 - The active-only posturi deploy SQLite (`webapp-php/posturi.sqlite`) cannot feed the employer export: 4,807 of 5,901 employers have no posting in it, so no county. Use a full export (2026-11-02, DATA-ORG-01).
+
+## Later / misc / unfilled
+- [ ] create /llms.txt, then let ~/devbox/gov2/gov2.ro know, to update their llms.txt - or submit an issue to [gov2-ro/gov2-alpha-sunrise](https://github.com/gov2-ro/gov2-alpha-sunrise)
