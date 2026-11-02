@@ -1475,7 +1475,7 @@
       cSel.addEventListener('change', () => { homeCounty = cSel.value; saveHomeCounty(homeCounty); fillUat(); refreshTasks(); });
       const placeSec = h('section', { class: 'home-sec org-place', 'aria-label': 'Unde locuiești?' },
         h('form', { class: 'org-placeform', onsubmit: e => { e.preventDefault(); if (!cSel.value) { cSel.focus(); return; }
-          closeDialogSilently(); clearFilters({ county: cSel.value, uat: uSel.value, web: S.web }); setView('loc'); window.scrollTo(0, 0); } },
+          closeDialogSilently(); noWeb(); clearFilters({ county: cSel.value, uat: uSel.value, web: false }); setView('loc'); window.scrollTo(0, 0); } },
           h('div', { class: 'g2-field' }, cSel),
           h('div', { class: 'g2-field' }, uSel),
           h('button', { class: 'g2-btn', type: 'submit' }, 'Arată'), clear));
