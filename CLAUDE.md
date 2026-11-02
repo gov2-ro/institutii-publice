@@ -69,6 +69,7 @@ Git: `.gitignore` excludes `data/*` except `data/consolidated/institutii.csv`, s
   fallbacks try a county named in the text, then Bucharest bodies (`national`), then a unique name anywhere
   (`elsewhere`). Local kinds (`DECL_LOCAL_KIND`: schools, clubs...) skip those fallbacks. Tuning knobs:
   `DECL_SPREAD`, `DECL_MIN_COUNT`.
+- **Curated aliases** `curation/aliases.csv`: the linker reads the reviewed rows of `A` ids as exact names. `apply_curated_aliases` copies every reviewed row (any id kind) into `aliases` of the surviving record, so the explorer search finds it.
 - **Categories**: `RULES` (ordered regexes on folded names, first match wins), falling back to `ANCESTOR_HINTS`
   on parent names. Category labels are Romanian with diacritics.
 - **Families**: curated `FAMILY_HEADS` first, then "network families" (name minus county/locality words shared

@@ -510,6 +510,30 @@ def check_aliases(records, path=None):
         raise SystemExit(f"{path}: ids match no record: {missing}")
 
 
+def apply_curated_aliases(records, path=None):
+    """Copy the reviewed rows of curation/aliases.csv into `aliases` of the record they name (any id kind).
+    An id that a merge absorbed goes to its survivor (`merged_ids`). An alias that folds to the record name
+    is skipped. -> number of records that gained an alias."""
+    path = path or CURATED_ALIASES
+    if not path.exists():
+        return 0
+    by_id = {}
+    for r in records:
+        for m in r.get("merged_ids", []):
+            by_id[m] = r
+    by_id.update({r["id"]: r for r in records})
+    gained = set()
+    with path.open(encoding="utf-8", newline="") as fh:
+        for row in csv.DictReader(fh):
+            rec, alias = by_id.get(row["institution_id"]), squash(row["alias"])
+            if row["status"] != "reviewed" or not rec or not fold(alias) or fold(alias) == fold(rec["name"]):
+                continue
+            if alias not in rec.get("aliases", []):
+                rec["aliases"] = sorted({*rec.get("aliases", []), alias})
+                gained.add(rec["id"])
+    return len(gained)
+
+
 SECTOR_SUFFIX_RE = re.compile(r"\s*-\s*sector(?:ul)?\s*\d$", re.I)
 
 
@@ -1639,6 +1663,7 @@ def main():
     for rec in records:
         rec.pop("_cands", None)
     assign_families(records)
+    merge_stats["curated_aliases"] = apply_curated_aliases(records)
     merge_stats["alias_unique"] = unique_aliases(records)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / "institutii.json").write_text(json.dumps(records, ensure_ascii=False), encoding="utf-8")
@@ -1777,7 +1802,7 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
           f"{mg['dup_source']} groups with a repeated name inside one source, {mg['sectors']} with different sectors",
           file=sys.stderr)
     print(f"  of which nationwide (county ignored): {mg['national']} groups; curated: {dict(mg['curated'])}; "
-          f"sector suffix removed from {mg['sector_names']} names; same_body_as links: {mg['same_body']}; records with aliases_unique: {mg['alias_unique']}", file=sys.stderr)
+          f"sector suffix removed from {mg['sector_names']} names; same_body_as links: {mg['same_body']}; records with aliases_unique: {mg['alias_unique']}; records with curated aliases added: {mg['curated_aliases']}", file=sys.stderr)
     print(f"  loose-name merges: {mg['loose']['groups']} groups, {mg['loose']['ids']} ids absorbed; skipped: "
           f"{mg['loose']['anaf']} with two ANAF CIFs, {mg['loose']['local']} local or generic names", file=sys.stderr)
     for k, v in sorted(mg["groups"].items(), key=lambda kv: -kv[1]):

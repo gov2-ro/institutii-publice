@@ -343,6 +343,22 @@ class AbsorbedIds(unittest.TestCase):
         self.assertEqual((len(recs), keep["merged_ids"]), (1, ["G5", "R1"]))
 
 
+class CuratedAliases(unittest.TestCase):
+
+    def test_rows_reach_aliases_by_survivor(self):
+        import tempfile, pathlib
+        keep = {"id": "G5", "name": "Institutul X", "aliases": [], "merged_ids": ["D9"]}
+        other = {"id": "A1", "name": "Agentia Y", "aliases": []}
+        with tempfile.TemporaryDirectory() as d:
+            f = pathlib.Path(d) / "a.csv"
+            f.write_text("institution_id,alias,kind,basis,status\n"
+                         "D9,IX,acronym,b,reviewed\n"
+                         "G5,institutul  x,acronym,b,reviewed\n"
+                         "A1,AY,acronym,b,proposed\n", encoding="utf-8")
+            n = c.apply_curated_aliases([keep, other], f)
+        self.assertEqual((n, keep["aliases"], other["aliases"]), (1, ["IX"], []))
+
+
 class UniqueAliases(unittest.TestCase):
 
     def test_shared_generic_and_own_name_are_dropped(self):
