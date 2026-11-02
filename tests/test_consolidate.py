@@ -471,6 +471,59 @@ class PosturiTiers(unittest.TestCase):
         self.assertIsNone(L.link("", "COMUNA BOD")[0])
 
 
+class PosturiNameRules(unittest.TestCase):
+    """DATA-ORG-03: name noise of posturi employers and the equivalent words. Names are real, from the export."""
+
+    def test_clean_strips_county_tail_and_uat_head(self):
+        cases = [
+            ("U.A.T. Comuna Matca, județul Galați", "Comuna Matca"),
+            ("Spitalul Județean de Urgență Alexandria, judetul Teleorman", "Spitalul Județean de Urgență Alexandria"),
+            ("Spitalul Clinic Județean de Urgență „Pius Brînzeu”, Timișoara, județul Timiș",
+             "Spitalul Clinic Județean de Urgență „Pius Brînzeu”"),
+            ("A.B.A. Buzău-Ialomiţa, nr. 308, jud. Prahova", "A.B.A. Buzău-Ialomiţa"),
+            ("U.A.T Comuna Păltiniș, județul Botoșani", "Comuna Păltiniș"),
+            ("UAT LUNCA, JUDETUL MURES", "LUNCA"),
+            ("Academia Română Filiala Cluj-Napoca, județul Cluj", "Academia Română Filiala Cluj-Napoca"),
+            ("Spitalul Clinic de Copii „Dr. Victor Gomoiu” București", "Spitalul Clinic de Copii „Dr. Victor Gomoiu” București"),
+        ]
+        for raw, clean in cases:
+            self.assertEqual(c.posturi_clean(raw)[0], clean, raw)
+
+    def test_bare_uat_locality_is_a_local_authority(self):
+        self.assertEqual(c.posturi_link_name("UAT Vultureni"), "Comuna Vultureni")
+        self.assertEqual(c.posturi_link_name("UAT Municipiul Blaj, județul Alba"), "Municipiul Blaj")
+        self.assertEqual(c.posturi_link_name("Comuna Bod"), "Comuna Bod")      # no U.A.T.: unchanged
+
+    def test_uat_row_links_to_the_commune_not_the_school(self):
+        L = linker([row(1, "COMUNA VULTURENI", "Vaslui", "Comuna Vultureni"),
+                    row(2, "SCOALA GIMNAZIALA VULTURENI", "Vaslui", "Comuna Vultureni"),
+                    row(3, "COMUNA MATCA", "Galati", "Comuna Matca"),
+                    row(4, "SCOALA GIMNAZIALA NR 1 MATCA", "Galati", "Comuna Matca")])
+        for county, raw, cif in (("Vaslui", "UAT Vultureni", "1"), ("Galați", "U.A.T. Comuna Matca, județul Galați", "3")):
+            tier, idx, _, _ = L.link(county, c.posturi_link_name(raw))
+            self.assertEqual((tier, L.anaf[idx[0]]["cif"]), ("exact", cif), raw)
+
+    def test_local_authority_never_takes_a_school_by_tokens(self):
+        L = linker([row(2, "SCOALA GIMNAZIALA TERPEZITA", "Dolj", "Comuna Terpezita")])
+        tier, idx, _, _ = L.link("Dolj", c.posturi_link_name("UAT Terpezița"))
+        self.assertNotIn(tier, c.TIER_RANK)
+
+    def test_equivalent_words_compare_equal(self):
+        L = linker([row(1, "SPITAL MUNICIPAL BRAD", "Hunedoara"), row(2, "COMPLEXUL SPORTIV NATIONAL ARCUL DE TRIUMF", "Bucuresti"),
+                    row(3, "SPITALUL CLINIC C.F. CLUJ NAPOCA", "Cluj"), row(4, "COLEGIUL NATIONAL UNIREA TG. MURES", "Mures"),
+                    row(5, "SPITALUL DE COPII DOCTOR VICTOR GOMOIU", "Bucuresti")])
+        cases = [("Hunedoara", "Spitalul Municipal Brad", "1"), ("București", "Complex Sportiv Național Arcul de Triumf", "2"),
+                 ("Cluj", "SPITAL CLINIC CF CLUJ NAPOCA", "3"), ("Mureș", "Colegiul Național Unirea Târgu Mureș", "4"),
+                 ("București", "Spitalul de Copii Dr. Victor Gomoiu", "5")]
+        for county, name, cif in cases:
+            tier, idx, _, _ = L.link(county, name)
+            self.assertEqual((tier, L.anaf[idx[0]]["cif"]), ("exact", cif), name)
+
+    def test_equiv_is_shared_by_prep(self):
+        self.assertEqual(c.prep("Primaria Orasul Tg. Frumos"), c.prep("Orasul Targu Frumos"))
+        self.assertEqual(c.equiv("spitalul dr x"), "spital doctor x")
+
+
 class PosturiRecords(unittest.TestCase):
     def prow(self, slug, name, county="Teleorman", locality="", postings=1):
         return (None, [], 0.0, {"slug": slug, "name": name, "county": county, "locality": locality,
