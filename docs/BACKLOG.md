@@ -273,7 +273,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] #3 — "Caută un tip" uses `norm` and tokens.
 - [x] #4 — empty state shows the records hidden by the website filter; the landing counter shows the total.
 - [x] #5 — `institutii.csv` is published at the site root; the footer shows the link and the EUPL line. Publish to see it live.
-- [ ] The footer text "41 de coloane" is hard-coded. Update it when the CSV columns change.
+- [-] The footer text "41 de coloane" was hard-coded. Opus dropped the count from the footer instead (2026-11-02).
 
 ## Verified limits
 - The ANAF parent link (ordonator principal de credite) is one level deep. It gives no middle level
