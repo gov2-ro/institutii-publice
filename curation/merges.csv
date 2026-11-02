@@ -15,3 +15,5 @@ G26002,merge,A11364678,2026-10-27,"AJOFM Ilfov: Registrul lists it twice (G10049
 G26022,merge,A4192545,2026-10-27,"Consiliul Judetean Ilfov is the county council; ANAF files it as JUDETUL ILFOV (county of the row: Bucuresti), and Registrul, ROePAS and ANI name it 'Consiliul Judetean Ilfov'. Stiri read 8 mentions: all name the Ilfov council.",
 Dd57bd520,merge,G26071,2026-11-02,"Same body: INCDFM. The ANI name adds the acronym and BUCURESTI (the ANI county is unreliable); the Registrul record gives the seat in Ilfov. Issue #6.",
 D5b3d7d53,merge,R11040419,2026-11-02,"Same body: CNAIR S.A. is the ANI spelling of Compania Nationala de Administrare a Infrastructurii Rutiere (CNADNR before the rename). Same county. Issue #6.",
+Dd8f2fa63,merge,R11040419,2026-11-03,Same body: Compania Nationala de Administrare a Infrastructurii Rutiere SA (CNAIR). The ANI name has the full name and no regional suffix. SEAP CUI 16054368 names this body once.,
+Ddf110eaa,merge,R11040493,2026-11-03,Same body: BANCA NATIONALA is the ANI form label of the Banca Nationala a Romaniei (SEAP CUI 361684). The record R11040493 is the only other central bank record.,
