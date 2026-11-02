@@ -1,7 +1,7 @@
 #!/bin/sh
 # Publish the explorer to GitHub Pages (https://org.gov2.ro).
 #
-# The site is the committed explorer/ of HEAD plus the generated data (metadata.json, rows.json).
+# The site is the committed explorer/ of HEAD plus the generated data (metadata.json, rows.json, institutii.csv).
 # In the repo those two are symlinks into the ignored data/consolidated/; this script copies the real files.
 # CI cannot rebuild the data (the inputs stay out of git), so publishing runs from the owner's machine.
 #
@@ -25,7 +25,7 @@ if ! git diff --quiet HEAD -- explorer; then
   echo "explorer/ has uncommitted changes. Commit them first: the site must match a commit." >&2
   exit 1
 fi
-for f in metadata.json rows.json; do
+for f in metadata.json rows.json institutii.csv; do
   [ -s "data/consolidated/$f" ] || { echo "missing data/consolidated/$f. Run: uv run scripts/consolidate.py" >&2; exit 1; }
 done
 if grep -q '"/Users/\|"/home/' data/consolidated/metadata.json; then
@@ -38,7 +38,7 @@ index=$(mktemp)
 trap 'rm -rf "$site" "$index"' EXIT
 git archive HEAD explorer | tar -x -C "$site" --strip-components 1
 rm -f "$site/metadata.json" "$site/rows.json"
-cp data/consolidated/metadata.json data/consolidated/rows.json "$site/"
+cp data/consolidated/metadata.json data/consolidated/rows.json data/consolidated/institutii.csv "$site/"
 echo "$DOMAIN" > "$site/CNAME"
 touch "$site/.nojekyll"
 
