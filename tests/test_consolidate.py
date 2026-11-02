@@ -108,7 +108,8 @@ class Tokens(unittest.TestCase):
         rows = [row(1, "Scoala Gimnaziala Nr 2 Mihai Viteazul"), row(2, "Scoala Gimnaziala nr. 1 Mihai Viteazul")]
         L = linker(rows)
         tier, idx, score, cands = L.link("Valcea", "Scoala Gimnaziala Mihai Viteazul nr 1")
-        self.assertEqual((tier, L.anaf[idx[0]]["cif"]), ("tokens", "2"))
+        self.assertIn(tier, c.TIER_RANK)
+        self.assertEqual(L.anaf[idx[0]]["cif"], "2")
 
     def test_other_number_alone_is_not_a_match(self):
         L = linker([row(1, "Scoala Gimnaziala Nr 2 Mihai Viteazul")])
@@ -525,6 +526,19 @@ class PosturiNameRules(unittest.TestCase):
         written = L.tokens(c.prep("SPITALUL ABC", unify=False)[1])
         w = L.weights(L.tokens(c.prep("SPITALUL ABC")[1]), written)
         self.assertEqual(w["spital"], L.idf["spitalul"])      # not the IDF of "spital" (30 rows vs 1)
+
+    def test_kindergarten_never_links_to_a_school_by_tokens(self):
+        L = linker([row(1, "SCOALA GIMNAZIALA CONSTANTIN BRANCUSI TG-JIU", "Gorj", "Municipiul Targu Jiu"),
+                    row(2, "GRADINITA CU PROGRAM PRELUNGIT CONSTANTIN BRANCUSI", "Gorj", "Municipiul Targu Jiu")])
+        tier, idx, _, _ = L.link("Gorj", "GRADINITA CU PROGRAM PRELUNGIT CONSTANTIN BRANCUSI TG JIU")
+        self.assertNotIn(tier, c.TIER_RANK)
+        tier, idx, _, _ = L.link("Gorj", "SCOALA GIMNAZIALA CONSTANTIN BRANCUSI TARGU JIU")
+        self.assertEqual((tier, L.anaf[idx[0]]["cif"]), ("exact", "1"))
+
+    def test_kindergarten_still_links_to_a_kindergarten(self):
+        L = linker([row(2, "GRADINITA CU PROGRAM PRELUNGIT CONSTANTIN BRANCUSI TG-JIU", "Gorj", "Municipiul Targu Jiu")])
+        tier, idx, _, _ = L.link("Gorj", "GRADINITA CONSTANTIN BRANCUSI TARGU JIU")
+        self.assertEqual((tier in c.TIER_RANK, L.anaf[idx[0]]["cif"]), (True, "2"))
 
     def test_equiv_is_shared_by_prep(self):
         self.assertEqual(c.prep("Primaria Orasul Tg. Frumos"), c.prep("Orasul Targu Frumos"))

@@ -792,6 +792,9 @@ class Linker:
                 continue                             # "Scoala nr 1" is not "Scoala nr 2"
             s = self.score(toks, a["_toks"], tw, a["_tw"])
             if s >= 0.75 and nums == a["_nums"]:
+                if f.startswith("gradinita") != a["_f"].startswith("gradinita"):
+                    weak.append((i, s))              # a kindergarten is never a school: no merge, a candidate only
+                    continue
                 strong.append((i, s))
             elif s >= 0.5:
                 weak.append((i, s))
