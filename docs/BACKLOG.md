@@ -255,6 +255,11 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       (`5c78f09`…`0742bf7`), not published. Posturi linked 4,443 → 4,661 (79.0%; 81.1% of postings); queue 1,172 → 945,
       6 with 10 or more postings. The linker now reads the reviewed rows of `curation/aliases.csv` (139 + 21 new acronym rows).
       A kindergarten never token-links to a school. 67 tests; determinism passes.
+- [x] Issue #6, parts done 2026-11-02: acronym aliases (ROTLD, INCAS, GeoEcoMar, IFIN-HH, INCDFM, ICI, CNAIR, ARACIP, ANMCS),
+      alias rows now reach `aliases` for all id kinds, INCDFM and CNAIR duplicates merged.
+- [ ] Issue #6: curated CIF identities for the INCDs, BNR, CNAIR, RAAPPS and Imprimeria BNR (`curation/entities.csv` or
+      an extension of `websites.csv`). Needs a spec and an owner decision.
+- [ ] Issue #6: absent bodies Consiliul Fiscal, CSAT, Autoritatea de Audit, AMR and UNCJR. The owner decides the record form.
 - [ ] DATA-ORG-07 — posturi gives the posting county, not the seat, for national bodies. Five ABA bodies cannot link
       (Jiu in Gorj/Mehedinți, Crișuri in Hunedoara, Olt in Sibiu/Harghita, Prut-Bârlad in Galați/Botoșani/Vaslui,
       Buzău-Ialomița in Prahova). Scan the other national bodies. Decide between a national alias scope and a posturi fix.

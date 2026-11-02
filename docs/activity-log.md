@@ -1,5 +1,23 @@
 # Activity log
 
+## 2026-11-02 — issue #6: acronym aliases, ROTLD, two duplicate pairs (Sonnet)
+
+**Done**
+- 8 rows in `curation/aliases.csv`: ROTLD and ICI (`R11052491`), INCAS (`G10606`), GeoEcoMar (`G10610`), IFIN-HH (`G26068`),
+  INCDFM (`G26071`), CNAIR (`R11040419`), ARACIP (`A18126924`). ANMCS existed (`A34998410`).
+- New `apply_curated_aliases` copies reviewed alias rows into `aliases` of every id kind, after the merges, before `unique_aliases`.
+  Before this, only the linker read the file and no alias of a `G`, `R` or `D` record reached the search. 163 records gained aliases.
+- 2 rows in `curation/merges.csv`: `Dd57bd520` -> `G26071` (INCDFM), `D5b3d7d53` -> `R11040419` (CNAIR).
+- Records 25,831 -> 25,829. Records with `aliases_unique` 5,289 -> 5,335. In the CSV only `aliases`, `aliases_unique`,
+  `merged_ids` and the merge side effects (`sources`, `link_declaratii`, `declaratii_count`) changed. 68 tests; determinism passes.
+
+**Hard**
+- The first run showed that the alias rows did not reach `al`. The cause was in the code, not in the data.
+
+**Decided**
+- The two duplicate pairs go to `merges.csv`, not `same_body.csv`: each pair has one tax identity, so a merge is correct.
+- The CIF identity file and the absent bodies wait for an owner decision (see the backlog).
+
 ## 2026-11-02 — explorer issues #1-#5 (Opus decisions, Sonnet build)
 
 **Done**
