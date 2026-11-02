@@ -64,11 +64,14 @@ ROEPAS_JSON = ROOT / "data/roepas/institutii.json"
 DECLARATII_DIR = ROOT / "data/declaratii-integritate"
 DECLARATII_MERGED = DECLARATII_DIR / "declaratii.csv"
 POSTURI_CSV = ROOT / "data/posturi/employers.csv"
+SEAP_CSV = ROOT / "data/seap/authorities.csv"
+SEAP_MANIFEST = ROOT / "data/seap/manifest.json"
 OUT_DIR = ROOT / "data/consolidated"
 CURATED_WEBSITES = ROOT / "curation/websites.csv"
 CURATED_MERGES = ROOT / "curation/merges.csv"
 CURATED_ALIASES = ROOT / "curation/aliases.csv"
 CURATED_SAME_BODY = ROOT / "curation/same_body.csv"
+CURATED_IDENTITIES = ROOT / "curation/identities.csv"
 
 # ---------------------------------------------------------------- text helpers
 
@@ -1322,7 +1325,7 @@ def declaratii_standalone(rows, aggregate):
 # The other DECL_LOCAL_KIND kinds (hospitals, colleges, street administrations...) are unique per locality, so
 # a name with a proper noun combines (the brief's own example is "Administratia domeniului public sector 1").
 SAME_NAME_NEVER = re.compile(r"^(scoala|gradinita|grup scolar|biblioteca|caminul|parohia|casa de cultura)\b")
-SRC_ORDER = ["anaf", "roepas", "registrul", "declaratii", "posturi"]
+SRC_ORDER = ["anaf", "roepas", "registrul", "declaratii", "posturi", "seap"]
 SRC_PRIORITY = {"roepas": 0, "registrul": 1, "declaratii": 2, "posturi": 3}       # the surviving id of a same-name group
 
 
@@ -1493,6 +1496,217 @@ def infer_sectors(records):
     return stats
 
 
+# ---------------------------------------------------------------- SEAP contracting authorities
+SEAP_REVIEW_COLS = ["cui", "name", "rows", "tip_autoritate", "decision", "rule", "candidate_id", "candidate_name"]
+# A SEAP authority that no record carries becomes a record, unless its name says it is a private body.
+# The rules run on fold()ed names. Municipal SRL and SA companies stay: many are owned by a locality.
+SEAP_PRIVATE = [  # (rule, regex, exception regex or None)
+    ("church", re.compile(r"\b(parohia|manastirea|schitul|mitropolia|arhiepiscopia|arhiepiscopiei|episcopia|episcopiei|"
+                          r"eparhia|protopopiatul|biserica|patriarhia|lacas de cult|cultul|comunitatea evreilor|"
+                          r"seminarul teologic)\b"), re.compile(r"\borganizatia utilizatorilor de apa\b")),
+    ("foundation", re.compile(r"^fundatia\b"), None),
+    ("association", re.compile(r"^asociatia\b"), None),
+    ("sports club", re.compile(r"^(clubul?|cs|c s|acs|asc|afc|fc|asd)\b|\bclubul? sportiv\b"),
+     re.compile(r"\b(municipal\w*|scolar\w*|universitar\w*|armatei|armata|militar\w*|copiilor|elevilor|studentesc\w*)\b")),
+]
+# Kept although a rule above or the 2023 type says "private": associations of local authorities (ADI, zone
+# metropolitane, AMR, UNCJR: owner decision 2026-11-02) and companies (SA, SRL, RA: many are municipal).
+SEAP_PUBLIC_KIND = re.compile(r"\b(dezvoltare|dezvoltarii) intercomunitar|\bmetropolitan|"
+                              r"\b(municipiilor|oraselor|comunelor|consiliilor judetene) din romania\b|^uniunea nationala a consiliilor")
+SEAP_COMPANY = re.compile(r"\b(s a|sa|s r l|srl|r a|ra)\b")
+SEAP_PRIVATE_TIPS = ("operatorii economici care beneficiaza de finantare",)
+
+
+def seap_private(name, tip=""):
+    """The rule (a SEAP_PRIVATE label, or "tip") by which a SEAP authority is a private body; None if it is not.
+    A body of local authorities (SEAP_PUBLIC_KIND) is kept. The 2023 type "Operatorii economici care beneficiaza de
+    finantare din instrumente structurale" excludes a body only if its name is not a company (SEAP_COMPANY)."""
+    f = fold(name)
+    if SEAP_PUBLIC_KIND.search(f):
+        return None
+    for rule, pat, exception in SEAP_PRIVATE:
+        if pat.search(f) and not (exception and exception.search(f)):
+            return rule
+    if any(t in fold(tip) for t in SEAP_PRIVATE_TIPS) and not SEAP_COMPANY.search(f):
+        return "tip"
+    return None
+
+
+def load_seap(path=None, manifest=None):
+    """SEAP contracting authorities (data/seap/authorities.csv, made by scripts/extract_seap.py): one row per CUI.
+    A missing file gives no rows (the input is not in git). The files that data/seap/manifest.json lists as read go
+    to the `dataset` block, with paths relative to the dump."""
+    path, manifest = path or SEAP_CSV, manifest or SEAP_MANIFEST
+    if not path.exists():
+        print(f"warning: {path} not found, seap source skipped", file=sys.stderr)
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = [{**r, "rows": int(r["rows"] or 0)} for r in csv.DictReader(fh)]
+    dup = sorted(c for c, n in Counter(r["cui"] for r in rows).items() if n > 1)
+    if dup or any(not r["cui"].isdigit() or not squash(r["name"]) for r in rows):
+        raise SystemExit(f"{path}: duplicate CUI, a CUI that is not digits, or an empty name: {dup[:5]}")
+    record_input("seap", path, len(rows))
+    if manifest.exists():
+        files = json.loads(manifest.read_text(encoding="utf-8"))["files"]
+        for e in files:
+            if e["status"] in ("read", "trusted", "cached"):
+                PROVENANCE.append({"source": "seap", "path": e["file"] or e["resource"], "bytes": e["size"], "sha256": e["sha256"],
+                                   "rows": e["rows"], "status": e["status"], "period": e["period"],
+                                   "report_type": e["report_type"]})
+    return rows
+
+
+def load_curated_identities(path=None):
+    """curation/identities.csv (id, cif, checked_at, evidence): the CIF of a record that has none. A missing file
+    means no curation. Stops on a duplicate id, a duplicate CIF or a CIF that is not digits."""
+    path = path or CURATED_IDENTITIES
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = [{k: (v or "").strip() for k, v in r.items()} for r in csv.DictReader(fh) if (r.get("id") or "").strip()]
+    for key in ("id", "cif"):
+        dup = sorted(v for v, n in Counter(r[key] for r in rows).items() if n > 1)
+        if dup:
+            raise SystemExit(f"{path}: {key} listed twice: {dup}")
+    bad = sorted(r["id"] for r in rows if not r["cif"].isdigit())
+    if bad:
+        raise SystemExit(f"{path}: the cif of {bad} is not digits")
+    return rows
+
+
+def apply_curated_identities(records, curated):
+    """Set `cif` (`cif_source` curation) on the record of each row of curation/identities.csv. An id that a merge
+    absorbed goes to its survivor. Every other record with a CIF gets `cif_source` anaf. Stops on an unknown id, a
+    record that already has a CIF, two rows for one survivor, or a CIF of an ANAF record. -> number of rows applied."""
+    by_id = {}
+    for r in records:
+        for m in r.get("merged_ids", []):
+            by_id[m] = r
+    by_id.update({r["id"]: r for r in records})
+    anaf = {r["cif"]: r["id"] for r in records if r["cif"]}
+    used = {}
+    for c in curated:
+        rec = by_id.get(c["id"])
+        if not rec:
+            raise SystemExit(f"{CURATED_IDENTITIES}: {c['id']} matches no record")
+        if rec["id"] in used:
+            raise SystemExit(f"{CURATED_IDENTITIES}: {c['id']} and {used[rec['id']]} are one record ({rec['id']})")
+        if rec["cif"]:
+            raise SystemExit(f"{CURATED_IDENTITIES}: {c['id']} ({rec['id']}) already has the CIF {rec['cif']}")
+        if c["cif"] in anaf:
+            raise SystemExit(f"{CURATED_IDENTITIES}: the CIF {c['cif']} of {c['id']} belongs to the record "
+                             f"{anaf[c['cif']]}; a CIF that an ANAF record has belongs in curation/merges.csv")
+        used[rec["id"]] = c["id"]
+        rec["cif"], rec["cif_source"] = c["cif"], "curation"
+    for r in records:
+        if r["cif"] and not r.get("cif_source"):
+            r["cif_source"] = "anaf"
+    return len(used)
+
+
+def link_seap(records, rows):
+    """Add the source `seap` to the record whose `cif` (else `cif_tva`) equals the CUI. Stops when a CUI names
+    more than one record. -> (linked {cui: record}, the rows no record carries)."""
+    by_cif, by_tva = defaultdict(list), defaultdict(list)
+    for r in records:
+        if r["cif"]:
+            by_cif[r["cif"]].append(r)
+        if r["cif_tva"]:
+            by_tva[r["cif_tva"]].append(r)
+    linked, rest, many = {}, [], {}
+    for row in rows:
+        hits, how = by_cif.get(row["cui"]), "cif"
+        if not hits:
+            hits, how = by_tva.get(row["cui"]), "cif_tva"
+        if not hits:
+            rest.append(row)
+        elif len(hits) > 1:
+            many[row["cui"]] = [h["id"] for h in hits]
+        else:
+            rec = hits[0]
+            rec["sources"] = sorted({*rec["sources"], "seap"}, key=SRC_ORDER.index)
+            rec["link"]["seap"] = how
+            linked[row["cui"]] = rec
+    if many:
+        raise SystemExit(f"SEAP: {len(many)} CUIs link to more than one record: {dict(list(many.items())[:10])}")
+    return linked, rest
+
+
+def seap_candidates(records, rows):
+    """The best CIF-less record for each SEAP row, by the existing linker (tier tokens or better), as a proposal:
+    {cui: record}. A row with a county looks in that county, a row without one in every county."""
+    pool = [{"county": r["county"] or "", "cif": r["id"], "cif_tva": None, "name": r["name"], "uat": r["uat"] or "",
+             "address": None, "parent_cifs": []} for r in records if not r["cif"]]
+    by_id = {r["id"]: r for r in records}
+    if not pool:
+        return {}
+    linker = Linker(pool)
+    counties = sorted({a["_ck"] for a in pool})
+    out = {}
+    for row in rows:
+        found = []
+        for county in ([row["county"]] if row["county"] and fold(row["county"]) in counties else counties):
+            tier, idx, score, cands = linker.link(county, row["name"], row["locality"])
+            if tier in TIER_RANK and tier != "prefix":
+                found.append((TIER_RANK[tier], -score, pool[idx[0]]["cif"]))
+            elif tier == "ambiguous" and idx:
+                found.append((TIER_RANK[cands[0]["tier"]] if cands[0]["tier"] in TIER_RANK else 2, -score, pool[idx[0]]["cif"]))
+        if found:
+            out[row["cui"]] = by_id[min(found)[2]]
+    return out
+
+
+def seap_standalone(rows, county_of, uat_of):
+    """The SEAP rows that no record carries -> (records, excluded [(row, rule)]). A private body (SEAP_PRIVATE)
+    is excluded."""
+    recs, excluded = [], []
+    for row in rows:
+        rule = seap_private(row["name"], row["tip_autoritate"])
+        if rule:
+            excluded.append((row, rule))
+            continue
+        county = county_of(row["county"]) if row["county"] else None
+        names = [squash(n) for n in row["names"].split("|") if n and fold(n) != fold(row["name"])]
+        recs.append({
+            "id": "S" + row["cui"], "name": squash(row["name"]), "county": county,
+            "uat": uat_of(row["county"], row["locality"]) if row["county"] and row["locality"] else None,
+            "address": None, "cif": row["cui"], "cif_tva": None, "cif_source": "seap", "parents": [],
+            "category": categorize(row["name"]), "sources": ["seap"], "link": {}, "possible_duplicate_of": None,
+            "aliases": sorted(set(names))})
+    return recs, excluded
+
+
+def write_seap_review(path, recs, excluded, rows, candidates):
+    """Every SEAP row that no record carried: a new record or an excluded private body, most rows first, with the
+    best CIF-less record as a proposal. A decision goes to curation/identities.csv. -> the rows written."""
+    out = []
+    kept = {x["cif"] for x in recs}
+    for row, rule in [*((r, None) for r in rows if r["cui"] in kept), *excluded]:
+        cand = candidates.get(row["cui"])
+        out.append({"cui": row["cui"], "name": row["name"], "rows": row["rows"], "tip_autoritate": row["tip_autoritate"],
+                    "decision": "excluded" if rule else "record", "rule": rule or "",
+                    "candidate_id": cand["id"] if cand else "", "candidate_name": cand["name"] if cand else ""})
+    out.sort(key=lambda x: (-x["rows"], int(x["cui"])))
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=SEAP_REVIEW_COLS, lineterminator="\n")
+        w.writeheader()
+        w.writerows(out)
+    return out
+
+
+def report_seap(rows, linked, recs, excluded, review):
+    """Summary lines of the SEAP source: rows, links, new records, exclusions by rule."""
+    unmatched = len(recs) + len(excluded)
+    by_how = Counter(r["link"]["seap"] for r in linked.values())
+    print(f"seap: {len(rows)} authority CUIs", file=sys.stderr)
+    print(f"  linked by CUI: {len(linked)} ({100 * len(linked) / len(rows):.1f}%; by field {dict(by_how)}); "
+          f"not linked: {unmatched}", file=sys.stderr)
+    print(f"  new records: {len(recs)}; excluded as private: {len(excluded)} "
+          f"({100 * len(excluded) / (unmatched or 1):.1f}% of the unlinked); by rule "
+          f"{dict(sorted(Counter(rule for _, rule in excluded).items()))}", file=sys.stderr)
+    print(f"  records with a proposed CIF-less match: {sum(1 for x in review if x['candidate_id'])}", file=sys.stderr)
+
+
 TIER_RANK = {"exact": 0, "canonical": 1, "unit": 1, "tokens": 2, "prefix": 2, "national": 3, "elsewhere": 3}
 
 
@@ -1660,6 +1874,14 @@ def main():
     merge_stats["same_body"] = apply_same_body(records)
     sector_stats = infer_sectors(records)
     sector_stats["unified"] += unified[True]
+    # SEAP and identities come last: the sector steps above treat a record with a CIF as an ANAF record
+    merge_stats["identities"] = apply_curated_identities(records, load_curated_identities())
+    seap = load_seap()
+    seap_linked, seap_rest = link_seap(records, seap)
+    seap_recs, seap_excl = seap_standalone(seap_rest, county_of, uat_of)
+    seap_review = write_seap_review(OUT_DIR / "seap-review.csv", seap_recs, seap_excl, seap_rest,
+                                    seap_candidates(records, seap_rest)) if seap else []
+    records.extend(seap_recs)
     for rec in records:
         rec.pop("_cands", None)
     assign_families(records)
@@ -1671,14 +1893,14 @@ def main():
     write_explorer_data(OUT_DIR, records)
     review = write_posturi_review(OUT_DIR / "posturi-review.csv", records, by_cif)
     report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats, curation_stats,
-           posturi, review)
+           posturi, review, (seap, seap_linked, seap_recs, seap_excl, seap_review))
 
 
 CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif", "cif_tva", "parent_cifs",
             "parent_names", "website", "website_url", "email", "phone", "fax", "lat", "lon", "sources",
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
-            "declaratii_count", "declaratii_group", "link_posturi", "posturi_slugs", "posturi_postings", "uat_source", "merged_ids", "website_source", "same_body_as", "aliases", "aliases_unique"]
+            "declaratii_count", "declaratii_group", "link_posturi", "posturi_slugs", "posturi_postings", "uat_source", "merged_ids", "website_source", "cif_source", "same_body_as", "aliases", "aliases_unique"]
 
 
 REVIEW_COLS = ["id", "name", "county", "locality", "postings", "possible_duplicate_of", "candidate_name"]
@@ -1719,7 +1941,7 @@ def write_csv(path, records):
             w.writerow(row)
 
 
-SRC_BIT = {"anaf": 1, "roepas": 2, "registrul": 4, "declaratii": 8, "posturi": 16}
+SRC_BIT = {"anaf": 1, "roepas": 2, "registrul": 4, "declaratii": 8, "posturi": 16, "seap": 32}
 
 
 def dataset_block():
@@ -1767,7 +1989,7 @@ def write_explorer_data(out_dir, records):
 
 
 def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats, curation_stats,
-           posturi=(), review=()):
+           posturi=(), review=(), seap_info=None):
     n = Counter(tuple(r["sources"]) for r in records)
     print(f"\nconsolidated records: {len(records)}", file=sys.stderr)
     for k, v in sorted(n.items(), key=lambda kv: -kv[1]):
@@ -1796,6 +2018,9 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
           f"{sum(r['declaratii_count'] for r in own)} declarations", file=sys.stderr)
     if posturi:
         report_posturi(records, links, standalone, posturi, review)
+    if seap_info and seap_info[0]:
+        report_seap(*seap_info)
+    print(f"curated identities: {merge_stats['identities']} CIFs set on records without one", file=sys.stderr)
     mg = merge_stats
     print(f"\nsame-name merges (source-only records of different sources): {sum(mg['groups'].values())} groups, "
           f"{mg['ids']} ids absorbed; skipped: {mg['generic']} generic or village-level names, "
