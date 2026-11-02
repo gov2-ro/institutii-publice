@@ -1,5 +1,33 @@
 # Activity log
 
+## 2026-11-02 — posturi.gov.ro employers as a source (DATA-ORG-01; Opus brief, Sonnet build)
+
+**Done**
+- `consolidate.py` reads `data/posturi/employers.csv` (5,901 rows, the posturi export of 2026-10-18) and links each row
+  through the tiers exact, canonical, unit and tokens. There is no prefix tier.
+- An unlinked row becomes a `P<slug>` record. The new rows land in the review queue `posturi-review.csv`.
+- The explorer has a "posturi" badge, a source filter and a link to the employer page on posturi.gov2.ro.
+- New CSV columns: `posturi_slugs`, `posturi_postings`, `link_posturi`.
+- Tests: 47 → 57; determinism passes. Opus re-ran the tests.
+
+**Measured**
+- 4,443 rows linked (75.3%; 76.5% of postings): exact 1,932, tokens 1,616, canonical 718, unit 177.
+- 662 weak, 15 ambiguous, 781 without a candidate. That gives 1,172 `P` records, 11 of them with 10 or more postings.
+- Records 24,981 → 26,153; no old id lost. 3,324 records changed `sources`, 164 `merged_ids`.
+- 19 of the top-20 `P` records are name variants (suffix, `U.A.T.`, spital/spitalul, tg/târgu, acronyms), not missing institutions.
+
+**Hard**
+- The active-only posturi SQLite gave 4,807 rows without a county. The build used the full `dev.sqlite`.
+- One employer can have several posturi slugs. Those made `merge_same_name` skip a group, and `check_absorbed_ids`
+  stopped the build. The fix collapses unlinked posturi rows with the same county and name before they become records.
+
+**Decided**
+- Name rules come before the manual review (pax): [DATA-ORG-03 brief](briefs/posturi-name-rules.md). A spike links
+  96 more rows and turns ~780 token links into exact or canonical. Reviewing first would mean deciding ~1,000 variant
+  rows by hand.
+- Collapse same-name posturi rows in the builder, not in the "repeated name inside one source" rule, so that the old
+  sources keep their behaviour.
+
 ## 2026-10-28 — "Despre" in the menu, beta tag (Opus, small change)
 
 **Done**

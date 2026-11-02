@@ -246,7 +246,24 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Keep internal staff/unit structures separate from the directory of institutions. Add a dataset field guide,
       release dates and named source maintainers where known. See the comparative-research activity entry.
 
+## posturi.gov.ro employers as a source (owner request, 2026-11-02)
+- [x] DATA-ORG-01 — posturi employers as a source: [brief](briefs/posturi-employers-source.md). Merged 2026-11-02
+      (`a97d412`…`25b0b88`), not published. The export script is `ops/export-employers-for-org.py` in posturi.gov.ro.
+      Measured on the posturi export of 2026-10-18: 4,443 of 5,901 employers link (75.3%; 76.5% of postings),
+      1,172 `P` records in `posturi-review.csv`, 11 with 10 or more postings. Records 24,981 → 26,153; no old id lost.
+- [ ] DATA-ORG-03 — name rules for posturi names (suffix `, județul X`, `U.A.T.` prefix, spital/tg/dr/cf
+      equivalents, no commune-to-school token link, acronym aliases): [brief](briefs/posturi-name-rules.md).
+      Do this before DATA-ORG-02.
+- [ ] DATA-ORG-04 — re-run with a fresh full posturi export from the VPS (`--db` on a full export, not the
+      active-only deploy file), then rebuild.
+- [ ] DATA-ORG-02 — review `data/consolidated/posturi-review.csv` after DATA-ORG-03 and -04. Decisions go to
+      `curation/merges.csv` or `curation/aliases.csv`.
+- [ ] DATA-ORG-05 — decide whether linked posturi names become `aliases`. Not now: they carry county suffixes and junk.
+- [ ] Check the posturi badge, filter and employer link of the explorer in a browser. The builder checked only the
+      script syntax (`node --check`).
+
 ## Verified limits
 - The ANAF parent link (ordonator principal de credite) is one level deep. It gives no middle level
   (for example, no ISJ between a school and the ministry). A middle level must come from grouping (family,
   county), not from ANAF.
+- The active-only posturi deploy SQLite (`webapp-php/posturi.sqlite`) cannot feed the employer export: 4,807 of 5,901 employers have no posting in it, so no county. Use a full export (2026-11-02, DATA-ORG-01).
