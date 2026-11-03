@@ -297,6 +297,14 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       `rows.json` equal the CIFs placed in `metadata.state` (3,296 both) and the page script syntax (`node --check`).
 - [ ] `curation/merges.csv` cannot name an `S<cui>` id (the records are created after the merges). Add it if a merge is needed.
 - [ ] Phase 2: spike on the e-licitatie.ro authority profiles for contacts (access, terms, fields), then a brief.
+- [ ] Phase 2: sicap.ai API (`https://api.sicap.ai/v1/openapi/json`) gives `cityAuthority`/`countyAuthority` per authority CIF,
+      which fills the county of the `S` records. No contacts. Needs an API key (the owner has none yet) and a check of the
+      pricing and terms (re-publishing under EUPL). `https://sicap.ai/mcp` is behind a Vercel checkpoint (429 for scripts).
+- [ ] Delete the dump `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-adr-achizitii-publice-dump` (owner request, 2026-11-03).
+      Do it after the download ends and `extract_seap.py` re-ran, and only when the manifest has no `incomplete` or `missing`
+      resource that the owner wants. Keep `packages.json`. The cache in `data/seap/cache/` keeps the extracted authorities.
+- [ ] Private utilities pass the SEAP company rule by volume (100 rows or more): ENGIE Romania, E-Distributie Dobrogea, and
+      similar sector entities. Consider a curated exclusion list or a "utility operator, private" flag.
 - [x] `packages.json` resource `38e601a9` has the size and file name of `e40a48ed`. Checked by hand 2026-11-03: the file is a valid
       zip, 72,644 rows, header `Numar notificare`: it is the report "Notificări de atribuire la cumpărarea directă TII 2025".
       The extractor reads it with `--trust 38e601a9`.
