@@ -198,7 +198,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Wrong categories, needing evidence first: IDPSAR is in Sănătate. SRR and SRTV are in
       "Servicii publice locale și regii".
 - [ ] Re-export the two capped ANI county groups (full tail of rare names). (from README)
-- [ ] Resolve ANI-only records (state companies) to a CUI with the ONRC open data. (from README)
+- [~] Resolve ANI-only records (state companies) to a CUI with the ONRC open data. (from README) See the SEAP section.
 
 - [x] Linker ties: when two ANAF rows get the same best token score, the first row wins. Consider "weak"
       for a tie instead (two equal candidates means the link is ambiguous). Confirmed contact errors:
@@ -318,10 +318,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Family "Poliția locală" lost Sector 1, 2, 4 and 5 after the merge of the ANI copies of Sector 2 (2026-11-04). The ANI county noise
       had carried these records over the rule of 5 members in 4 counties. Consider `FAMILY_HEADS` for this family.
 - [ ] Phase 2: spike on the e-licitatie.ro authority profiles for contacts (access, terms, fields), then a brief.
-- [ ] Proposal: the free ANAF web service (`PlatitorTvaRest/v9`, POST, 100 CUIs per request) may fill the county and locality of the
-      `S` records without the sicap.ai API key. Measured 2026-11-04 on the 29 CUIs of `seap-pairs.csv`: 28 found (96.6%), including 24 bodies
-      with no VAT registration and bodies with the status RADIERE. One CUI (448001922) is unknown. The answer gives name, seat county, seat
-      locality and status. Open: run it on the 2,748 `S` CUIs (28 requests), check terms of use, and decide where to store the result.
+- [~] ANAF lookup of the `S` records. Run 2026-11-04: 2,747 CUIs in 28 requests; 2,728 found; 809 `RADIERE` or `DIZOLVARE`; 19 not found.
+      The output stays in `data/lookup-survey/` (not in git). ANAF states no terms on re-use: the right to republish is open.
+- [ ] Build status and county of `S` records ([brief](briefs/record-status.md)). Owner decision 2026-11-05: keep defunct records,
+      add a status field, hide them by default. The brief waits for the source decision.
+- [~] Check the Finance Ministry dataset `date_de_identificare_platitori_actualizate_iunie_2026` (CC-BY-4.0): can it replace the ANAF lookup?
+- [~] ONRC files of 2026-10-19 for the ANI-only records: download to geana and measure the match (owner approved 2026-11-05). The result is a review queue, not a merge.
 - [ ] Phase 2: sicap.ai API (`https://api.sicap.ai/v1/openapi/json`) gives `cityAuthority`/`countyAuthority` per authority CIF,
       which fills the county of the `S` records. No contacts. Needs an API key (the owner has none yet) and a check of the
       pricing and terms (re-publishing under EUPL). `https://sicap.ai/mcp` is behind a Vercel checkpoint (429 for scripts).
@@ -341,6 +343,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       The extractor reads it with `--trust 38e601a9`.
 
 ## Verified limits
+- openapi.ro cannot feed the published data: its terms forbid redistribution (checked 2026-11-04).
+- No free, republishable source of email or website for `S` or `D` records was found on 2026-11-04. ANAF gives a fiscal phone only; ONRC `WEB` is filled in 0.25% of the sampled rows. termene.ro, listafirme.eu, sicap.ai and RECOM could not be verified (403 or no connection).
+- data.gov.ro ignores HTTP Range headers. To sample a file, read a stream and stop it (`curl | head -c`).
 - The ANAF parent link (ordonator principal de credite) is one level deep. It gives no middle level
   (for example, no ISJ between a school and the ministry). A middle level must come from grouping (family,
   county), not from ANAF.

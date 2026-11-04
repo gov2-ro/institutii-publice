@@ -1,5 +1,26 @@
 # Activity log
 
+## 2026-11-05 — lookup survey: ANAF, ONRC, alternatives; brief for record status (Sonnet survey, Opus brief)
+
+**Done**
+- ANAF `PlatitorTvaRest/v9/tva` on 2,747 `S` CUIs (28 requests, no key): 2,728 found, 19 not found. County and locality on all found rows;
+  this fills the county of 2,048 records; 668 of 680 existing counties agree. 422 `RADIERE`, 386 `DIZOLVARE FARA LICHIDARE(FUZIUNE)`, 1 `DIZOLVARE CU
+  LICHIDARE`: 809 (29.5%). Of the 253 `S` records found only in the 2014 files, 187 (74%) are defunct or not found; of the others, 26%.
+- ONRC on data.gov.ro: `OD_FIRME` and `OD_STARE_FIRMA` are CC-BY-4.0, `^`-separated, with name, CUI, county, legal form and status. Commercial-register
+  entities only. About 498 of 4,634 CIF-less `D` records have a company form in the name (rough regex). The match rate is not measured yet.
+- Alternatives compared: see *Verified limits* in the backlog. The Finance Ministry dataset is the open lead.
+- Brief `docs/briefs/record-status.md`, draft.
+
+**Hard**
+- The survey broke the "no full download" rule: data.gov.ro ignored the Range header and sent 788 MB. The agent cut the files to samples and deleted the full copies.
+- The survey reported 2,045 filled counties. The recount from its CSV gives 2,048.
+
+**Decided**
+- (Owner) Keep defunct records, add a status, hide them by default. Download the ONRC files to geana. Check the Finance Ministry columns first.
+- (Opus) `fuzionat` differs from `radiat`: 386 bodies, mostly schools, continue inside another body. An empty status means "not checked", never "active".
+  A status that conflicts with later SEAP activity goes to review (CUI 4515077: `RADIERE` 2017, SEAP rows up to 2026-Q3). Cost: some defunct records stay visible.
+- (Opus) The build waits for the source decision: ANAF states no re-use terms and `institutii.csv` is public.
+
 ## 2026-11-05 — SEAP: period() fix and cache-only check (Sonnet)
 
 **Done**
