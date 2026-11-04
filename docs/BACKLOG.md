@@ -320,9 +320,17 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Phase 2: spike on the e-licitatie.ro authority profiles for contacts (access, terms, fields), then a brief.
 - [~] ANAF lookup of the `S` records. Run 2026-11-04: 2,747 CUIs in 28 requests; 2,728 found; 809 `RADIERE` or `DIZOLVARE`; 19 not found.
       The output stays in `data/lookup-survey/` (not in git). ANAF states no terms on re-use: the right to republish is open.
-- [ ] Build status and county of `S` records ([brief](briefs/record-status.md)). Owner decision 2026-11-05: keep defunct records,
-      add a status field, hide them by default. Source: MF. Starts after the ONRC build.
+- [x] Build status and county of `S` records ([brief](briefs/record-status.md)). Owner decision 2026-11-05: keep defunct records,
+      add a status field, hide them by default. Source: MF only. Built 2026-11-05 (Sonnet), awaits review by Opus. 3,406 CUIs looked up:
+      2,441 `activ`, 572 `not_found`, 386 `fuzionat`, 1 `in_lichidare`, 0 `radiat`. 386 records hidden by default; 6 SEAP conflicts and 17 county
+      disagreements in `status-review.csv`; county filled on 1,585 `S` records. Script `scripts/lookup_status.py`; tests `tests/test_status.py`.
 - [x] Check the Finance Ministry dataset (MF, CC-BY-4.0): base source for the status brief, not the only source. See the activity log, 2026-11-05. Yearly dataset with a new name each year; snapshot 2026-06-11.
+- [ ] Status rows: the page hides only `radiat` and `fuzionat`. `radiat` is 0 in our data now (MF has 41 `RADIERE` rows, none is ours): the 391 deregistered
+      `S` bodies of the ANAF survey are `not_found` and stay visible until the owner accepts ANAF.
+- [ ] Status review (Opus): `data/consolidated/status-review.csv` lists 6 SEAP conflicts (5 `fuzionat` `S` records and `G18039`) and 17 county disagreements
+      (9 `S`, 8 `D`). Decide whether a SEAP conflict with a fuzionat body (the SEAP rows may belong to the successor, e.g. E-Distributie) should keep the status.
+- [ ] 217 `S` records got a county but no UAT: the MF locality is a village, or a spelling that ANAF does not use ("Simleu Silvaniei" / "Simleul Silvaniei").
+- [ ] Explorer: the CSV export of the page has no `status` column yet.
 - [ ] Owner: accept or reject ANAF as a status source for the published data. ANAF states no re-use terms. Without ANAF, 391 deregistered `S` bodies stay visible as `not_found`.
 - [ ] MF `TELEFON`: 1,540 usable numbers for `S` and 7,526 for `A`. Not published: 50% differ from our phones, 1,373 are mobiles, 38 numbers are shared by 3 or more CUIs, so they may be fiscal or personal contacts. Needs a decision on personal data.
 - [ ] MF `STARE` "MODIFICARE PUBLICI": 2,176 rows are not in our data. About 794 look public by a rough regex. A lead for missing public bodies, after a filter and a review.
@@ -369,6 +377,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] `packages.json` resource `38e601a9` has the size and file name of `e40a48ed`. Checked by hand 2026-11-03: the file is a valid
       zip, 72,644 rows, header `Numar notificare`: it is the report "Notificări de atribuire la cumpărarea directă TII 2025".
       The extractor reads it with `--trust 38e601a9`.
+
+- [ ] Record `Px` has the name "—" (source posturi, Alba). It is the first row of the A-Z list. It existed before v0.55.0. Fix the name or exclude the row in the posturi export.
 
 ## Verified limits
 - openapi.ro cannot feed the published data: its terms forbid redistribution (checked 2026-11-04).

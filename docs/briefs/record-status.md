@@ -37,9 +37,9 @@ MF rows with `TIP_CONTRIB` PF are natural persons: skip them, and treat a CUI th
    - `radiat`: `RADIERE`, `LICHIDAT`.
    - `fuzionat`: `DIZOLVARE FARA LICHIDARE(FUZIUNE)`, `DIZOLVARE FARA LICHIDARE(DIVIZARE)`. This body continues in another body, so the page must not say "closed".
    - `in_lichidare`: `DIZOLVARE CU LICHIDARE(INCEPUT LICHIDARE)`. The body still exists, and the record stays visible.
-   - `activ`: `INREGISTRAT`, `MODIFICARE PUBLICI`, `TRANSFER(SOSIRE)`, `RELUARE ACTIVITATE`, `SUSPENDARE ACTIVITATE`. `MODIFICARE PUBLICI` can hide a later dissolution, so show `activ` to nobody as a claim of "active": the page shows only `radiat`, `fuzionat` and `in_lichidare`.
+   - `listat`: `INREGISTRAT`, `MODIFICARE PUBLICI`, `TRANSFER(SOSIRE)`, `RELUARE ACTIVITATE`, `SUSPENDARE ACTIVITATE`. `MODIFICARE PUBLICI` can hide a later dissolution, so show `listat` to nobody as a claim of "active": the page shows only `radiat`, `fuzionat` and `in_lichidare`.
    - `not_found`: the record stays visible.
-   - An empty status means "not checked". Never read an empty status as `activ`. ANAF list records stay empty.
+   - An empty status means "not checked". Never read an empty status as `listat`. ANAF list records stay empty.
    - An unknown label stops the script. The one PJ row with an empty `STARE` is not ours: an empty label on one of our CUIs also stops the script.
 3. **`consolidate.py`**: read `status.csv`. A missing file skips the source with a warning, as for the other inputs.
    - Add the CSV columns `status`, `status_date`, `status_source`.

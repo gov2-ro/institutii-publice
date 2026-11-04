@@ -13,6 +13,7 @@ No linter or build step. Four scripts, a static page and standard-library tests:
     uv run scripts/consolidate.py              # rebuild data/consolidated/ (needs openpyxl; inline uv script deps)
     uv run scripts/extract_seap.py [--dump DIR] [--trust ID]  # SEAP dump -> data/seap/ (openpyxl, xlrd; minutes)
     python3 scripts/scrape_roepas.py [--workers 4] [--limit N]   # re-scrape roepas.ro -> data/roepas/ (requests, lxml)
+    python3 scripts/lookup_status.py [--mf DIR]   # MF files -> data/lookup/status.csv (stdlib; about 20 s; run before consolidate.py)
     python3 scripts/build_uat_maps.py          # rebuild explorer/assets/gis/uat/ from docs/reference/gis/*.geojson (stdlib)
     python3 -m http.server                     # then open http://localhost:8000/explorer/
     sh scripts/publish_pages.sh [--dry-run]    # publish explorer/ + data to gh-pages -> https://org.gov2.ro
@@ -56,6 +57,18 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
   CIF-less `D` records and writes the ignored queue `data/consolidated/onrc-review.csv`. The script writes no curation file.
   A person or an agent sets the rows of `curation/identities.csv` and `curation/merges.csv` with the evidence `ONRC 2026-10-19 <COD_INMATRICULARE>, tier <tier>`.
   `consolidate.py` does not read the ONRC files. The attribution is in `README.md`.
+- **Status and county from the Finance Ministry (MF)** `data/lookup/status.csv` (`cui, name, status, status_label, status_date, county,
+  locality, source, checked_at`), made by `scripts/lookup_status.py` from the two UTF-8 July files of the dataset "Date de identificare
+  plătitori" (data.gov.ro, CC-BY-4.0; default folder `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-mf-platitori-2026-07`, option `--mf DIR`;
+  snapshot 2026-06-11). It covers every record with a CIF that is not from ANAF. It skips every row with `TIP_CONTRIB` PF (natural
+  persons) and reads no `TELEFON`. The `STARE` label gives `status` (`radiat`, `fuzionat`, `in_lichidare`, `listat`, `not_found`); an
+  unknown label stops the script. A CUI that MF does not hold is `not_found`: absence never means `radiat`. ANAF is not a status source
+  (the owner has not accepted it), and ANAF list records keep an empty status. An empty status means "not checked", never `listat`.
+  `consolidate.py` adds the CSV columns `status`, `status_date`, `status_source`, `county_source`. It does not apply `radiat` or
+  `fuzionat` when SEAP lists the CUI in a year after the status year plus one; the case goes to `data/consolidated/status-review.csv`
+  and the status stays empty. It fills an empty `county` (and a known `uat`) from MF (`county_source` and `uat_source` `status`),
+  never replaces a county, and lists the disagreements in `status-review.csv`. The fill runs after the families, so it moves no
+  record between families. A missing `status.csv` skips the source with a warning.
 - **Curated identities** `curation/identities.csv` (tracked): `id, cif, checked_at, evidence`. A row sets the CIF of a
   record that has none (CSV column `cif_source`: `anaf`, `curation` or `seap`). The script stops on an unknown id, a
   duplicate id or CIF, a CIF that is not digits, a record that has a CIF, or a CIF of an ANAF record (use `merges.csv`).
@@ -102,12 +115,14 @@ served over HTTP, not opened as file://. Its look is the gov2 design system (see
 holds `gov2.css` and the local Inter and Fragment Mono; `<html data-g2-scheme="auto">` turns on the DS dark scheme. Rows use the compact schema from `write_explorer_data`: short keys
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
 declaratii=8/posturi=16/seap=32, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
-candidates, `us` 1 = sector inferred from the name (`uat_source`), `mi` ids absorbed by a same-name merge, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
+candidates, `us` 1 = sector inferred from the name (`uat_source`), 2 = county from MF (`county_source`), `st` status (1 = radiat, 2 = fuzionat, 3 = in_lichidare; `listat` and `not_found` give no key), `sd` status date (ISO), `mi` ids absorbed by a same-name merge, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
 `write_explorer_data` and the decoding in `index.html`.
 `metadata.json` also carries `dataset` (generation time; per input file the path, bytes, SHA-256, mtime, row count;
 ANI exports add `exported_at` and `capped`). Ambiguous source rows stay separate records with `match_candidates`
 (CSV column `match_candidate_cifs`). It also carries `state`, the "Structura statului" tree: the curated top layer (`STATE_NODES`,
 `STATE_MEMBERS`, `STATE_ATTACH` in `consolidate.py`, keyed by CIF) plus the UAT and unclassified root CIFs.
+The page hides the rows with `st` 1 or 2 by default (list, county profile, landing counts, families). The menu "Opțiuni" holds the filter
+"Include entități radiate sau fuzionate" (hash `rad=1`). A search by the exact CIF finds such a row in all cases.
 Views: `acasa` (landing: overview, families, county choropleth; opened by an empty hash), `list`, `stat`, `fam`,
 `loc` (`k=<county>` gives the county profile: coat of arms, UAT map, seat/municipii/orașe/comune groups).
 Maps are inline SVG from `explorer/assets/gis/`, loaded on first use: the county choropleth from `romania-counties.geojson`,

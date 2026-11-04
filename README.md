@@ -18,6 +18,7 @@ Va fi și input data (cu site-urile publice) pentru [gov2-ro/stiri](https://gith
 ## Pipeline
 
 ```sh
+python3 scripts/lookup_status.py       # -> data/lookup/status.csv (status of the CUIs that ANAF does not list; MF files)
 uv run scripts/consolidate.py          # -> data/consolidated/ (institutii.csv/json, metadata.json, rows.json)
 python3 -m http.server                 # then open http://localhost:8000/explorer/
 ```
@@ -29,6 +30,12 @@ Attribution: the tax IDs (CUI) that `curation/identities.csv` and `curation/merg
 open dataset "Firme înregistrate la Registrul Comerțului până la data de 19.10.2026" of the Oficiul Național al Registrului
 Comerțului (ONRC), published on data.gov.ro under the licence [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).
 `scripts/onrc_candidates.py` matches the names; a person reviews the matches. The ONRC files are not in this repository.
+
+Attribution: the columns `status`, `status_date` and `status_source`, and the county of some `S` records (`county_source` `status`), come from
+the open dataset "Date de identificare plătitori actualizate iunie 2026" of the Ministerul Finanțelor, published on data.gov.ro under the
+licence [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/). The snapshot date is 2026-06-11. `scripts/lookup_status.py` reads the
+rows of public bodies and companies. It skips every row of a natural person. The MF files are not in this repository. The value `listat`
+means only that the files list no dissolution of the body. It does not prove that the body is active.
 
 ### ANI exports (data/declaratii-integritate/)
 Kibana Lens → "Top values of `institutie_id.keyword`" + "Count of records", filtered on a group of counties,

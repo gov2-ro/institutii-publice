@@ -1,5 +1,53 @@
 # Activity log
 
+## 2026-11-05 — Status of a legal body and county of `S` records, MF only (Sonnet, brief `record-status.md`)
+
+**Done**
+- `scripts/lookup_status.py` (stdlib, 22 s) reads the two MF July files and writes `data/lookup/status.csv` (ignored by git). It covers the 3,406 records with a CIF
+  that is not from ANAF (2,580 `seap`, 826 `curation`). It skips every PF row before any field is read: 818,693 PF rows, 27 rows of another type, 1 short row, 1,829,045 PJ rows read.
+  It reads no `TELEFON`. Snapshot (latest `DATA_PRELUCRARE` of the PJ rows) 2026-06-11, equal to the value over all rows.
+- Result per CUI: `activ` 2,441; `not_found` 572; `fuzionat` 392; `in_lichidare` 1; `radiat` 0. Every `STARE` label on our CUIs is inside the rule: INREGISTRAT 1,984,
+  `DIZOLVARE FARA LICHIDARE(FUZIUNE)` 392, MODIFICARE PUBLICI 369, TRANSFER(SOSIRE) 78, RELUARE ACTIVITATE 9, SUSPENDARE ACTIVITATE 1, `DIZOLVARE CU LICHIDARE(INCEPUT LICHIDARE)` 1. No label stopped the script.
+  No CUI is on two PJ rows.
+- `consolidate.py`: `load_status`, `apply_status`, `write_status_review`. New CSV columns (at the end): `status`, `status_date`, `status_source`, `county_source`.
+  Applied on records: `activ` 2,441, `not_found` 572, `fuzionat` 386, `in_lichidare` 1; 6 `fuzionat` CUIs are SEAP conflicts, so their status is empty.
+  `metadata.json` `dataset.inputs` has an entry `source: mf` with the file, `snapshot`, `licence` CC-BY-4.0 and the origin. README, CLAUDE.md and `despre.html` give the attribution.
+- Compared with the measurement on the older record set: `S` records with MF data 2,273 of 2,747 then. All 2,273 CUIs are still records and found; 165 of them are now `D` records (ONRC identities),
+  so 2,108 `S` records have MF data now (2,103 applied, 5 SEAP conflicts). `S` `fuzionat`: 344 then; now 339 applied + 5 conflicts = 344. `S` not found: 472 of 2,580.
+  The 561 other found CUIs are `D` 312, `G` 213, `R` 27, `P` 9 (curated identities).
+- Status per kind (applied): `S` activ 1,763, not_found 472, fuzionat 339, in_lichidare 1; `D` activ 450, not_found 58, fuzionat 27; `G` activ 195, not_found 39, fuzionat 17; `R` activ 25, not_found 3, fuzionat 2; `P` activ 8, fuzionat 1.
+- Hidden by default (`st` 1 or 2): 386 records, all `fuzionat`: `S` 339, `D` 27, `G` 17, `R` 2, `P` 1. By category: Educație 272, Asistență socială și muncă 25, Altele 21,
+  Agricultură mediu și păduri 15, Autorități centrale și deconcentrate 10, Cultură sport și tineret 9, Servicii publice locale și regii 9, Sănătate 8, Ordine publică și urgențe 6, Apărare 6,
+  Companii de stat 2, Transport și infrastructură 2, Finanțe publice 1. None has a website or a parent. Dates: 2025 228, 2024 43, 2026 20, older 95.
+- County fill: 1,585 `S` records got a county (all with an empty county before; `S` with no county 2,014 -> 429); 1,389 also got a UAT (`uat_source` `status`). 17 disagreements, none replaced:
+  `county_differs` 17 (9 `S`, 8 `D`; examples: ELECTRICA FURNIZARE SA SEAP Brasov, MF Bucuresti; ROMARM filials; E-DISTRIBUTIE BANAT SEAP Timis, MF Bucuresti, the seat of the company).
+  `status-review.csv`: 23 rows = 6 `seap_conflict` + 17 `county_differs` (0 `county_unknown`). Conflicts: `S14490379` E-DISTRIBUTIE BANAT (fuzionat 2024-11-30, SEAP to 2026), `S14500308` E-DISTRIBUTIE DOBROGEA (same),
+  `S14493260` and `S14506181` (SDEE, fuzionat 2020-12-31, SEAP to 2023 and 2024), `S4417176` (fuzionat 1993, SEAP to 2025), `G18039` (fuzionat 1993, SEAP to 2025).
+- CSV against v0.55.0: 28,308 records, same ids in the same order; 1,585 records changed; changed old columns: `county` 1,585, `uat` 1,389, `uat_source` 1,389 (all from empty). Every other old column is equal.
+  Without `status.csv` the CSV differs only by the 4 new empty columns (measured before the first run with status).
+- Explorer: row keys `st` (1 radiat, 2 fuzionat, 3 in_lichidare) and `sd` (ISO date); `us` is now 1 (sector from the name) or 2 (county from MF). The menu "Opțiuni" has the filter "Include entități radiate sau fuzionate"
+  (hash `rad=1`). Default views hide `st` 1 and 2: list, facets, county profile, landing counts and map, families, the header count ("27.922 din 27.922" instead of 28.308). The empty state counts the hidden records and has the button "Arată-le".
+  A search by the exact CIF finds a hidden row. The record detail shows "Fuzionată din <dată>" (tag, DS `g2-tag`) and the source. The list shows a tag on the shown rows. No new local CSS.
+- Checks: 122 unit tests pass (111 before, 11 new in `tests/test_status.py`); `tests/determinism.sh` passes; neclasificate roots 2. Browser check (headless Chrome, own server on port 8765, Chrome on 9333; both stopped):
+  default list 2,299 rows with the website filter, 27,922 without it, 0 rows with `st` 1 or 2; `rad=1` gives 28,308 (386 with `st` 2, 1 with `st` 3); exact CIF search finds `S4266197` with the filter off and the website filter on;
+  a partial CIF does not; `reachableRoots()` 3,296 = `expectedRoots()` 3,296; `descendantVisibility()` 8 checked, 0 failures; 0 console errors; landing 27,922 (28,308 with `rad=1`); county Alba 589 records (591 with `rad=1`).
+
+**Hard**
+- A hidden row has no website, so with the default website filter the empty state found nothing to offer. The count for the button now ignores the website filter too, and the button turns that filter off when it is needed.
+- MF writes `Bîrlad`, `Oraş Bragadiru`; ANAF has `Municipiul Barlad`, `Orasul Bragadiru`. The UAT lookup maps a non-initial `î` to `a` and strips the prefix. 217 `S` records still have a county and no UAT (a village, or another spelling).
+- The explorer `web` filter is on by default, so "the default list" has two counts: 2,299 (website) and 27,922.
+
+**Decided**
+- (Opus review) The CSV value `activ` is renamed `listat` in the code and the docs: MF lists the body and shows no dissolution. `activ` was a claim that `MODIFICARE PUBLICI` can contradict. Numbers in this entry that say `activ` mean `listat`. `county_source` and `uat_source` say `mf`, not `status`. `rows.json` is equal before and after these two changes.
+- (Sonnet, assumed) `in_lichidare` gets the row value `st` 3. The page hides only 1 and 2. Cost of the alternative (no key): the detail could not show the label.
+- (Sonnet, assumed) `sd` is an ISO date string and the page formats it as dd.mm.yyyy. `activ` and `not_found` give no `st` and no `sd`.
+- (Sonnet, assumed) The CSV `status` column holds all values, `activ` and `not_found` too. `activ` means only that MF lists no dissolution; README and `despre.html` say so. Cost of blanking `activ`: an empty value would mean "not checked", so the column would lose that difference.
+- (Sonnet, assumed) The county fill runs after the families. Cost of the alternative: a county word in the name would move records between families (the brief forbids changes outside county and uat).
+- (Sonnet, assumed) A UAT is set only when the MF locality maps to an ANAF UAT label or to a sector; otherwise the county is set and the UAT stays empty. Cost of the alternative (raw MF locality as UAT): villages would appear as UAT labels and break the county map join.
+- (Sonnet, assumed) The exact-CIF search overrides the website filter for a hidden record only; it leaves the website filter of other records as it was.
+- (Sonnet, assumed) A SEAP conflict keeps `status` empty but still fills the county. The review file lists it.
+- The `S` count in the brief (2,747) fell to 2,580 after the ONRC build. The expected 2,273 found and 344 `fuzionat` match exactly after the 165 records that moved to `D` are added back (see Done).
+
 ## 2026-11-05 — ONRC identities and merges applied (Sonnet, rule by Opus)
 
 **Done**
