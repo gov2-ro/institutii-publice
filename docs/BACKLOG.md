@@ -265,7 +265,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] DATA-ORG-07 — posturi gives the posting county, not the seat, for national bodies. Five ABA bodies cannot link
       (Jiu in Gorj/Mehedinți, Crișuri in Hunedoara, Olt in Sibiu/Harghita, Prut-Bârlad in Galați/Botoșani/Vaslui,
       Buzău-Ialomița in Prahova). Scan the other national bodies. Decide between a national alias scope and a posturi fix.
-- [ ] "A.B.A." does not fold to "aba", so the ABA alias rows do not catch that spelling.
+- [-] "A.B.A." does not fold to "aba", so the ABA alias rows do not catch that spelling. Dropped (Opus, 2026-11-04): see *Verified limits*.
 - [ ] DATA-ORG-04 — re-run with a fresh full posturi export from the VPS (`--db` on a full export, not the
       active-only deploy file), then rebuild.
 - [ ] DATA-ORG-02 — review `data/consolidated/posturi-review.csv` after DATA-ORG-03 and -04. Decisions go to
@@ -286,25 +286,50 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Phase 1: extractor, source `seap`, `S<cui>` records, `curation/identities.csv`, hosted-body aliases. Built 2026-11-03.
       Opus decisions of 2026-11-03 applied (see the activity log): rule accepted, company rule added, state tree fixed.
 - [~] Review `data/consolidated/seap-pairs.csv`. Done 2026-11-04: 44 duplicate pairs merged and 41 identities added (same name, one county
-      or one Bucuresti sector). Left: 15 `two_records` rows whose records name different counties (ANI county is unreliable:
-      Politia Locala Chitila, CNIT, CNEE, Registrul Auto Roman...) and 11 `two_seap_rows` rows (generic names such as
-      "Camin pentru persoane varstnice"). A person must decide.
-- [ ] Re-run `scripts/extract_seap.py` when the dump download ends (2021 TIII/TIV, 2024 TIII/TIV and others were missing on 2026-11-03).
-      The dump will be deleted after the full run: the cache in `data/seap/cache/` then rebuilds `authorities.csv`.
+      or one Bucuresti sector). Done 2026-11-04, second pass (ANAF web service lookup, see the activity log): 18 identities and 19 merges.
+      After the extractor re-run the file had 29 rows (18 `two_records`, 11 `two_seap_rows`); it now has 11 (4 + 7). Rows that stay open:
+      - `2865432`, `12269739` (Camin pentru persoane varstnice), `17993499` (Unitatea de asistenta medico-sociala), `24618107`
+        (SPCLEP), `34052870` (Serviciul public de salubrizare), `39483628` (Directia de asistenta sociala), `4291700` (APM):
+        ANAF puts the seat in a county where no candidate lies. A person or a county-level source must decide.
+      - `4515077` (DADR): the ANAF name differs ("DIRECTIA PENTRU AGRICULTURA JUDETEANA CONSTANTA", status RADIERE 2017) while SEAP
+        lists 354 rows up to 2026-Q3. G15191 (Constanta) is the likely record, but the name and the dates disagree.
+      - `448001922` (Administratia Comerciala Sector 6): the ANAF service does not know the CUI (9 digits, likely a typo).
+      - New rows, not decided: `11446310` (Oficiul Judetean de Consultanta Agricola; ANAF name "CAMERA AGRICOLA DOLJ", Dolj; G18183 is
+        the only Dolj candidate), `15221670` (Serviciul Public de Administrare a Domeniului Public si Privat; ANAF name is the one of
+        Mangalia, Constanta; G15340 is the only Constanta candidate). Both names differ from the ANAF name.
+      Lowest confidence among the applied merges: `39466317` (D04a78a2e, Ilfov): ANI often files Bucuresti bodies under Ilfov.
+      `14198936`: the identity is on G12310 (Calarasi). D22bd9669 (Arges) stays separate, because the name is generic (Opus review).
+- [x] Re-run `scripts/extract_seap.py` when the dump download ends (2021 TIII/TIV, 2024 TIII/TIV and others were missing on 2026-11-03).
+      Done 2026-11-04 with `--trust 38e601a9`: 291 resources, 181 read, 1 trusted, 62 `no_size`, 47 `no_header`, 0 `missing`.
+      Distinct authority CUIs 17,783 -> 18,077. The cache in `data/seap/cache/` rebuilds `authorities.csv` after the dump is deleted.
 - [-] 62 files of 2016-2019 stay unread. Reason: `packages.json` has no size for them (status `no_size`), so a partial download
       cannot be told from a full one; the authorities are old. Owner decision (Opus, 2026-11-03).
-- [-] 4 files of 2007-2016 stay unread. Reason: they are `^`-separated with other column names (`AutoritateContractanta`,
+- [-] 47 files of 2007-2016 stay unread (4 on 2026-11-03; 43 more files of this kind were downloaded later). Reason: they are `^`-separated with other column names (`AutoritateContractanta`,
       `AutoritateContractantaCUI`) and the authorities are old (status `no_header`). Owner decision (Opus, 2026-11-03).
-- [ ] Check `explorer.reachableRoots()` against `expectedRoots()` in a browser. The builder checked only that the root CIFs of
-      `rows.json` equal the CIFs placed in `metadata.state` (3,296 both) and the page script syntax (`node --check`).
+- [x] Check `explorer.reachableRoots()` against `expectedRoots()` in a browser. Done 2026-11-04 in headless Chrome: 3,296 = 3,296;
+      `descendantVisibility()` checked 8, 0 failures; no console error. Before this, the builder had checked only that the root CIFs
+      of `rows.json` equal the CIFs placed in `metadata.state` (3,296 both) and the page script syntax (`node --check`).
 - [ ] `curation/merges.csv` cannot name an `S<cui>` id (the records are created after the merges). Add it if a merge is needed.
+- [ ] Defect: `period()` in `scripts/extract_seap.py` gives the wrong period to the 3 files of 2014 T3/T4 that it now reads
+      (`2d1bcb67`, `3d31f7be`, `e32a3d76`): the manifest says 2007-Q3 and 2007-Q4. The name of the file says 2014. The period affects only
+      `first_seen` and `last_seen` of the authorities: 4,935 CUIs now have `first_seen` 2007 (0 before), among them all 294 new CUIs. `consolidate.py` does not read these dates, so `institutii.csv` is correct.
+      Fix this before the dump deletion: the cache stores the period, and a cache rebuild needs the dump files.
+- [ ] Family "Poliția locală" lost Sector 1, 2, 4 and 5 after the merge of the ANI copies of Sector 2 (2026-11-04). The ANI county noise
+      had carried these records over the rule of 5 members in 4 counties. Consider `FAMILY_HEADS` for this family.
 - [ ] Phase 2: spike on the e-licitatie.ro authority profiles for contacts (access, terms, fields), then a brief.
+- [ ] Proposal: the free ANAF web service (`PlatitorTvaRest/v9`, POST, 100 CUIs per request) may fill the county and locality of the
+      `S` records without the sicap.ai API key. Measured 2026-11-04 on the 29 CUIs of `seap-pairs.csv`: 28 found (96.6%), including 24 bodies
+      with no VAT registration and bodies with the status RADIERE. One CUI (448001922) is unknown. The answer gives name, seat county, seat
+      locality and status. Open: run it on the 2,748 `S` CUIs (28 requests), check terms of use, and decide where to store the result.
 - [ ] Phase 2: sicap.ai API (`https://api.sicap.ai/v1/openapi/json`) gives `cityAuthority`/`countyAuthority` per authority CIF,
       which fills the county of the `S` records. No contacts. Needs an API key (the owner has none yet) and a check of the
       pricing and terms (re-publishing under EUPL). `https://sicap.ai/mcp` is behind a Vercel checkpoint (429 for scripts).
 - [ ] Delete the dump `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-adr-achizitii-publice-dump` (owner request, 2026-11-03).
       Do it after the download ends and `extract_seap.py` re-ran, and only when the manifest has no `incomplete` or `missing`
       resource that the owner wants. Keep `packages.json`. The cache in `data/seap/cache/` keeps the extracted authorities.
+      State on 2026-11-04: the manifest has no `missing` and no `incomplete` resource. The owner still decides about the resources
+      that the extractor does not read: 62 `no_size` files (2016-2019, no size in `packages.json`) and 47 `no_header` files (2007-2016,
+      `^`-separated). The cache holds nothing for them, so the deletion loses them.
 - [ ] Private utilities pass the SEAP company rule by volume (100 rows or more): ENGIE Romania, E-Distributie Dobrogea, and
       similar sector entities. Consider a curated exclusion list or a "utility operator, private" flag.
 - [x] `packages.json` resource `38e601a9` has the size and file name of `e40a48ed`. Checked by hand 2026-11-03: the file is a valid
@@ -315,6 +340,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - The ANAF parent link (ordonator principal de credite) is one level deep. It gives no middle level
   (for example, no ISJ between a school and the ministry). A middle level must come from grouping (family,
   county), not from ANAF.
+- "A.B.A." (Administrația Bazinală de Apă) in the posturi names (Opus, 2026-11-04): only 3 posturi names use this spelling, and all three
+  name SGA units, so they stay in the posturi review queue. A change in `fold` would alter the folding of every initialism in the dataset.
 - The active-only posturi deploy SQLite (`webapp-php/posturi.sqlite`) cannot feed the employer export: 4,807 of 5,901 employers have no posting in it, so no county. Use a full export (2026-11-02, DATA-ORG-01).
 
 ## Later / misc / unfilled

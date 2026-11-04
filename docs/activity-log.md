@@ -1,5 +1,48 @@
 # Activity log
 
+## 2026-11-04 — SEAP re-run, ANAF lookup for the pairs, browser check (Sonnet, Opus decisions)
+
+**Done**
+- `extract_seap.py --trust 38e601a9` on the full dump: 291 resources; 181 read (was 178), 1 trusted, 62 `no_size`, 47 `no_header` (was 4), 0
+  `missing` (was 46). The 46 missing files exist now: 3 were read (`cumparari-directe` 2014 T3 and T4, 716,285 rows) and 43 are `^`-separated
+  files of 2007-2014 (`no_header`). Data rows 24,202,803 -> 24,919,088; rejected 12,477 -> 12,528. Distinct CUIs 17,783 -> 18,077 (+294,
+  all with no county, all from the 3 new files).
+- After the re-run: records 28,294 -> 28,548; linked 13,449 of 18,077 CUIs (74.4%); new `S` records 2,511 -> 2,765; `seap-pairs.csv` 26 -> 29
+  rows (18 `two_records`, 11 `two_seap_rows`). Three new rows: `11446310`, `15221670`, `17329505`.
+- ANAF web service (`PlatitorTvaRest/v9/tva`, POST, no key) sent the 29 CUIs of `seap-pairs.csv` in one request: 28 found (96.6%), 1 not found
+  (`448001922`, 9 digits). 24 of the 28 have no VAT registration; several have the status RADIERE or DIZOLVARE. No body is flagged inactive.
+  The answer gives name, seat county, seat locality and status. Raw answer: `data/seap/anaf-lookup-pairs.json` (not in git).
+- Curation: 19 merges in `curation/merges.csv`, 18 identities in `curation/identities.csv`. Applied: Registrul Auto Roman, Camera de Comert
+  Braila, FRDS, Politia Locala Sector 2, Fondul Roman de Contragarantare, CNEE, Politia Locala Chitila, Politia Locala Bistrita, Spitalul
+  Orasenesc Videle, ADP Oradea, CNIT, APM Ilfov, Centrul Cultural Lumina, Electrica Serv; identity only: Serviciul Public Piete Oboare (Calarasi), Camin pentru persoane
+  varstnice (Mures), Gestionare a cainilor (Sibiu and Olt).
+- Rebuild: records 28,548 -> 28,511 (19 merged, 18 `S` records now linked by CIF); new `S` records 2,747; `seap-pairs.csv` 11
+  rows (4 + 7). In the CSV only the 18 survivors changed on old records, plus `family` of 4 records (see Hard). 100 tests pass; determinism
+  passes; neclasificate roots stay at 2.
+- Browser check, run before the Opus review changes below and not repeated (headless Chrome, page served from the repo root): `reachableRoots()` 3,296 = `expectedRoots()` 3,296;
+  `descendantVisibility()` checked 8, 0 failures; 0 console errors.
+
+**Hard**
+- The 4 `no_header` files of 2026-11-03 became 47 because the download added 43 more `^` files. They stay unread by the earlier decision.
+- The 3 files of 2014 get the period 2007-Q3 or 2007-Q4 (defect in `period()`); `first_seen` of 4,935 CUIs now says 2007.
+- Merging 3 ANI copies of "Politia Locala Sector 2" (counties Ilfov, Calarasi, Giurgiu) dropped the family "Poliția locală" from 4 records
+  (Sector 1, 2, 4, 5): the rule of 5 members in 4 counties no longer holds. The family lists 62 -> 53 records.
+- Several ANAF names differ from the SEAP name (for example `11446310` "CAMERA AGRICOLA DOLJ", `15221670` the Mangalia body, `4515077` DADR
+  Constanta with the status RADIERE 2017 and SEAP rows up to 2026-Q3). Those rows stay open.
+
+**Decided**
+- (Opus) A CUI is one legal body. A wrong merge costs more than a duplicate, so in any doubt the row stays open.
+- (Opus) Specific names (Registrul Auto Roman, FRDS, Politia Locala Sector 2, CNEE and others): merge, and the ANI county is noise.
+- (Opus) Generic names: identity only, never a merge. Rule: exactly one candidate lies in the ANAF county; its `uat`, if any, equals the ANAF
+  locality; no other CUI of the same name lies in that county. Otherwise the row stays open.
+- (Opus) 448001922 (9 digits) is applied only if ANAF confirms it. ANAF does not know it, so the row stays open.
+- (Opus) "A.B.A." is not a defect: only 3 posturi names use the spelling, all three name SGA units. A change in `fold` would alter every
+  initialism. The backlog item is dropped.
+- (Sonnet, assumed) For `4515077` the ANAF name differs from the SEAP name, so the row stays open although the county rule holds.
+- (Opus review) `14198936` Piete Oboare: the Sonnet merge of D22bd9669 (Arges) is undone. The name is generic, so the ANAF seat of the CUI says
+  nothing about the Arges record. The identity on G12310 stays. Cost: a possible duplicate. `39466317` Lumina stays merged: ANI often files
+  Bucuresti bodies under Ilfov. `17329505` Electrica Serv is merged (specific name, same county in both records).
+
 ## 2026-11-04 — SEAP pairs review (Sonnet)
 
 **Done**
