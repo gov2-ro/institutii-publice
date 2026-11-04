@@ -404,6 +404,7 @@
         <label class="chk"><input type="checkbox" id="web" checked> are site</label>
         <label class="chk"><input type="checkbox" id="noanaf"> fără corespondent ANAF</label>
         <label class="chk" title="Înregistrări cu posibil duplicat sau cu potrivire nerezolvată"><input type="checkbox" id="review"> de verificat</label>
+        <label class="chk" title="Radiate sau dizolvate prin fuziune sau divizare, după datele Ministerului Finanțelor"><input type="checkbox" id="rad"> Include entități radiate sau fuzionate</label>
       </div>
     </details>
   </div>
@@ -532,11 +533,14 @@
     for (const r of rows) { byId.set(r.id, r); if (r.f) byCif.set(r.f, r); }
     const mergedInto = new Map();                        // an id absorbed by a same-name merge -> the record that survived
     for (const r of rows) for (const m of r.mi || []) mergedInto.set(m, r);
+    /* status of a legal body (MF): `st` 1 = radiat, 2 = fuzionat (both hidden by default), 3 = în lichidare (visible), `sd` = status date */
+    const hiddenSt = r => r.st === 1 || r.st === 2;
+    const nShown = rows.reduce((n, r) => n + !hiddenSt(r), 0);
     const famSize = new Map(), famCat = new Map();
     {
       const perCat = new Map();
       for (const r of rows) if (r.fam) {
-        famSize.set(r.fam, (famSize.get(r.fam) || 0) + 1);
+        if (!hiddenSt(r)) famSize.set(r.fam, (famSize.get(r.fam) || 0) + 1);
         if (!perCat.has(r.fam)) perCat.set(r.fam, new Map());
         const m = perCat.get(r.fam);
         m.set(r.cat, (m.get(r.cat) || 0) + 1);
@@ -640,21 +644,22 @@
 
     /* ---------- filter state ---------- */
     const NO_FAMILY = '(fără tip comun)';
-    const S = { q: '', cat: '', fam: '', county: '', uat: '', srcs: new Set(), srcMode: 'all', web: true, review: false,
+    const S = { q: '', cat: '', fam: '', county: '', uat: '', srcs: new Set(), srcMode: 'all', web: true, review: false, rad: false,
       view: 'list', sort: 'n', node: '', id: '' };
-    let qTokens = [], srcList = [];
+    let qTokens = [], srcList = [], qCif = '';
     const pass = (r, skip) =>
       (skip === 'cat' || !S.cat || r.cat === S.cat) &&
       (skip === 'fam' || !S.fam || (r.fam || NO_FAMILY) === S.fam) &&
       (skip === 'county' || !S.county || r.county === S.county) &&
       (skip === 'uat' || !S.uat || r.u === S.uat) &&
       (skip === 'src' || !srcList.length || (S.srcMode === 'all' ? srcList.every(k => srcTest[k](r)) : srcList.some(k => srcTest[k](r)))) &&
-      (skip === 'web' || !S.web || r.w) &&
+      (skip === 'web' || skip === 'radweb' || !S.web || r.w || (hiddenSt(r) && r.f === qCif)) &&
+      (skip === 'rad' || skip === 'radweb' || S.rad || !hiddenSt(r) || r.f === qCif) &&       // a search by the exact CIF finds a hidden record
       (!S.review || needsReview(r)) &&
       qTokens.every(t => r.hay.includes(t));
 
     const el = { q: $('q'), cat: $('cat'), fam: $('fam'), county: $('county'), uat: $('uat'), web: $('web'),
-      noanaf: $('noanaf'), review: $('review'), sort: $('sort') };
+      noanaf: $('noanaf'), review: $('review'), rad: $('rad'), sort: $('sort') };
 
     function fillSelect(sel, allLabel, entries, current) {   // entries: [[value, label, count]]
       sel.replaceChildren(h('option', { value: '' }, allLabel),
@@ -699,11 +704,17 @@
     const siteLink = r => !r.w ? '' : isHttp(r.w)
       ? h('a', { href: r.w, target: '_blank', rel: 'noopener noreferrer', title: r.w, onclick: e => e.stopPropagation() }, domain(r.w))
       : domain(r.w);
+    const STATUS_UI = { 1: { tone: 'danger', tag: 'radiată', text: 'Radiată' }, 2: { tone: 'info', tag: 'fuzionată', text: 'Fuzionată' },
+      3: { tone: 'progress', tag: 'în lichidare', text: 'În lichidare' } };
     const emptyMsg = () => {
       const hidden = S.web ? rows.filter(r => pass(r, 'web')).length : 0;   // records that pass every filter except "are site"
+      // records that pass every filter except "radiate sau fuzionate" (and "are site": a defunct record seldom has one)
+      const gone = S.rad ? 0 : rows.filter(r => pass(r, 'radweb')).length, goneWeb = S.web && gone > rows.filter(r => pass(r, 'rad')).length;
       return h('div', { class: 'empty' }, h('p', null, 'Nicio instituție nu corespunde filtrelor.'),
         hidden ? h('p', null, `${fmt(hidden)} ${hidden === 1 ? 'înregistrare corespunde' : 'înregistrări corespund'}, dar nu au site. `,
           h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => { S.web = false; el.web.checked = false; update(); } }, 'Arată-le')) : null,
+        gone ? h('p', null, `${fmt(gone)} ${gone === 1 ? 'înregistrare corespunde' : 'înregistrări corespund'}, dar sunt radiate sau fuzionate. `,
+          h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => { S.rad = true; el.rad.checked = true; if (goneWeb) { S.web = false; el.web.checked = false; } update(); } }, 'Arată-le')) : null,
         h('button', { class: 'g2-btn g2-secondary', type: 'button', onclick: () => { clearFilters(); update(); } }, 'Resetează filtrele')); };
     const rowKey = (r, open) => e => { if (e.key === 'Enter') open(r); };
 
@@ -736,6 +747,7 @@
         h('td', null, h('span', { class: 'nm' }, r.n),
           r.mc && r.mc.length ? h('span', { class: 'g2-tag', 'data-tone': 'warning' }, 'potrivire neclară') : null,
           r.d ? h('span', { class: 'g2-tag', 'data-tone': 'warning' }, 'posibil duplicat') : null,
+          r.st ? h('span', { class: 'g2-tag', 'data-tone': STATUS_UI[r.st].tone }, STATUS_UI[r.st].tag) : null,
           h('div', { class: 'sub' }, kind(r), where(r) ? h('span', { class: 'where' }, (kind(r) ? ' · ' : '') + where(r)) : null,
             S.sort === 'dc' && r.dc ? h('span', { class: 'dc' }, ' · ' + plural(r.dc, 'declarație', 'declarații')) : null)),
         h('td', { class: 'c contact' }, [r.w && h('div', { class: 'line site' }, siteLink(r)),
@@ -854,7 +866,7 @@
     }
 
     /* ---------- "Structura statului" ---------- */
-    const isFiltered = () => !!(S.q || S.cat || S.fam || S.county || S.uat || S.srcs.size || S.web || S.review);
+    const isFiltered = () => !!(S.q || S.cat || S.fam || S.county || S.uat || S.srcs.size || S.web || S.review || S.rad);
     const KINDS = [['Municipii', /^municipi/], ['Sectoare', /^sectorul/], ['Orașe', /^oras/], ['Comune', /^comuna/], ['Altele', /./]];
     const isCountyRec = r => /^judetul\b/.test(fold(r.n));
 
@@ -1277,7 +1289,7 @@
 
     /* counties */
     const countyFeatures = g => g.features.map(f => ({ f, name: counties.find(c => norm(c) === norm(f.properties.name.replace(/^Municipiul /, ''))) || null }));
-    const openCounty = c => { clearFilters({ county: c, web: S.web }); closeDialogSilently(); setView('loc'); window.scrollTo(0, 0); };
+    const openCounty = c => { clearFilters({ county: c, web: S.web, rad: S.rad }); closeDialogSilently(); setView('loc'); window.scrollTo(0, 0); };
     function countyMap(box, counts) {
       gis('romania-counties.geojson').then(g => {
         if (!box.isConnected) return;
@@ -1365,7 +1377,7 @@
 
     /* county profile: coat of arms, name and counts on the left above the locality tree; the locality map in a column on the right */
     function countyProfile(county, tree) {
-      const all = rows.filter(r => r.county === county), noU = all.filter(r => !r.u).length;
+      const all = rows.filter(r => r.county === county && (S.rad || !hiddenSt(r))), noU = all.filter(r => !r.u).length;
       const locs = new Set(all.filter(r => r.u).map(r => r.u));
       const mapBox = h('div', null, h('p', { class: 'sub', role: 'status' }, 'Se încarcă harta…'));
       const note = h('p', { class: 'sub', role: 'status' });
@@ -1699,6 +1711,14 @@
       elsewhere: 'nume identic, unic în țară (depusă din alt județ)',
       prefix: 'nume trunchiat, început al unui nume ANAF', same_name: 'același nume și județ, combinat din surse fără ANAF' };
     const srcOfId = { R: 'ROePAS', G: 'Registru', D: 'ANI', P: 'posturi.gov.ro', S: 'SEAP' };
+    const MF = ((D.dataset && D.dataset.inputs) || []).find(i => i.source === 'mf');       // the status source (name, licence, snapshot)
+    const dmy = d => d ? d.split('-').reverse().join('.') : '';
+    const STATUS_NOTE = { 2: 'Entitatea s-a dizolvat prin fuziune sau divizare. Activitatea ei continuă în altă entitate.',
+      3: 'Entitatea există încă. Starea oficială este dizolvare cu lichidare.' };
+    const statusBlock = r => r.st ? [h('p', null, h('span', { class: 'g2-tag', 'data-tone': STATUS_UI[r.st].tone }, STATUS_UI[r.st].text + (r.sd ? ' din ' + dmy(r.sd) : ''))),
+      h('p', { class: 'sub' }, [STATUS_NOTE[r.st], `Sursa: Ministerul Finanțelor${MF && MF.snapshot ? `, date din ${dmy(MF.snapshot)}` : ''} (${(MF && MF.licence) || 'CC-BY-4.0'}).`].filter(Boolean).join(' '))] : null;
+    const usMark = r => r.us === 1 ? '(sector dedus din nume)' : r.us === 2 ? '(din datele Ministerului Finanțelor)' : '';   // row key `us`
+    const marked = (r, v) => v && r.us ? [v, ' ', h('span', { class: 'sub' }, usMark(r))] : v;
     const peerBtn = rr => h('button', { class: 'link acc', type: 'button', onclick: () => openRecord(rr) }, rr.n);
 
     function renderDialog(r) {
@@ -1716,7 +1736,7 @@
       const note = r.f && noteOf.get(r.f);
       // same family, same ordonator (or same county when it has none)
       const sibs = !r.fam ? [] : (parents.length ? subordinates.get(parents[0].f) || [] : rows.filter(x => x.county === r.county && !x.p))
-        .filter(x => x !== r && x.fam === r.fam);
+        .filter(x => x !== r && x.fam === r.fam && (S.rad || !hiddenSt(x)));
       const copyMsg = h('span', { role: 'status' });
       const linkBox = h('input', { class: 'g2-input', type: 'text', readonly: true, 'aria-label': 'Linkul înregistrării', value: location.href, hidden: true });
       const copy = async () => {
@@ -1740,8 +1760,9 @@
             `Mai multe instituții ANAF se potrivesc la fel de bine (${cands.length}), așa că înregistrarea nu a fost combinată cu niciuna. Scorul de potrivire nu este o probabilitate.`,
             h('ul', { class: 'plain' }, cands.map(([c, rr]) => h('li', null, rr ? [peerBtn(rr), ` · CIF ${c}`] : `CIF ${c} (nu este în setul curent)`)))) : null,
           dup ? h('p', { class: 'flag' }, 'Posibil duplicat al: ', peerBtn(dup), ' (potrivire nesigură, nu a fost combinat; scorul nu este o probabilitate)') : null,
+          statusBlock(r),
           h('div', { class: 'sec' }, 'Locație'),
-          h('dl', { class: 'g2-summary-list' }, pair('Județ', r.county), pair('Localitate (UAT)', r.u && (r.us ? [r.u, ' ', h('span', { class: 'sub' }, '(sector dedus din nume)')] : r.u)), pair('Adresă', r.a),
+          h('dl', { class: 'g2-summary-list' }, pair('Județ', r.us === 2 ? marked(r, r.county) : r.county), pair('Localitate (UAT)', marked(r, r.u)), pair('Adresă', r.a),
             pair('Coordonate', r.la != null && h('a', { href: `https://www.openstreetmap.org/?mlat=${r.la}&mlon=${r.lo}#map=15/${r.la}/${r.lo}`,
               target: '_blank', rel: 'noopener noreferrer' }, `${r.la}, ${r.lo}`))),
           (r.w || r.e || r.ph || r.fx) ? [h('div', { class: 'sec' }, 'Contact'),
@@ -1859,9 +1880,9 @@
     }
 
     function clearFilters(extra = {}) {
-      Object.assign(S, { q: '', cat: '', fam: '', county: '', uat: '', srcMode: 'all', web: true, review: false, sort: 'n', ...extra });
+      Object.assign(S, { q: '', cat: '', fam: '', county: '', uat: '', srcMode: 'all', web: true, review: false, rad: false, sort: 'n', ...extra });
       S.srcs.clear();
-      el.q.value = ''; el.web.checked = S.web; el.review.checked = false; el.sort.value = 'n';
+      el.q.value = ''; el.web.checked = S.web; el.review.checked = false; el.rad.checked = S.rad; el.sort.value = 'n';
     }
 
     /* ---------- CSV export of the current selection ---------- */
@@ -1913,23 +1934,25 @@
     function update() {
       qTokens = norm(S.q).split(' ').filter(Boolean);
       srcList = [...S.srcs];
+      qCif = S.q.trim().replace(/^ro\s*/i, '');
+      const total = S.rad ? rows.length : nShown;               // the default views leave out the radiate and fuzionate records
       items = rows.filter(r => pass(r));
       if (S.sort === 'dc') items.sort((a, b) => (b.dc || 0) - (a.dc || 0));
       el.sort.closest('.sortby').hidden = S.view !== 'list';
       refreshFacets();
-      const nAct = !!S.cat + !!S.fam + !!S.county + !!S.uat + (S.srcs.size ? 1 : 0) + S.web + S.review;
+      const nAct = !!S.cat + !!S.fam + !!S.county + !!S.uat + (S.srcs.size ? 1 : 0) + S.web + S.review + S.rad;
       $('fcount').textContent = nAct || '';
       $('ftoggle').setAttribute('aria-label', nAct ? `Filtre, ${nAct} active` : 'Filtre');
       const homeStats = S.view === 'acasa';                  // the landing counts ignore the website filter
-      $('stats').textContent = homeStats ? `${fmt(rows.length)} înregistrări` : `${fmt(items.length)} din ${fmt(rows.length)}`;
-      $('stats').title = homeStats ? `${fmt(rows.length)} înregistrări` : `${fmt(items.length)} din ${fmt(rows.length)} înregistrări`;
+      $('stats').textContent = homeStats ? `${fmt(total)} înregistrări` : `${fmt(items.length)} din ${fmt(total)}`;
+      $('stats').title = homeStats ? `${fmt(total)} înregistrări` : `${fmt(items.length)} din ${fmt(total)} înregistrări`;
       $('csv-msg').textContent = '';
       $('toolbar').hidden = S.view === 'acasa';
       $('filters').hidden = S.view === 'acasa';
       $('home-link').toggleAttribute('aria-current', S.view === 'acasa');
       if (S.view === 'acasa') $('home-link').setAttribute('aria-current', 'page');
       refreshViewLinks();
-      $('menu-status').textContent = S.web || S.review || S.srcs.has('nocif') ? ' •' : '';
+      $('menu-status').textContent = S.web || S.review || S.rad || S.srcs.has('nocif') ? ' •' : '';
       results.replaceChildren({ acasa: renderHome, list: renderList, stat: renderStat, fam: renderFamTree, loc: renderLocTree }[S.view](items));
       syncHash();
     }
@@ -1947,6 +1970,7 @@
       if (S.srcs.size > 1 && S.srcMode === 'any') p.set('sm', 'any');
       if (!S.web) p.set('web', '0');
       if (S.review) p.set('review', '1');
+      if (S.rad) p.set('rad', '1');
       return p;
     }
     function syncHash(mode) {                           // mode: 'push' (record opened), 'replace' (record closed in place)
@@ -1979,8 +2003,9 @@
       S.srcMode = p.get('sm') === 'any' ? 'any' : 'all';
       S.web = p.get('web') !== '0';
       S.review = p.get('review') === '1';
+      S.rad = p.get('rad') === '1';
       S.id = p.get('id') || '';
-      el.q.value = S.q; el.web.checked = S.web; el.review.checked = S.review; el.sort.value = S.sort;
+      el.q.value = S.q; el.web.checked = S.web; el.review.checked = S.review; el.rad.checked = S.rad; el.sort.value = S.sort;
       refreshViewLinks();
       lastNav = navKey();
     }
@@ -2040,6 +2065,7 @@
     on(el.uat, 'change', () => { leaveHome(); S.uat = el.uat.value; update(); });
     on(el.web, 'change', () => { S.web = el.web.checked; update(); });
     on(el.review, 'change', () => { leaveHome(); S.review = el.review.checked; update(); });
+    on(el.rad, 'change', () => { S.rad = el.rad.checked; update(); });
     on(el.noanaf, 'change', () => { leaveHome(); el.noanaf.checked ? S.srcs.add('nocif') : S.srcs.delete('nocif'); update(); });
     on(el.sort, 'change', () => { S.sort = el.sort.value; update(); });
     on($('reset'), 'click', () => { clearFilters(); update(); });

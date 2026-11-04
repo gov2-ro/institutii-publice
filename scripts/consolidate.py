@@ -37,6 +37,11 @@ a record with no UAT gets its sector from the name (`uat_source` = "name"); sect
 Curated websites (curation/websites.csv, keyed by CIF) fill or replace the ROePAS website of an ANAF record;
 `website_source` is "curation" or "roepas".
 
+Status (data/lookup/status.csv, made by scripts/lookup_status.py from the Finance Ministry files): `status`, `status_date`,
+`status_source` on records with a CIF that is not from ANAF, and the county (`county_source` = "mf") of such a record that has
+none. `radiat` and `fuzionat` rows are hidden by default in the explorer. A SEAP conflict or a county disagreement goes to
+status-review.csv. The step runs after the families and changes no match, merge or category.
+
 Outputs (data/consolidated/): institutii.json (`match_candidates` is omitted when empty), institutii.csv
 (`match_candidate_cifs`, " | " joined), and metadata.json + rows.json, the compact copy that
 explorer/index.html loads. metadata.json carries `dataset`: generation time plus path, size, SHA-256,
@@ -66,6 +71,7 @@ DECLARATII_MERGED = DECLARATII_DIR / "declaratii.csv"
 POSTURI_CSV = ROOT / "data/posturi/employers.csv"
 SEAP_CSV = ROOT / "data/seap/authorities.csv"
 SEAP_MANIFEST = ROOT / "data/seap/manifest.json"
+STATUS_CSV = ROOT / "data/lookup/status.csv"
 OUT_DIR = ROOT / "data/consolidated"
 CURATED_WEBSITES = ROOT / "curation/websites.csv"
 CURATED_MERGES = ROOT / "curation/merges.csv"
@@ -1763,6 +1769,98 @@ def report_seap(rows, linked, recs, excluded, review):
     print(f"  records with a proposed CIF-less match: {sum(1 for x in review if x['candidate_id'])}", file=sys.stderr)
 
 
+# ---------------------------------------------------------------- status of a legal body (Finance Ministry)
+STATUS_VALUES = {"radiat", "fuzionat", "in_lichidare", "listat", "not_found"}
+STATUS_CODE = {"radiat": 1, "fuzionat": 2, "in_lichidare": 3}      # row key `st`; the page hides 1 and 2 by default
+USAT_CODE = {"name": 1, "mf": 2}        # row key `us`: the sector comes from the name / the county comes from the MF status
+STATUS_REVIEW_COLS = ["kind", "id", "cif", "name", "status", "status_date", "seap_last_seen", "county", "mf_county",
+                      "mf_locality"]
+STATUS_LICENCE = {"origin": "Ministerul Finanțelor, Date de identificare plătitori (data.gov.ro)",
+                  "licence": "CC-BY-4.0"}
+
+
+def load_status(path=None):
+    """data/lookup/status.csv (made by scripts/lookup_status.py): one row per CUI. A missing file gives no rows
+    (the input is not in git). Stops on a duplicate CUI, a CUI that is not digits or a status outside STATUS_VALUES."""
+    path = path or STATUS_CSV
+    if not path.exists():
+        print(f"warning: {path} not found, status source skipped", file=sys.stderr)
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = [{k: (v or "").strip() for k, v in r.items()} for r in csv.DictReader(fh)]
+    dup = sorted(c for c, n in Counter(r["cui"] for r in rows).items() if n > 1)
+    bad = sorted({r["status"] for r in rows if r["status"] not in STATUS_VALUES})
+    if dup or bad or any(not r["cui"].isdigit() for r in rows):
+        raise SystemExit(f"{path}: duplicate CUI {dup[:5]}, a CUI that is not digits, or an unknown status {bad}")
+    record_input("mf", path, len(rows), snapshot=max((r["checked_at"] for r in rows), default=""), **STATUS_LICENCE)
+    return rows
+
+
+def seap_last_years(seap):
+    """{cui: last year that SEAP lists the CUI} from the `last_seen` column ('2026-Q3')."""
+    return {r["cui"]: int(r["last_seen"][:4]) for r in seap if (r.get("last_seen") or "")[:4].isdigit()}
+
+
+def apply_status(records, rows, seap_last, county_of, uat_of):
+    """Set `status`, `status_date`, `status_source` on the record whose CUI a status row names, and fill an empty
+    county from the row. A record from ANAF is never touched. `county_of(text)` -> our county or None;
+    `uat_of(county, locality)` -> a known UAT label or None. Rules:
+      - `radiat` and `fuzionat` are not applied when SEAP lists the CUI in a year after the status year plus one;
+        the case goes to the review rows and the status stays empty.
+      - `county` and `uat` are set only when `county` is empty (`county_source` and `uat_source` = "mf").
+        A county that differs from the row goes to the review rows and stays.
+    -> (stats, review rows)."""
+    by_cui = {r["cif"]: r for r in records if r["cif"] and r.get("cif_source", "anaf") != "anaf"}
+    stats, review = Counter(), []
+    for row in rows:
+        rec = by_cui.get(row["cui"])
+        if not rec:
+            stats["no_record"] += 1
+            continue
+        base = {"id": rec["id"], "cif": rec["cif"], "name": rec["name"], "status": row["status"],
+                "status_date": row["status_date"], "county": rec["county"] or "", "mf_county": row["county"],
+                "mf_locality": row["locality"]}
+        year, seen = int(row["status_date"][:4]) if row["status_date"] else None, seap_last.get(row["cui"])
+        if row["status"] in ("radiat", "fuzionat") and year and seen and seen > year + 1:
+            review.append({"kind": "seap_conflict", **base, "seap_last_seen": seen})
+            stats["conflict"] += 1
+        else:
+            rec["status"], rec["status_date"], rec["status_source"] = row["status"], row["status_date"], "mf"
+            stats[row["status"]] += 1
+        if not row["county"]:
+            continue
+        county = county_of(row["county"])
+        if not county:
+            review.append({"kind": "county_unknown", **base})
+        elif not rec["county"]:
+            rec["county"], rec["county_source"] = county, "mf"
+            uat = uat_of(county, row["locality"])
+            if uat and not rec["uat"]:
+                rec["uat"], rec["uat_source"] = uat, "mf"
+            stats["county_filled"] += 1
+            stats["uat_filled"] += bool(uat and rec.get("uat_source") == "mf")
+        elif fold(rec["county"]) != fold(county):
+            review.append({"kind": "county_differs", **base})
+            stats["county_differs"] += 1
+    return stats, review
+
+
+def write_status_review(path, review):
+    """data/consolidated/status-review.csv: the SEAP conflicts and the county disagreements, for a person to read."""
+    review = sorted(review, key=lambda x: (x["kind"], x["id"]))
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=STATUS_REVIEW_COLS, restval="", lineterminator="\n")
+        w.writeheader()
+        w.writerows(review)
+
+
+def report_status(stats, review, rows):
+    print(f"status (mf): {len(rows)} rows; applied {dict(sorted((k, v) for k, v in stats.items() if k in STATUS_VALUES))}; "
+          f"SEAP conflicts {stats['conflict']}; no record {stats['no_record']}", file=sys.stderr)
+    print(f"  county filled {stats['county_filled']} (uat {stats['uat_filled']}); county differs {stats['county_differs']}; "
+          f"review rows {len(review)} {dict(Counter(x['kind'] for x in review))}", file=sys.stderr)
+
+
 TIER_RANK = {"exact": 0, "canonical": 1, "unit": 1, "tokens": 2, "prefix": 2, "national": 3, "elsewhere": 3}
 
 
@@ -1949,6 +2047,23 @@ def main():
     assign_families(records)
     merge_stats["curated_aliases"] = apply_curated_aliases(records)
     merge_stats["alias_unique"] = unique_aliases(records)
+    # Status comes after the families: a county filled from it must not move a record into or out of a family.
+    status_rows = load_status()
+
+    def status_county(text):
+        f = fold(text)
+        return county_display.get("bucuresti" if f == "municipiul bucuresti" else f)
+
+    def status_uat(county, locality):
+        # MF spells a town "Bîrlad" or "Oraş Bragadiru"; ANAF has "Municipiul Barlad" and "Orasul Bragadiru"
+        label = sector_label(locality)
+        if label != locality:
+            return label
+        return uat_label.get((fold(county), UAT_RE.sub("", fold(re.sub(r"(?<=\w)[îÎ]", "a", locality)), count=1)))
+
+    status_stats, status_review = apply_status(records, status_rows, seap_last_years(seap), status_county, status_uat)
+    if status_rows:
+        write_status_review(OUT_DIR / "status-review.csv", status_review)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / "institutii.json").write_text(json.dumps(records, ensure_ascii=False), encoding="utf-8")
     write_csv(OUT_DIR / "institutii.csv", records)
@@ -1956,13 +2071,16 @@ def main():
     review = write_posturi_review(OUT_DIR / "posturi-review.csv", records, by_cif)
     report(records, anaf, links, standalone, declaratii, aggregate, merge_stats, sector_stats, curation_stats,
            posturi, review, (seap, seap_linked, seap_recs, seap_excl, seap_review))
+    if status_rows:
+        report_status(status_stats, status_review, status_rows)
 
 
 CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif", "cif_tva", "parent_cifs",
             "parent_names", "website", "website_url", "email", "phone", "fax", "lat", "lon", "sources",
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
-            "declaratii_count", "declaratii_group", "link_posturi", "posturi_slugs", "posturi_postings", "uat_source", "merged_ids", "website_source", "cif_source", "same_body_as", "aliases", "aliases_unique"]
+            "declaratii_count", "declaratii_group", "link_posturi", "posturi_slugs", "posturi_postings", "uat_source", "merged_ids", "website_source", "cif_source", "same_body_as", "aliases", "aliases_unique",
+            "status", "status_date", "status_source", "county_source"]
 
 
 REVIEW_COLS = ["id", "name", "county", "locality", "postings", "possible_duplicate_of", "candidate_name"]
@@ -2035,7 +2153,7 @@ def write_explorer_data(out_dir, records):
             "m": fi.get(r["family"]), "dc": r.get("declaratii_count"), "ld": r["link"].get("declaratii"),
             "dg": r.get("declaratii_group"), "dk": r.get("declaratii_by_county"),
             "mc": [c["cif"] for c in r.get("match_candidates", [])],
-            "us": 1 if r.get("uat_source") else None, "nc": 1 if r["cif"] and r.get("cif_source", "anaf") != "anaf" else None, "mi": r.get("merged_ids"),
+            "us": USAT_CODE.get(r.get("uat_source") or r.get("county_source")), "st": STATUS_CODE.get(r.get("status")), "sd": r.get("status_date") if r.get("status") in STATUS_CODE else None, "nc": 1 if r["cif"] and r.get("cif_source", "anaf") != "anaf" else None, "mi": r.get("merged_ids"),
             "ps": r.get("posturi_slugs"), "pp": r.get("posturi_postings"), "lp": r["link"].get("posturi"),
         }
         for k, v in optional.items():
