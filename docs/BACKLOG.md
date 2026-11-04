@@ -310,10 +310,11 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       `descendantVisibility()` checked 8, 0 failures; no console error. Before this, the builder had checked only that the root CIFs
       of `rows.json` equal the CIFs placed in `metadata.state` (3,296 both) and the page script syntax (`node --check`).
 - [ ] `curation/merges.csv` cannot name an `S<cui>` id (the records are created after the merges). Add it if a merge is needed.
-- [ ] Defect: `period()` in `scripts/extract_seap.py` gives the wrong period to the 3 files of 2014 T3/T4 that it now reads
-      (`2d1bcb67`, `3d31f7be`, `e32a3d76`): the manifest says 2007-Q3 and 2007-Q4. The name of the file says 2014. The period affects only
-      `first_seen` and `last_seen` of the authorities: 4,935 CUIs now have `first_seen` 2007 (0 before), among them all 294 new CUIs. `consolidate.py` does not read these dates, so `institutii.csv` is correct.
-      Fix this before the dump deletion: the cache stores the period, and a cache rebuild needs the dump files.
+- [x] Defect: `period()` in `scripts/extract_seap.py` gave the wrong period to the files of the dataset "Achizitii publice 2007-2015
+      (Contracte)": the title gave 2007 for files of 2008-2016 (among them the 3 files of 2014 T3/T4, `2d1bcb67`, `3d31f7be`, `e32a3d76`).
+      Fixed 2026-11-05: a year in the file name wins over the year in the title. Measured: 58 of 291 resources changed, all in that dataset;
+      the other 233 keep their period. `first_seen` 2007: 4,935 -> 0 CUIs; `last_seen` 2007: 294 -> 0. Only these two columns differ in
+      `authorities.csv`; `institutii.csv` is unchanged. A cache with a stale period is now corrected when the file is there (no full read).
 - [ ] Family "Poliția locală" lost Sector 1, 2, 4 and 5 after the merge of the ANI copies of Sector 2 (2026-11-04). The ANI county noise
       had carried these records over the rule of 5 members in 4 counties. Consider `FAMILY_HEADS` for this family.
 - [ ] Phase 2: spike on the e-licitatie.ro authority profiles for contacts (access, terms, fields), then a brief.
@@ -329,7 +330,10 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       resource that the owner wants. Keep `packages.json`. The cache in `data/seap/cache/` keeps the extracted authorities.
       State on 2026-11-04: the manifest has no `missing` and no `incomplete` resource. The owner still decides about the resources
       that the extractor does not read: 62 `no_size` files (2016-2019, no size in `packages.json`) and 47 `no_header` files (2007-2016,
-      `^`-separated). The cache holds nothing for them, so the deletion loses them.
+      `^`-separated). The cache holds nothing for them, so the deletion loses them. The owner accepted that loss on 2026-11-04.
+      The `period()` defect is fixed (2026-11-05). Check of 2026-11-05: `extract_seap.py --dump <folder with packages.json only> --out <copy
+      of the cache>` gave `authorities.csv` byte-identical to the run with the dump; 182 resources `cached` (181 read + 1 trusted), 109
+      `missing` (62 `no_size` + 47 `no_header`); 18,077 CUIs. Ready to delete: the owner deletes the dump files, keeps `packages.json`.
 - [ ] Private utilities pass the SEAP company rule by volume (100 rows or more): ENGIE Romania, E-Distributie Dobrogea, and
       similar sector entities. Consider a curated exclusion list or a "utility operator, private" flag.
 - [x] `packages.json` resource `38e601a9` has the size and file name of `e40a48ed`. Checked by hand 2026-11-03: the file is a valid

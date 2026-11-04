@@ -238,8 +238,10 @@ QUARTER_NO = {"i": 1, "ii": 2, "iii": 3, "iv": 4}
 
 
 def period(file_name, title):
-    """'2025-Q2' from the quarter in the file name and the year in the dataset title; '2025' for no quarter."""
-    year = re.search(r"\b(20\d\d)\b", title)
+    """'2025-Q2' from the quarter and the year in the file name; '2025' for no quarter. A file name without a year
+    takes the first year in the dataset title (the title "Achizitii publice 2007-2015" covers files of 2008-2016)."""
+    year = re.search(r"(?<![0-9a-z])(20\d\d)(?![0-9a-z])", file_name.lower().replace("_", " ")) \
+        or re.search(r"\b(20\d\d)\b", title)
     year = year.group(1) if year else ""
     m = QUARTER.search(file_name.lower().replace(".", " "))
     if not m:
@@ -397,7 +399,7 @@ def main():
         else:
             sha = sha256_of(path)
             got = read_cache(cache, entry["size"], sha)
-            if got is not None and not got["meta"].get("period"):      # a cache from before the meta was kept
+            if got is not None and got["meta"].get("period") != entry["period"]:   # no period in the meta, or a stale one
                 write_cache(cache, got["counts"], got["rows"], got["rejects"], size=entry["size"], sha256=sha,
                             file=entry["file"], period=entry["period"], report_type=entry["report_type"])
             if got is None:

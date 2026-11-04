@@ -98,6 +98,21 @@ class ReadAuthorities(unittest.TestCase):
         self.assertEqual(x.period("raport-t1-2023.xls", "Achiziții publice 2023"), "2023-Q1")
         self.assertEqual(x.period("raport-contracte.xls", "Achizitii publice 2019"), "2019")
 
+    def test_period_year_in_the_file_name_wins_over_the_title(self):
+        title = "Achizitii publice 2007-2015 (Contracte)"
+        for name, want in (("e32a3d76-cumparari-directe-2014-t3.csv", "2014-Q3"),
+                           ("2d1bcb67-cumparari-directe-2014-t4-part1.csv", "2014-Q4"),
+                           ("3d31f7be-cumparari-directe-2014-t4-part2.csv", "2014-Q4"),
+                           ("becbf396-cumparari-directe-2008-t1.csv", "2008-Q1"),
+                           ("cfe94ff9-contracte-2014-s1.csv", "2014"),
+                           ("65558337-contracte-2016-s1.csv", "2016"),
+                           ("29fbc4fa-contracte-subsecvente-2016-t1-t3.csv", "2016-Q1"),
+                           ("4eb03268-y_contracte-2009.csv", "2009")):
+            self.assertEqual(x.period(name, title), want, name)
+        # the 8-character id prefix is not a year, and a name without a year takes the year of the title
+        self.assertEqual(x.period("20141234-raport-contracte-tiii.xlsx", "Achiziții publice 2026"), "2026-Q3")
+        self.assertEqual(x.period("3a2f2079-datagov-invitatii-tiii-2025.xlsx", "Achiziții publice 2025"), "2025-Q3")
+
     def test_aggregate_name_is_the_most_frequent_then_the_newest(self):
         files = [{"period": "2025-Q1", "report_type": "contracte",
                   "counts": {("55", "A SA", "", "", "", ""): 2, ("55", "B SA", "", "", "", ""): 2}},
@@ -130,6 +145,27 @@ class CachedWithoutDump(unittest.TestCase):
             self.assertEqual([(e["status"], e["rows"], e["authorities"], e["period"]) for e in manifest], [("cached", 3, 1, "2023-Q2")])
             line = (out / "authorities.csv").read_text(encoding="utf-8").splitlines()[1]
             self.assertEqual(line, "55,Alfa,,2023-Q2,2023-Q2,3,contracte,Autoritate locala,Servicii,Alfa,ALBA")
+
+    def test_a_stale_period_in_the_cache_is_corrected_when_the_file_is_there(self):
+        with tempfile.TemporaryDirectory() as d:
+            dump, out = Path(d) / "dump", Path(d) / "out"
+            (dump / "y").mkdir(parents=True)
+            res = {"id": "abcdef12-0000-0000-0000-000000000000", "name": "n", "size": 5,
+                   "url": "https://x/abcdef12-cumparari-directe-2014-t3.csv"}
+            (dump / "packages.json").write_text(x.json.dumps([{"id": "p", "title": "Achizitii publice 2007-2015",
+                                                               "resources": [res]}]), encoding="utf-8")
+            f = dump / "y" / "abcdef12-cumparari-directe-2014-t3.csv"
+            f.write_bytes(b"12345")
+            counts = {("55", "Alfa", "", "", "", ""): 3}
+            cache = out / "cache" / f"{res['id']}.csv"
+            x.write_cache(cache, counts, 3, 0, size=5, sha256=x.sha256_of(f), file="y/" + f.name,
+                          period="2007-Q3", report_type="achizitii_directe")
+            sys.argv = ["extract_seap", "--dump", str(dump), "--out", str(out)]
+            x.main()
+            manifest = x.json.loads((out / "manifest.json").read_text(encoding="utf-8"))["files"]
+            self.assertEqual((manifest[0]["status"], manifest[0]["period"]), ("read", "2014-Q3"))
+            self.assertEqual(x.read_cache(cache)["meta"]["period"], "2014-Q3")
+            self.assertEqual(x.read_cache(cache)["counts"], counts)
 
     def test_a_cache_of_another_size_is_not_used(self):
         with tempfile.TemporaryDirectory() as d:

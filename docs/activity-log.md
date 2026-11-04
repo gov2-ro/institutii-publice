@@ -1,5 +1,35 @@
 # Activity log
 
+## 2026-11-05 — SEAP: period() fix and cache-only check (Sonnet)
+
+**Done**
+- `period()` in `scripts/extract_seap.py`: a year in the file name wins over the year in the dataset title. The year must stand alone
+  (not inside the 8-character id prefix). Compared with the old function on the 291 resources: 233 keep their period, 58 change. All 58 are in
+  the dataset "Achizitii publice 2007-2015 (Contracte)" (files of 2008-2016, title year 2007). No other dataset has a year in the name that
+  differs from the year in the title.
+- Cache: the refresh now runs when the period in the cache differs from the computed period (was: when the period is missing). It rewrites
+  only the cache header. No `CACHE_FORMAT` bump, no full read. Two new tests: `period()` with real names, and the stale-period refresh. 102 tests pass.
+- `extract_seap.py --trust 38e601a9` on the full dump: 291 resources; status 181 `read`, 1 `trusted`, 62 `no_size`, 47 `no_header`, 0 `missing`
+  (as before); data rows 24,919,088; rejected 12,528; distinct CUIs 18,077. `first_seen` 2007: 4,935 -> 0 CUIs; `last_seen` 2007: 294 -> 0.
+  Compared with the file before the run: 18,077 CUIs in both; only `first_seen` (4,935 rows) and `last_seen` (294 rows) differ. In the manifest only
+  `period` differs (58 entries).
+- Cache-only check: `--dump` pointed at a folder with `packages.json` only, `--out` at a copy of the cache. Result: 182 resources `cached`
+  (181 `read` and 1 `trusted` before), 109 `missing` (62 `no_size`, 47 `no_header`); `authorities.csv` byte-identical (`cmp`); 18,077 CUIs; the
+  manifest fields of the 182 cached entries (size, sha256, rows, rejects, authorities, report_type, period, file) equal the run with the dump.
+- `consolidate.py`: `institutii.csv` unchanged. `tests/determinism.sh` passes.
+
+**Hard**
+- The cache stores the period, and a cache hit never ran `period()` again. The old check only filled a missing period. The new check compares.
+- The 47 `no_header` files have no cache. The extractor reads them again on every run with the dump (no rows, a few seconds each).
+- A file name like `...-2025.xlsx` contains the 8-character id prefix `3a2f2079`. A plain regex `20\d\d` would match `2079`, so the year must stand alone.
+
+**Decided**
+- (Opus order, 2026-11-04) Fix the defect first, then the owner deletes the dump.
+- (Owner, 2026-11-04) The loss of the 62 `no_size` and 47 `no_header` files is accepted.
+- (Sonnet) A stale period is corrected in the cache header, not by a `CACHE_FORMAT` bump. Cost of the alternative: a full read of the dump
+  (15 minutes or more) for an unchanged result. Risk of this choice: none seen; the test and the run above cover it.
+- (Sonnet, assumed) A name with no year (for example `raport-contracte-tiii.xlsx`) keeps the year of the title. This holds for 30 resources of 2021, 2024 and 2026 (titles with one year, so the year is right).
+
 ## 2026-11-04 — SEAP re-run, ANAF lookup for the pairs, browser check (Sonnet, Opus decisions)
 
 **Done**
