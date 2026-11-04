@@ -1,5 +1,52 @@
 # Activity log
 
+## 2026-11-05 — ONRC identities and merges applied (Sonnet, rule by Opus)
+
+**Done**
+- `scripts/onrc_candidates.py` (stdlib) writes the queue `data/consolidated/onrc-review.csv`. Run on the baseline (4,634 CIF-less `D` records), it gives the survey
+  counts exactly: `exact_county` 315, `exact_elsewhere` 33, `ambiguous` 12, none 4,274; 4,659 rows; every column equal to `data/lookup-survey/onrc-review.csv`
+  (only the row order inside 2 ambiguous records differs). The survey script was not kept, so the rules were rebuilt from the data: the key drops a leading SC and the words
+  SA, SRL, RA anywhere in the name; ONRC rows with CUI `0` or empty are dropped; `ambiguous` lists at most 5 rows. One column is new: `onrc_code` (the evidence needs it).
+  `identity_rejects` holds the rule of the brief for a new identity. Runtime 26 s. Tests `tests/test_onrc.py`: 9 new, 111 in all, pass.
+- Task 2 test: 3 identities (MEDITUR `D008ce49e`, TEGA `D78f77c4a`, HIDRO PRAHOVA `D22d54b26`) absorbed their `S` records; each `D` record changed in `cif`, `cif_source`,
+  `sources`, `merged_ids` only; no other record changed. The rows stay.
+- Sample of the merge candidates (by eye, no independent source): 30 of 171 `S` holders `exact_county` (seed 20261105): 30 right. All 27 other holders `exact_county`: 26 right,
+  1 doubtful. All 7 `S` holders `exact_elsewhere`: right. The 15 other holders `exact_elsewhere`: 2 right, 13 wrong (generic names). A flag scan of all 171 `S` cases (name key, county,
+  generic name with no `S` county) found 2 form conflicts. 0 wrong in 30 cannot rule out a wrong share up to about 10%. The other 141 `S` cases had only the flag scan.
+- Applied (rule below). Records 28,511 -> 28,308 (-203: 167 `S`, 35 `D`, 1 `P`). `curation/identities.csv` 581 -> 826 rows; `curation/merges.csv` 81 -> 117 rows.
+  - Item 1, `S` holder `exact_county`: 165 records, 158 identity rows (7 `D` copies of a CUI merged first). With the 3 test rows: 168 of the 171.
+  - Item 2, `S` holder `exact_elsewhere`: 7 records (`D1045fb36`, `D813a80a4` one CUI, `D3ae4624e`, `D418881c1`, `D49b57100`, `Dd5b7d64a`, `Df65a22bf`): 6 identity rows, 1 copy merged.
+  - Item 3, other holders `exact_county`: 26 merge rows (22 `G`, 2 `R`, 1 `P`, 1 `D`). The `P` holder is absorbed into the ANI record (order ROePAS, Registrul, ANI, posturi); its
+    existing identity row moves to the survivor `D5352a16a`.
+  - Item 4, `exact_elsewhere`: `D3d5ab95f` (to `G10286`) and `D8bb7fdd6` (to `G15383`): 2 merge rows.
+  - Item 5, several `D` records on one CUI: 8 merge rows (7 in item 1, 1 in item 2). CUI 27515874 is excluded.
+  - Task 4, new identities by the rule of the brief: 78 rows (48 SA, 30 SRL) of the 117 `exact_county` identity candidates. Rejected: 13 (CUI matches another `D` record), 17 (not in function: 14 `no`,
+    3 `unknown`), 6 (no company form in the name), 3 (form conflict). Evidence on every row: `ONRC 2026-10-19 <COD_INMATRICULARE>, tier <tier>`; `checked_at` 2026-11-05.
+- `consolidate.py` summary after the build: linked SEAP CUIs 13,470 -> 13,654 of 18,077 (75.5%); new `S` records 2,744 -> 2,580; records of their own from ANI 4,596 -> 4,377 (all "from" values are the run of task 2; the baseline has 2,747 new `S` records);
+  curated identities 826 (was 581); curated merges 111 (was 75); neclasificate roots 2. Companii de stat 1,406 -> 1,236 (run of task 2 -> now).
+- CSV diff against the committed file: 203 records removed, 0 added, 271 changed; all 271 are in the curation rows (survivors and their holders). Every removed id is in `merged_ids` of a survivor.
+  Changed columns: `cif`, `cif_source` 246; `sources` 210; `merged_ids` 193; `declaratii_count` 22; `aliases`, `aliases_unique` 33; `link_declaratii` 31; `declaratii_group` 6; `category` 1; posturi columns 1.
+- Families: 184 before, 184 after, none lost. Members lost by merges: Institut național 123 -> 116, Regie autonomă 99 -> 96, Muzeu 129 -> 128, Centru de sănătate 29 -> 28.
+- Checks: 111 unit tests pass; `tests/determinism.sh` passes (identical CSV under `PYTHONHASHSEED` 1 and 2); browser check (headless Chrome, own server): `reachableRoots()` 3,296 = `expectedRoots()` 3,296,
+  `descendantVisibility()` 8 checked, 0 failures, 0 console errors.
+- Attribution to ONRC, the dataset and CC-BY-4.0: `README.md`, and the data flow of `CLAUDE.md`.
+
+**Hard**
+- The first form check treated "R A T SRL" as a company with the form RA. A spaced "R A" is not a safe form word. The rule now needs the ONRC form to be one of the forms found in the name.
+- The 3 test rows ran before the rule existed, so the sample and the final build use the same data but the queue changed from 4,634 to 4,631 records.
+- `absorb` gave `G02187` the category of the absorbed ANI record (Altele -> Companii de stat). It is the existing rule for the category Altele; not changed.
+- `onrc_candidates.py` and the unit tests cannot test the ONRC files; the zero-difference result against the survey queue is the regression check for the rules.
+
+**Decided**
+- (Opus) `S` holder, `exact_county`: identity row on the `D` record, also when the company is dissolved (one body; the status brief handles the state). Form conflicts and CUI 27515874 go to hand review.
+- (Opus) `S` holder, `exact_elsewhere`: the 7 ids that were read enter (specific names). Other holders, `exact_county`: `merges.csv` rows, survivor order ROePAS, Registrul, ANI, posturi; `Dffbbf1ee` stays open.
+- (Opus) In `exact_elsewhere`, only `D3d5ab95f` and `D8bb7fdd6` enter among the other holders. The 13 generic cases never enter (see Verified limits in the backlog).
+- (Opus) Several `D` records on one CUI: merge first, identity on the survivor.
+- (Sonnet, assumed) Survivor of a `D` copy group: the record without a leading SC in the name, then the larger `declaratii_count`, then the lower id. Cost of the alternative: none seen; the survivor only changes the display name.
+- (Sonnet, assumed) A name with only "SC" and no form word is "no form in the name": the rule does not apply (6 records). The brief is silent on this case.
+- (Sonnet, assumed) The ONRC form `INCD` never agrees with a form word in the name. No `INCD` record passed the rule; the `INCD` records that entered are merges with a `G` holder or have no form word in the name.
+- (Sonnet) Hand-review list (dissolved, form conflicts, shared CUIs, no form, `Dffbbf1ee`) is in the backlog, open. Nothing from it is applied.
+
 ## 2026-11-05 — Finance Ministry dataset measured; source of the status brief (Sonnet measure, Opus decision)
 
 **Done**

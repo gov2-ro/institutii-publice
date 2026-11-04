@@ -13,7 +13,7 @@ Va fi și input data (cu site-urile publice) pentru [gov2-ro/stiri](https://gith
 - [x] consolidate data
 - [x] integrate ANI "Declarații integritate" (declaration counts, state-owned companies)
 - [ ] re-export the two capped ANI county groups (full tail of rare names)
-- [ ] resolve ANI-only records (state companies) to a CUI via the ONRC open data
+- [~] resolve ANI-only records (state companies) to a CUI via the ONRC open data (first batch applied 2026-11-05; see `docs/BACKLOG.md`)
 
 ## Pipeline
 
@@ -24,6 +24,11 @@ python3 -m http.server                 # then open http://localhost:8000/explore
 
 Sources it reads: the ANAF list (backbone, `docs/reference/`), the ROePAS scrape (`data/roepas/`, `scripts/scrape_roepas.py`),
 the Registrul PDF extraction (`docs/reference/`) and the ANI exports (`data/declaratii-integritate/`).
+
+Attribution: the tax IDs (CUI) that `curation/identities.csv` and `curation/merges.csv` give to ANI-only records come from the
+open dataset "Firme înregistrate la Registrul Comerțului până la data de 19.10.2026" of the Oficiul Național al Registrului
+Comerțului (ONRC), published on data.gov.ro under the licence [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).
+`scripts/onrc_candidates.py` matches the names; a person reviews the matches. The ONRC files are not in this repository.
 
 ### ANI exports (data/declaratii-integritate/)
 Kibana Lens → "Top values of `institutie_id.keyword`" + "Count of records", filtered on a group of counties,

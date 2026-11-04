@@ -50,6 +50,12 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
   record `S<cui>` (`cif_source` `seap`), unless the name rule `SEAP_PRIVATE` marks a private body (church, foundation, association, sports club, a structural-funds beneficiary, or a company with no public-service marker and fewer than 100 rows; bodies of local authorities are exempt). Records with a `cif_source` other than `anaf` are not roots of the state tree (row key `nc` = 1). CUIs with two candidate records are in `data/consolidated/seap-pairs.csv`. The review queue is
   `data/consolidated/seap-review.csv` (decision `record` or `excluded`, plus the best CIF-less record as a proposal only).
   The ignored inputs are `data/seap/`; the dump itself is not in the project.
+- **ONRC company register** (Oficiul Național al Registrului Comerțului, dataset "Firme înregistrate la Registrul Comerțului până la
+  data de 19.10.2026" on data.gov.ro, licence CC-BY-4.0): `OD_FIRME.csv`, `OD_STARE_FIRMA.csv`, `N_STARE_FIRMA.csv`, outside the repo
+  (delimiter `^`, raw `"` in names, so no quote handling). `scripts/onrc_candidates.py` (stdlib) matches the name key and county of the
+  CIF-less `D` records and writes the ignored queue `data/consolidated/onrc-review.csv`. The script writes no curation file.
+  A person or an agent sets the rows of `curation/identities.csv` and `curation/merges.csv` with the evidence `ONRC 2026-10-19 <COD_INMATRICULARE>, tier <tier>`.
+  `consolidate.py` does not read the ONRC files. The attribution is in `README.md`.
 - **Curated identities** `curation/identities.csv` (tracked): `id, cif, checked_at, evidence`. A row sets the CIF of a
   record that has none (CSV column `cif_source`: `anaf`, `curation` or `seap`). The script stops on an unknown id, a
   duplicate id or CIF, a CIF that is not digits, a record that has a CIF, or a CIF of an ANAF record (use `merges.csv`).

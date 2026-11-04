@@ -198,7 +198,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Wrong categories, needing evidence first: IDPSAR is in Sănătate. SRR and SRTV are in
       "Servicii publice locale și regii".
 - [ ] Re-export the two capped ANI county groups (full tail of rare names). (from README)
-- [~] Resolve ANI-only records (state companies) to a CUI with the ONRC open data. (from README) See the SEAP section.
+- [~] Resolve ANI-only records (state companies) to a CUI with the ONRC open data. (from README) First batch applied 2026-11-05; open: the hand-review list in the SEAP section. 4,274 records have no ONRC match (fuzzy matching is not started).
 
 - [x] Linker ties: when two ANAF rows get the same best token score, the first row wins. Consider "weak"
       for a tie instead (two equal candidates means the link is ambiguous). Confirmed contact errors:
@@ -329,9 +329,29 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] ANFP list 2025 (CC-BY-4.0, 4,325 rows; name, type, county, locality; no CUI or contacts): consider it for classification.
 - [x] ONRC files of 2026-10-19 for the ANI-only records: downloaded to `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-onrc-firme-2026-10-19/`, match measured 2026-11-05.
       Queue: `data/lookup-survey/onrc-review.csv` (not in git).
-- [ ] Apply the ONRC matches ([brief](briefs/onrc-identities.md), ready for Sonnet). Of 4,634 CIF-less `D` records: 315 `exact_county`, 33 `exact_elsewhere`, 12 `ambiguous`, 4,274 none. 128 exact matches give a new CUI;
-      220 name a CUI that another record holds (178 of them an `S` record). `exact_elsewhere` is not fit for a rule: about 47% false in a sample of 30.
-      No false match in a sample of 30 `exact_county`; a sample of this size cannot show a share under about 10%. The sample was not repeated after the form filter.
+- [x] Apply the ONRC matches ([brief](briefs/onrc-identities.md)). Built 2026-11-05, reviewed by Opus. Records 28,511 -> 28,308 (-203: 167 `S`, 35 `D`, 1 `P`).
+      `curation/identities.csv` 581 -> 826 rows (+245: 3 test rows of task 2, 158 `S` holders `exact_county`, 6 `S` holders `exact_elsewhere`, 78 by the task 4 rule).
+      `curation/merges.csv` 81 -> 117 rows (+36: 8 `D` copies of one CUI, 24 `G`, 2 `R`, 1 `P`, 1 `D` holders). Rule (Opus, 2026-11-05) in the activity log.
+      Script: `scripts/onrc_candidates.py` (queue `data/consolidated/onrc-review.csv`, not in git); tests: `tests/test_onrc.py`.
+      `exact_elsewhere` and `ambiguous` get no rule; only the 9 ids named in the activity log entered.
+      Sample limit: 0 wrong in 30 `S` cases cannot rule out a wrong share up to about 10%. The other 141 `S` cases had only a flag scan
+      (name key, county, generic name without county), not a read.
+- [ ] ONRC hand-review list (Opus decides; none of these is applied). Ids are `D` records unless said.
+      Dissolved or insolvent, new identity not set (`exact_county`, 17: 14 not in function, 3 `unknown`): `D0d7368df`, `D0e19aa1c`, `D0f4231e3`, `D164c95a7`,
+      `D2ba6cb6e`, `D35351796`, `D3bb87ffc`, `D43679d3d`, `D4a4215c2`, `D863838d3`, `D9a851607`, `Daa718cae`, `De78aca44`, `Deef5259b`
+      (not in function); `D5742add0` ROMAERO, `D6fa13d26` CASSTIL, `D7f6e3e64` (`unknown`, insolvency). Also `D03dd09f1`, `D6d256391` (FORMENERG),
+      `D8d5b84e1`, `Daa85e87f`, `Db9360acb` (INTERNET SI TEHNOLOGIE S3), `D4b7995b1`, `De33610b1` (SERVICII ENERGETICE OLTENIA) below.
+      Form conflicts: `Dd4162cb3` (name SRL, ONRC SA), `Ddbc23bf1` ROMGAZ SA (ONRC: ROMGAZ RA, radiată), `De46bd2ca` SMART SA (ONRC: SMART SRL, radiată);
+      with an `S` holder: `D67040b8e` CALORGAL SA (ONRC and `S`: SRL), `Ddf59f970` AMENAJARE EDILITARA S5 S R L (ONRC: SA; `S` name: SRL) and `D566191d2`
+      (same CUI 27515874, form agrees; held back with the other).
+      Several `D` records on one CUI, no other holder (13 records, 6 CUIs): 14529126 (`D03dd09f1`, `D6d256391`), 14325290 (`D47f94e9f`, `D61e5c56c`),
+      2410163 OIL TERMINAL (`D48913daf`, `D4e8f1dbb`, `Df875d65a`, and `Dfba6e431` with no form), 29389861 (`D4b7995b1`, `De33610b1`),
+      38189005 (`D8d5b84e1`, `Daa85e87f`, `Db9360acb`), 1350020 CONPET (`D45dd80c7`; the ambiguous `D6d38ad48` has the same name in Giurgiu).
+      A merge of the copies, then one identity, is the likely action.
+      No company form in the name, so the rule does not apply (6): `D498578a8` (ICPE-CA), `D8b450ebf` (EXIM BANCA ROMANEASCA), `D90ca3d97` (a CFR branch),
+      `D9188e2c5` (GRADINITA PITICOT, SRL, radiată: a private body), `Dcc400e15` (CENTRUL DE AFACERI FLANDRA VALCEA), `Dfba6e431`.
+      Held back: `Dffbbf1ee` ADMINISTRATIA DOMENIULUI PUBLIC (Bihor; the name has no SA; Bihor has several such bodies; the holder is `Dd0e06565`, ADP Oradea SA).
+      Side effect to check: `G02187` changed category from Altele to Companii de stat (the absorbed `Dfe52ae98` had that category; `absorb` takes the new category when the old is Altele).
 - [ ] Phase 2: sicap.ai API (`https://api.sicap.ai/v1/openapi/json`) gives `cityAuthority`/`countyAuthority` per authority CIF,
       which fills the county of the `S` records. No contacts. Needs an API key (the owner has none yet) and a check of the
       pricing and terms (re-publishing under EUPL). `https://sicap.ai/mcp` is behind a Vercel checkpoint (429 for scripts).
@@ -360,6 +380,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - "A.B.A." (Administrația Bazinală de Apă) in the posturi names (Opus, 2026-11-04): only 3 posturi names use this spelling, and all three
   name SGA units, so they stay in the posturi review queue. A change in `fold` would alter the folding of every initialism in the dataset.
 - The active-only posturi deploy SQLite (`webapp-php/posturi.sqlite`) cannot feed the employer export: 4,807 of 5,901 employers have no posting in it, so no county. Use a full export (2026-11-02, DATA-ORG-01).
+
+- ONRC `exact_elsewhere` and `ambiguous` matches never enter by rule (Opus, 2026-11-05). 13 generic `D` records matched the CUI of one body in another county, and all
+  are wrong: 8 "SPITALUL ORASENESC" (`D0f8380d1` Arges, `D2a7aa9d6` Cluj, `D486d4cf3` Bacau, `D9160515f` Vrancea, `D97fb74ec` Satu Mare, `D99649007` Olt,
+  `Dd71046bb` Prahova, `Dfba6611a` Brasov) against the Videle hospital (CUI 25040361, record `Da56aef25`), and 5 "ADMINISTRATIA DOMENIULUI PUBLIC" (`D513b336e` Arges, `D751068ae` Cluj,
+  `D7577ebdf` Hunedoara, `D892d2100` Ilfov, `Dc2fe7efa` Mures) against ADP Oradea SA (CUI 7997507, record `Dd0e06565`). Do not merge them. In a sample of 30
+  `exact_elsewhere` cases, 14 were wrong; the specific names (company names) are right, the generic local names are wrong.
 
 ## Later / misc / unfilled
 - [ ] create /llms.txt, then let ~/devbox/gov2/gov2.ro know, to update their llms.txt - or submit an issue to [gov2-ro/gov2-alpha-sunrise](https://github.com/gov2-ro/gov2-alpha-sunrise)
