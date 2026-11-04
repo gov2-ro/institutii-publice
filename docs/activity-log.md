@@ -1,5 +1,21 @@
 # Activity log
 
+## 2026-11-05 — Finance Ministry dataset measured; source of the status brief (Sonnet measure, Opus decision)
+
+**Done**
+- MF July files on geana: 2,647,766 rows; 1,829,046 PJ, 818,693 PF, 27 other. No duplicate `COD_FISCAL`. Snapshot 2026-06-11 (latest `DATA_PRELUCRARE`), not July.
+- Coverage: `S` 2,273 of 2,747 (ANAF: 2,728); `A` 13,443 of 13,485. With ANAF on 2,273 `S`: county 2,273 agree; locality 3 real differences; label 2,199 agree, 74 differ. No row is defunct in MF and active in ANAF.
+- Of 809 defunct by ANAF: 345 defunct in MF, 391 absent, 73 under another label (67 `MODIFICARE PUBLICI`, 6 `INREGISTRAT`). MF has only 41 `RADIERE` rows. Of 474 absent `S`, 64 are live by ANAF and 19 are unknown to both.
+- CUI 4515077 is absent from MF, so MF does not settle that conflict.
+
+**Hard**
+- `DATA_RADIERE` is filled only for mergers. `MODIFICARE PUBLICI` is a registration event of 1993 and 2011, not a public-entity flag: 12% of `A` lack it and it covers parishes. Its meaning is not documented.
+
+**Decided**
+- (Opus) MF is the base source of `record-status.md`: clear licence, bulk, no API limits. Cost: the 464 masked or absent defunct bodies stay visible unless ANAF also feeds it. Absence from MF never means `radiat`.
+- (Opus) `in_lichidare` is a separate status and stays visible. The page never claims "active", because `MODIFICARE PUBLICI` can hide a dissolution.
+- (Opus) ANAF re-use is a licence risk, so the owner decides. `TELEFON` is not published: it may hold personal numbers.
+
 ## 2026-11-05 — ONRC match measured; Finance Ministry and ANFP columns read (Sonnet)
 
 **Done**

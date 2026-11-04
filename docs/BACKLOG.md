@@ -321,10 +321,11 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [~] ANAF lookup of the `S` records. Run 2026-11-04: 2,747 CUIs in 28 requests; 2,728 found; 809 `RADIERE` or `DIZOLVARE`; 19 not found.
       The output stays in `data/lookup-survey/` (not in git). ANAF states no terms on re-use: the right to republish is open.
 - [ ] Build status and county of `S` records ([brief](briefs/record-status.md)). Owner decision 2026-11-05: keep defunct records,
-      add a status field, hide them by default. The brief waits for the source decision.
-- [~] Check the Finance Ministry dataset `date_de_identificare_platitori_actualizate_iunie_2026` (CC-BY-4.0): can it replace the ANAF lookup?
-      Sample of 2026-11-05: 61 columns with `COD_FISCAL`, `JUDET`, `LOCALITATE`, `TELEFON`, `STARE`, `DATA_STARE`, `DATA_RADIERE`; no email or website. County equal on 759 of 759
-      matched rows. Open: coverage of the 2,747 `S` CUIs, and the meaning of `STARE` "MODIFICARE PUBLICI". This needs the full July files (about 875 MB).
+      add a status field, hide them by default. Source: MF. Starts after the ONRC build.
+- [x] Check the Finance Ministry dataset (MF, CC-BY-4.0): base source for the status brief, not the only source. See the activity log, 2026-11-05. Yearly dataset with a new name each year; snapshot 2026-06-11.
+- [ ] Owner: accept or reject ANAF as a status source for the published data. ANAF states no re-use terms. Without ANAF, 391 deregistered `S` bodies stay visible as `not_found`.
+- [ ] MF `TELEFON`: 1,540 usable numbers for `S` and 7,526 for `A`. Not published: 50% differ from our phones, 1,373 are mobiles, 38 numbers are shared by 3 or more CUIs, so they may be fiscal or personal contacts. Needs a decision on personal data.
+- [ ] MF `STARE` "MODIFICARE PUBLICI": 2,176 rows are not in our data. About 794 look public by a rough regex. A lead for missing public bodies, after a filter and a review.
 - [ ] ANFP list 2025 (CC-BY-4.0, 4,325 rows; name, type, county, locality; no CUI or contacts): consider it for classification.
 - [x] ONRC files of 2026-10-19 for the ANI-only records: downloaded to `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-onrc-firme-2026-10-19/`, match measured 2026-11-05.
       Queue: `data/lookup-survey/onrc-review.csv` (not in git).

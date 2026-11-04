@@ -16,4 +16,4 @@ Rule (owner, 2026-11-05): read-only, within the published limits of the service,
 | 2026-11-05 | data.gov.ro | ONRC `OD_FIRME`, `OD_STARE_FIRMA`, `N_STARE_FIRMA` of 2026-10-19 | 787,967,023 bytes, 3 files | To geana, sizes equal the metadata | `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-onrc-firme-2026-10-19/`, `SHA256SUMS` there. Natural persons appear only as `PF`/`II` company rows in this file. |
 | 2026-11-05 | data.gov.ro | Finance Ministry dataset, stream samples of 3 files | 5 MB each | `data/lookup-survey/mf-sample/` | The sample holds natural persons. It stays local and out of git. |
 | 2026-11-05 | data.gov.ro | ANFP list 2025 | 147,431 bytes | `data/lookup-survey/mf-sample/` | CC-BY-4.0 |
-| 2026-11-05 | data.gov.ro | Finance Ministry dataset, 2 July files | About 875 MB | In progress | `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-mf-platitori-2026-07/`. Natural-person rows stay on geana. |
+| 2026-11-05 | data.gov.ro | Finance Ministry dataset, 2 July files | 874,608,750 bytes | To geana, sizes equal the metadata | `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-mf-platitori-2026-07/`, `SHA256SUMS` there. 818,693 natural-person rows stay on geana only. |
