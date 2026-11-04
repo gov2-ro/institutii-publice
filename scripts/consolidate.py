@@ -399,7 +399,7 @@ def released_csvs(min_version=(0, 15, 0)):
             continue
 
 
-def check_absorbed_ids(records, released=None, link_trail=None):
+def check_absorbed_ids(records, released=None, link_trail=None, retired=()):
     """An id that a released tag listed in `merged_ids` must not be a record now, unless curation/unmerged.csv
     (id, reason) says so. Every id of the latest release must still be a record or appear in `merged_ids` or
     `roepas_ids`. An id that was a record and is now linked into an ANAF record (`link_trail`), or whose ANI name now
@@ -408,7 +408,7 @@ def check_absorbed_ids(records, released=None, link_trail=None):
     if not released:
         return
     ids = {r["id"] for r in records}
-    trail = {m for r in records for m in r.get("merged_ids", [])}
+    trail = {m for r in records for m in r.get("merged_ids", [])} | set(retired)
     trail |= {"R" + m for r in records for m in r.get("roepas_ids", [])}
     allowed = set()
     if UNMERGED.exists():
@@ -1926,7 +1926,6 @@ def main():
     merge_stats["curated"] = apply_curated_merges(records, load_curated_merges(), link_trail)
     merge_stats["sector_names"] = strip_sector_suffix(records)
     check_aliases(records)
-    check_absorbed_ids(records, link_trail=link_trail)
     merge_stats["same_body"] = apply_same_body(records)
     sector_stats = infer_sectors(records)
     sector_stats["unified"] += unified[True]
@@ -1942,6 +1941,9 @@ def main():
         write_seap_pairs(OUT_DIR / "seap-pairs.csv", seap_pairs_rows)
         print(f"seap-pairs.csv: {Counter(x['kind'] for x in seap_pairs_rows)}", file=sys.stderr)
     records.extend(seap_recs)
+    for cui, rec in seap_linked.items():             # an S record that a CIF now links into another record
+        link_trail["S" + cui] = rec["id"]
+    check_absorbed_ids(records, link_trail=link_trail, retired={"S" + r["cui"] for r, _ in seap_excl})
     for rec in records:
         rec.pop("_cands", None)
     assign_families(records)
