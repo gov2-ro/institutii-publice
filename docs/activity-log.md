@@ -1,5 +1,24 @@
 # Activity log
 
+## 2026-11-04 — SEAP pairs review (Sonnet)
+
+**Done**
+- 44 duplicate project records merged in `curation/merges.csv` and 41 identities added to `curation/identities.csv`, for the pairs of
+  `seap-pairs.csv` whose records name one county (or one Bucuresti sector, where ANI files the body under Ilfov). Rule: same
+  normalized name as the SEAP authority, 3 or more words. Survivor order: ROePAS, Registrul, ANI, posturi.
+- Records 28,379 -> 28,294. Linked 13,421 of 17,783 CUIs (75.5%); new `S` records 2,511; `seap-pairs.csv` 26 rows (15 + 11).
+- 100 tests pass; determinism passes; neclasificate roots stay at 2.
+
+**Hard**
+- The release tag v0.48.0 lists `S` ids. `check_absorbed_ids` ran before the `S` records existed and stopped the build. It now runs
+  after the SEAP step; an `S` record that a CIF links into another record goes to that record's `merged_ids`, and an `S` id that
+  a rule excludes counts as retired.
+- The Chrome extension was not connected, so the browser check of `reachableRoots()` is still open.
+
+**Decided**
+- The 15 `two_records` rows with different counties and the 11 `two_seap_rows` rows stay for a person: a wrong merge of two bodies
+  with one name costs more than a duplicate.
+
 ## 2026-11-03 — SEAP source, CIF identities, hosted-body aliases (Sonnet build, Opus decisions)
 
 **Done**

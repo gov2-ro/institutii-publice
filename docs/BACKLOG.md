@@ -180,7 +180,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       punctuation or spelling, so the same-name rule misses them. 126 ambiguous surfaces in all.
 - [ ] R11176080 is named only "Adr" (ROePAS, Str. Italiana 22, Sector 2). Its meaning is unknown. Not the
       Autoritatea pentru Digitalizarea Romaniei (A42283735).
-- [ ] AMR and UNCJR are in no source. Add them as curated records when the owner decides how.
+- [x] AMR and UNCJR: records `S11036662` and `S4696968` via SEAP (2026-11-03).
 - [ ] More duplicates that differ by an ANAF typo or an old name remain undetected. Review the weak candidates
       (`possible_duplicate_of`) of source-only Bucuresti records and add rows to `curation/merges.csv`.
 - [ ] No ANAF or registrul record exists for Inspectoratul General al Jandarmeriei Romane. Only the ANI record
@@ -285,8 +285,10 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 ## SEAP contracting authorities as a source (owner request, 2026-11-02; brief: briefs/seap-authorities-source.md)
 - [x] Phase 1: extractor, source `seap`, `S<cui>` records, `curation/identities.csv`, hosted-body aliases. Built 2026-11-03.
       Opus decisions of 2026-11-03 applied (see the activity log): rule accepted, company rule added, state tree fixed.
-- [ ] Review `data/consolidated/seap-pairs.csv`: 56 CUIs with two candidate records (`two_records`) and 11 CUIs whose name
-      two SEAP rows share (`two_seap_rows`). Merge duplicates in `curation/merges.csv`, then add the identity.
+- [~] Review `data/consolidated/seap-pairs.csv`. Done 2026-11-04: 44 duplicate pairs merged and 41 identities added (same name, one county
+      or one Bucuresti sector). Left: 15 `two_records` rows whose records name different counties (ANI county is unreliable:
+      Politia Locala Chitila, CNIT, CNEE, Registrul Auto Roman...) and 11 `two_seap_rows` rows (generic names such as
+      "Camin pentru persoane varstnice"). A person must decide.
 - [ ] Re-run `scripts/extract_seap.py` when the dump download ends (2021 TIII/TIV, 2024 TIII/TIV and others were missing on 2026-11-03).
       The dump will be deleted after the full run: the cache in `data/seap/cache/` then rebuilds `authorities.csv`.
 - [-] 62 files of 2016-2019 stay unread. Reason: `packages.json` has no size for them (status `no_size`), so a partial download
