@@ -1,5 +1,20 @@
 # Activity log
 
+## 2026-11-05 — ONRC match measured; Finance Ministry and ANFP columns read (Sonnet)
+
+**Done**
+- ONRC files on geana: `OD_FIRME` 4,229,451 rows, `OD_STARE_FIRMA` 4,670,796 rows, `N_STARE_FIRMA`. Sizes equal the CKAN metadata; SHA-256 in `SHA256SUMS` there.
+- Match of 4,634 CIF-less `D` records (folded name without the legal form): `exact_county` 315, `exact_elsewhere` 33, `ambiguous` 12, none 4,274. With a company form (560 records): 297, 16, 11, 236.
+  Of the 348 exact matches: 297 in function, 43 dissolved, 8 unknown; 128 give a new CUI; 220 name a CUI that another record holds. The rule "form agrees, one row in the county, CUI on no other record" leaves 96 `exact_county`.
+- Eyeball samples (name, county, category, form; no independent source): `exact_county` 0 of 30 wrong; `exact_elsewhere` 14 of 30 wrong, 3 doubtful (generic local names matched to an unrelated SRL). Missed matches are not measured.
+- Finance Ministry sample (5 MB of 3 files): see the backlog. ANFP list 2025 read in full: 4,325 rows, no CUI, no contacts.
+
+**Hard**
+- ONRC names hold raw `"`, so a reader needs `QUOTE_NONE`. The Finance Ministry `.csv` files are ISO-8859-2; the July `.txt` files are UTF-8. Its title says June, but the July files are newer.
+
+**Decided**
+- (Opus) No ONRC match enters the curation without a review of the rule. `exact_elsewhere` and `ambiguous` get no rule.
+
 ## 2026-11-05 — lookup survey: ANAF, ONRC, alternatives; brief for record status (Sonnet survey, Opus brief)
 
 **Done**

@@ -323,7 +323,14 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Build status and county of `S` records ([brief](briefs/record-status.md)). Owner decision 2026-11-05: keep defunct records,
       add a status field, hide them by default. The brief waits for the source decision.
 - [~] Check the Finance Ministry dataset `date_de_identificare_platitori_actualizate_iunie_2026` (CC-BY-4.0): can it replace the ANAF lookup?
-- [~] ONRC files of 2026-10-19 for the ANI-only records: download to geana and measure the match (owner approved 2026-11-05). The result is a review queue, not a merge.
+      Sample of 2026-11-05: 61 columns with `COD_FISCAL`, `JUDET`, `LOCALITATE`, `TELEFON`, `STARE`, `DATA_STARE`, `DATA_RADIERE`; no email or website. County equal on 759 of 759
+      matched rows. Open: coverage of the 2,747 `S` CUIs, and the meaning of `STARE` "MODIFICARE PUBLICI". This needs the full July files (about 875 MB).
+- [ ] ANFP list 2025 (CC-BY-4.0, 4,325 rows; name, type, county, locality; no CUI or contacts): consider it for classification.
+- [x] ONRC files of 2026-10-19 for the ANI-only records: downloaded to `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-onrc-firme-2026-10-19/`, match measured 2026-11-05.
+      Queue: `data/lookup-survey/onrc-review.csv` (not in git).
+- [ ] Apply the ONRC matches ([brief](briefs/onrc-identities.md), ready for Sonnet). Of 4,634 CIF-less `D` records: 315 `exact_county`, 33 `exact_elsewhere`, 12 `ambiguous`, 4,274 none. 128 exact matches give a new CUI;
+      220 name a CUI that another record holds (178 of them an `S` record). `exact_elsewhere` is not fit for a rule: about 47% false in a sample of 30.
+      No false match in a sample of 30 `exact_county`; a sample of this size cannot show a share under about 10%. The sample was not repeated after the form filter.
 - [ ] Phase 2: sicap.ai API (`https://api.sicap.ai/v1/openapi/json`) gives `cityAuthority`/`countyAuthority` per authority CIF,
       which fills the county of the `S` records. No contacts. Needs an API key (the owner has none yet) and a check of the
       pricing and terms (re-publishing under EUPL). `https://sicap.ai/mcp` is behind a Vercel checkpoint (429 for scripts).
