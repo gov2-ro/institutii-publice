@@ -334,7 +334,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Phase 2: sicap.ai API (`https://api.sicap.ai/v1/openapi/json`) gives `cityAuthority`/`countyAuthority` per authority CIF,
       which fills the county of the `S` records. No contacts. Needs an API key (the owner has none yet) and a check of the
       pricing and terms (re-publishing under EUPL). `https://sicap.ai/mcp` is behind a Vercel checkpoint (429 for scripts).
-- [ ] Delete the dump `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-adr-achizitii-publice-dump` (owner request, 2026-11-03).
+- [x] Deleted by the owner, 2026-11-05; `packages.json` stays. Delete the dump `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-adr-achizitii-publice-dump` (owner request, 2026-11-03).
       Do it after the download ends and `extract_seap.py` re-ran, and only when the manifest has no `incomplete` or `missing`
       resource that the owner wants. Keep `packages.json`. The cache in `data/seap/cache/` keeps the extracted authorities.
       State on 2026-11-04: the manifest has no `missing` and no `incomplete` resource. The owner still decides about the resources
