@@ -94,7 +94,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Show a readable name per source and keep the path in a detail line.
 - [ ] Refine the county profiles (`#v=loc&k=<county>`): owner request 2026-10-28, deferred. Scope to agree first.
 - [x] Publish the landing v2 work to org.gov2.ro. Done 2026-11-02; the status and SEAP work followed on 2026-11-05.
-- [ ] Check the share preview of `og.png` in a share debugger (owner).
+- [x] Check the share preview of `og.png` (owner, 2026-11-06: fine).
 - [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
 
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)
@@ -260,6 +260,15 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Issue #6: curated CIF identities for the INCDs, BNR, RAAPPS and Imprimeria BNR. Built 2026-11-03: `curation/identities.csv`,
       521 rows (512 by an exact-name rule, 9 INCD rows by hand). CNAIR has no row: two project records are candidates
       (`R11040419`, `Dd8f2fa63`); see the SEAP section below.
+- [x] Issue #6: INCD records with no CIF, decided 2026-11-06 (brief: briefs/incd-pairs.md; table in the activity log). 22 of 27 resolved
+      by merge or identity, plus the Brașov pair. Opus reviewed it 2026-11-06.
+- [ ] Issue #6, open INCD records (5): `G30065` (Neamț centre of INCDSB; no ONRC row), `D79752cc5` (name cut at `PENTRU PROTECTIA`; fits ICIM,
+      `S27282590` or Darabont), `G10608` and `G10617` (old names of INCERC and URBANPROIECT; ONRC CUIs 698 and 990 are `radiată`; a source must link
+      them to URBAN-INCERC, CUI 26752660), `D5fd01700` (Cantacuzino `ACTIVITATE ECONOMICA`; find whether it has its own CUI).
+- [ ] Issue #6: 49 of the 52 INCD records have no website (44 of them have a CIF). Separate work; the 2026-11-06 work added no website.
+- [x] Issue #6: the survivors `G10597`, `G10602`, `G10605`, `G10610`, `G10613`, `G18160`, `G26069`, `G26070`, `G38134`, `G38135`, `G40079`
+      (11 in all) show a Registrul name cut at about 80 characters. Done 2026-11-06 (Opus): 11 `rename` rows in `curation/merges.csv`, with the full names from SEAP and ONRC.
+- [ ] Issue #6: `S27282590` (Protecția Mediului, 3 SEAP rows in 2014, MF `MODIFICARE PUBLICI`) may be an old record of ICIM (`G10598`, CUI 34938931). Not checked.
 - [x] Issue #6: absent bodies. Built 2026-11-03: AMR and UNCJR come in via SEAP (the name rule keeps them); Consiliul Fiscal,
       CSAT and Autoritatea de Audit have a `hosted_body` alias on the host body.
 - [ ] DATA-ORG-07 — posturi gives the posting county, not the seat, for national bodies. Five ABA bodies cannot link

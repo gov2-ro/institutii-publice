@@ -1,5 +1,78 @@
 # Activity log
 
+## 2026-11-06 — Review (Opus): INCD records accepted, with full names added
+
+**Done**
+- Checked the result against the CSV diff: 20 records removed, each in `merged_ids` of a survivor; 0 added; 21 changed, all listed in the brief or in the table below; no CIF on two records.
+- Checked the ONRC rows of the new identities 371378, 3193984, 49042467 and 14257595, and the row of the conflict on 2522213. They agree with the evidence.
+- Added 11 `rename` rows: the survivors with a name cut at about 80 characters now show the full name from SEAP or ONRC. The rebuild changed only `name` and `aliases` of these 11 records.
+- 124 tests pass. `tests/determinism.sh` passes.
+
+**Hard**
+- Three `S` records gave their name to no field of the survivor when they merged, so a search for the full name would fail. The `rename` rows fix this. The cut name stays as an alias.
+
+**Decided**
+- (Opus) Keep `D498578a8` with CIF 49042467. Its name contains `SUBUNITATEA ICEMENERG`, and ONRC lists this subunit with its own CUI. The earlier ONRC form rule does not apply here, because this row has an individual review.
+- (Opus) Keep the merge `G03144` -> `A2522213`. ONRC says `radiată`, but ANAF and SEAP to 2026-Q3 list the CIF. The evidence column records the conflict.
+
+## 2026-11-06 — INCD records with no CIF (Sonnet, brief `incd-pairs.md`; Opus reviews)
+
+**Done**
+- Decided the 27 INCD records with no CIF and the Brașov pair, one by one, with the four tests of the brief. The table below holds every decision.
+  Applied: 16 rows in `curation/merges.csv` (117 -> 133), 7 new rows in `curation/identities.csv` (826 -> 833) and 7 identity rows moved to the survivor. Nothing is committed.
+- Sources used, all local: ONRC files of 2026-10-19 on geana, `data/seap/authorities.csv` (column `names` too), `data/lookup/status.csv`, the build output. No external call.
+- Ran `lookup_status.py` after the first build: 3,406 -> 3,409 CUIs (new: 371378, 3193984, 49042467). Each is `listat`, and the MF county agrees with the record. Ran the build again.
+- Measured, before -> after: records 28,308 -> 28,288 (-20: 11 `D`, 3 `G`, 1 `P`, 1 `R`, 4 `S`). Kinds: `A` 13,485 -> 13,485; `D` 4,888 -> 4,877; `G` 5,935 -> 5,932; `P` 939 -> 938; `R` 481 -> 480; `S` 2,580 -> 2,576.
+  INCD records 71 -> 52; with a CIF 44 -> 47 (`curation` 35 -> 41, `anaf` 3 -> 3, `seap` 6 -> 3); with no CIF 27 -> 5. Brașov: `D93b7a3d6` now has CUI 14257595 and absorbed `S14257595`.
+  Companii de stat 1,236 -> 1,235; Cercetare 202 -> 185; Apărare 747 -> 745. Status counts: `listat` 2,441 -> 2,444, others equal. Neclasificate roots 2.
+- CSV against the build before the work (rebuilt first: byte-equal to the committed file): 20 records removed (each id is in `merged_ids` of a survivor), 0 added, 21 changed. All 21 are survivors or holders of the rows below. No record outside the listed ones changed.
+- Checks: 124 unit tests pass; `tests/determinism.sh` passes. The alias GeoEcoMar stays on `G10610` (the curated alias row has the id `G10610`). `R11065577` brings the e-mail and the phone to `A15203810`. The website of `A15203810` stays.
+
+| Record | Decision | Target or CIF | Reason |
+|---|---|---|---|
+| `R11065577` | merge | `A15203810` | Same address (Splaiul Independenței 103, sector 5). ONRC J2003001983404 gives the CUI for the name. |
+| `G03144` | merge | `A2522213` | The Registrul name is the ANAF name cut at 78 characters. Same county Argeș. SEAP gives the name for the CUI. ONRC row has the state `radiată`; ANAF and SEAP still list the CIF. |
+| `G23065` | merge | `R11067917` | Cut name, same county Hunedoara. SEAP, MF and ONRC give the INSEMEX name for CUI 2664676. The ROePAS record survives. |
+| `G26069` | merge `Df89edd07` into it | CUI 2788151 | Cut name; ANI name `... RARE IMNR`; same county Ilfov. SEAP, MF, ONRC J2003001160232. Registrul survives; identity row moved. |
+| `G26070` | merge `D0cb610fb` into it | CUI 9052135 | Cut name; INFLPR; Ilfov. SEAP, MF, ONRC J2003000609239. ONRC also has an older row with CUI 0, state `radiată`. Identity row moved. |
+| `G30065` | **open** | `G10604` rejected | The record is the Neamț centre of the institute. `G10604` (CUI 3324060) is the Bucharest seat. A unit in another county is not the same body. ONRC has no row for a Neamț unit. |
+| `G38134` | merge `D27c051fe` into it | CUI 3041226 | Cut name; ISIM Timișoara; Timiș. SEAP, MF, ONRC J2009001895356. Identity row moved. |
+| `G38135` | identity | CUI 9364218 | Replaces `S9364218`. SEAP name starts with the cut Registrul name; Timiș; MF and ONRC J1997000350356 agree. |
+| `G40079` | merge `D6b60679a` into it | CUI 2538104 | Cut name; ICSI Râmnicu Vâlcea; Vâlcea. SEAP, MF, ONRC J1997000047382. Identity row moved. |
+| `G10597` | identity | CUI 18107639 | Replaces `S18107639`. ICPA București; SEAP, MF, ONRC J2005018719401. Not `G10598` (ICIM, CUI 34938931). |
+| `D79752cc5` | **open** | `S27282590` rejected | The name stops at `PENTRU PROTECTIA`. It fits ICIM (`G10598`), the S record `S27282590` (Protecția Mediului, 3 SEAP rows in 2014) and Darabont (`G10615`). No source chooses one. |
+| `Punitatea-militara-02484-...-cantacuzino` (`P`) | merge | `A15203810` | Unit number 02484 and the name; the posturi record already linked to `A15203810` has the same unit number. |
+| `G10605` | merge `D974e5c45` into it | CUI 9254436 | Cut name; INCSMPS; București. SEAP, MF, ONRC J1997001900404. Identity row moved. |
+| `G10608` | **open** | `D105eddbc` rejected | `G10608` is `... IN CONSTRUCTII SI ECONOMIA CONSTRUCTIILOR` (INCERC). `D105eddbc` is URBAN-INCERC (CUI 26752660, 2010). ONRC has the INCERC name under CUI 698 with the state `radiată`. No local source links the two names. |
+| `G10610` | identity | CUI 5194978 | Replaces `S5194978`. GeoEcoMar; București. SEAP, MF, ONRC J1997001075407. The branch `S37424048` (ONRC: Constanța) is another body and stays. |
+| `G10613` | merge `D17cbcb49` into it | CUI 15576142 | Cut name; ICPMRR; București. SEAP, ONRC J40/9375/2003. Identity row moved. |
+| `G10617` | **open** | `D105eddbc` rejected (doubtful in the brief) | `... URBANISM SI AMENAJAREA TERITORIULUI` is URBANPROIECT; ONRC CUI 990, state `radiată`. Not the name of URBAN-INCERC. No source links them. |
+| `D5fd01700` | **open** | `A15203810` not applied | The name ends with `ACTIVITATE ECONOMICA`. In this list, such names often have their own CUI (communes, prisons). No local source shows that the institute has one CUI for this activity. |
+| `Dfd6f52e8` | merge | `G10611` | `ICPE CA` in București; CUI 13827850 (SEAP, MF, ONRC J2001003800402). The ONRC subunit and the Covasna branch are other bodies. |
+| `D498578a8` | identity | CUI 49042467 | `G10611` rejected: the name has `SUBUNITATEA ICEMENERG`. ONRC J2023020622407 has this exact name, București, `funcțiune`. MF `listat`. |
+| `D7f2f2e0e` | merge | `G10607` | ICCF București; CUI 3008580 (SEAP, MF, ONRC J1997000963402). The Călărași branch is another body. |
+| `Da00d8ede` | merge | `G10615` | Darabont; București. SEAP lists `Alexandru Darabont` as a name of CUI 1558391; MF sector 6. ONRC has no row for this CUI. |
+| `Df5d5cd2b` | merge | `G15220` | Cut ANI name `... MARINA GRIGORE A`; Constanța; CUI 1869096 (SEAP, MF, ONRC J2015001770131). |
+| `G18160` | merge `D10ecebad` into it | CUI 3871599 | The brief had no candidate. ICMET Craiova: Dolj; SEAP, MF, ONRC J1999000312165. Identity row moved. |
+| `G32125` | identity | CUI 3193984 | The brief had no candidate. ONRC J29/1021/2003 (IPCUP Ploiești, Prahova, `funcțiune`); MF `listat`, Ploiești. No SEAP row. |
+| `G10602` | identity | CUI 371378 | The brief had no candidate. ONRC J40/4038/1991 (INCDIF ISPIF București, `funcțiune`); MF `listat`, sector 4. The Timiș branch is another body. No SEAP row. |
+| `G10614` | merge | `A15203810` | The brief had no candidate. SEAP lists this name as an earlier name of CUI 15203810. București. |
+| `D93b7a3d6` (Brașov) | identity | CUI 14257595 | Replaces `S14257595`. SEAP lists the same name as `SC ... CFR SCRL ...`; the spaced letters C F R and S C R L blocked the tiers. ONRC J2001001079082 (form SA, `funcțiune`), MF, county Brașov. |
+
+**Open (5 INCD records with no CIF):** `G30065`, `D79752cc5`, `G10608`, `G10617`, `D5fd01700`. The backlog lists them.
+
+**Hard**
+- The Registrul source cuts names at about 80 characters. A cut name is a prefix of the full name. I accepted a cut name only when one body in the same county starts with it.
+- The Registrul block 10597-10618 also holds the old names of bodies that merged. `G10608` and `G10617` carry such names. ONRC marks their CUIs (698, 990) `radiată`. I found no local source that names the successor.
+- ONRC marks J03/1232/2005 (CUI 2522213) `radiată`, while ANAF and SEAP (to 2026-Q3) list the CIF. I used the ANAF record and recorded the conflict in the evidence.
+
+**Decided**
+- (Sonnet, assumed) `D498578a8` gets the identity 49042467 although the name has no company form. The brief for this work asks for tests 1 to 3 only. The earlier ONRC rule rejects a name with no form. Cost of the alternative: the record stays open with an exact ONRC match.
+- (Sonnet, assumed) `D5fd01700` stays open. Cost of the alternative: a wrong merge hides an economic unit that may have its own CUI (the ANAF record shows a second number 34965529 in `cif_tva`, which I could not place).
+- (Sonnet, assumed) I added no `rename` rows. The 11 survivors `G...` that hold a cut Registrul name keep it as the display name; the full name is in `aliases` for the 7 merged `D` cases and in `merged_ids` only for `G38135`, `G10597`, `G10610` (the `S` name is lost to the search, except the alias GeoEcoMar). Cost of the alternative: rename rows go beyond the brief. Opus decides.
+- (Sonnet, assumed) The survivor order follows the brief (ROePAS, Registrul, ANI, posturi), so the `D` record is absorbed by the `G` record in 7 cases.
+- Not changed: `docs/pipeline.md` (its counts are from the build of 2026-11-05).
+
 ## 2026-11-06 — Source credits on *Despre*; owner decisions on ROePAS and ANI (Opus)
 
 **Done**
