@@ -148,14 +148,18 @@
 <main id="main" class="g2-container" tabindex="-1">
 <div class="org-page">
 <h1>Despre date</h1>
-<p>Lista reunește patru surse publice:</p>
+<p>Lista reunește șase surse publice:</p>
 <ul class="org-src">
   <li><a href="https://data.gov.ro/dataset/listaentitatipublice/resource/9e6818e0-5bd1-48b1-b2ae-b774916d61ca">Lista entităților publice</a> (ANAF, pe data.gov.ro): CIF, adresă, UAT și instituția superioară.</li>
-  <li><a href="https://roepas.ro">ROePAS</a>: site, e-mail, telefon și proceduri.</li>
-  <li><a href="https://www.e-guvernare.ro/Registrul-National-al-Institutiilor-Publice-din-Romania.pdf">Registrul Național al Instituțiilor Publice din România</a> (PDF).</li>
-  <li>Declarațiile de integritate depuse la ANI, prin <a href="https://monitorul.ai/integritate">monitorul.ai/integritate</a>.</li>
+  <li><a href="https://roepas.ro">ROePAS</a> (Autoritatea pentru Digitalizarea României): site, e-mail, telefon și proceduri.</li>
+  <li><a href="https://www.e-guvernare.ro/Registrul-National-al-Institutiilor-Publice-din-Romania.pdf">Registrul Național al Instituțiilor Publice din România</a> (PDF din 2020, pe e-guvernare.ro): număr de registru și alte denumiri.</li>
+  <li>Declarațiile de integritate depuse la ANI (<a href="https://declaratii.integritate.eu/">declaratii.integritate.eu</a>): numele instituției, județul și numărul de declarații. Exporturile agregate vin prin <a href="https://monitorul.ai/integritate">monitorul.ai/integritate</a>.</li>
+  <li>Angajatorii de pe <a href="https://posturi.gov.ro/">posturi.gov.ro</a> (Guvernul României): nume, localitate și număr de posturi.</li>
+  <li>Autoritățile contractante din <a href="https://data.gov.ro/dataset/achizitii-publice-2025">Achiziții publice</a> (SEAP; Autoritatea pentru Digitalizarea României, pe data.gov.ro): CUI, ani de activitate, tip și localitate. Seturile din 2021–2026 au licența <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a>. Pentru seturile 2007–2015, 2018, 2019 și 2020: Conține informații publice în baza <a href="https://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf">Licenței pentru Guvernare Deschisă v1.0</a>.</li>
 </ul>
-<p class="sub">Starea juridică (radiată, fuzionată, în lichidare) și județul unor înregistrări vin din <a href="https://data.gov.ro/dataset/date_de_identificare_platitori_actualizate_iunie_2026">Date de identificare plătitori</a> (Ministerul Finanțelor, data.gov.ro, licența <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a>). Valoarea „activ” din CSV înseamnă doar că fișierele nu arată o dizolvare.</p>
+<p class="sub">Starea juridică (radiată, fuzionată, în lichidare) și județul unor înregistrări vin din <a href="https://data.gov.ro/dataset/date_de_identificare_platitori_actualizate_iunie_2026">Date de identificare plătitori</a> (Ministerul Finanțelor, data.gov.ro, licența <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a>). Valoarea „listat” din CSV înseamnă doar că fișierele nu arată o dizolvare.</p>
+<p class="sub">CUI-ul unor companii vine din <a href="https://data.gov.ro/dataset/firme-19-10-2026">Firme înregistrate la Registrul Comerțului până la data de 19.10.2026</a> (Oficiul Național al Registrului Comerțului, data.gov.ro, licența <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a>).</p>
+<p class="sub">Limitele administrative de pe hărți: <a href="http://geo-spatial.org/descarcare/date/administrative-boundaries/">geo-spatial.org</a>, pe baza datelor publice ale Agenției Naționale de Cadastru și Publicitate Imobiliară. Le-am împărțit pe județe pentru acest site. Subsolul site-ului sursă indică licența <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</p>
 <p class="sub">Numerele sunt înregistrări din surse, nu entități juridice verificate. Prezența într-o sursă nu arată dacă o instituție este activă sau dacă site-ul ei funcționează.</p>
 <p class="sub">Numărul din ANI numără declarații depuse, nu angajați și nu instituții distincte.</p>
 <div id="ds"><p class="sub" role="status">Se încarcă…</p></div>
@@ -168,7 +172,7 @@
 </main>
 <footer class="g2-footer">
   <div class="g2-footer-in g2-container org-foot">
-    <p>Surse: ANAF, ROePAS, Registrul Național, ANI.</p>
+    <p>Surse: ANAF, ROePAS, Registrul Național, ANI, posturi.gov.ro, SEAP, Ministerul Finanțelor, ONRC.</p>
     <ul aria-label="Pagini"><li><a href="index.html#v=stat">Structura statului</a></li><li><a href="index.html#v=fam">Domenii</a></li><li><a href="index.html#v=list">Lista completă</a></li><li><a href="organizare.html">Cum e organizat statul</a></li><li><a href="despre.html">Despre</a></li></ul>
     <p class="org-credit">un proiect <a href="https://gov2.ro">gov2.ro</a> <a class="org-gh" href="https://github.com/gov2-ro/institutii-publice" aria-label="Cod sursă pe GitHub"><svg class="org-icon-fill" width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a></p>
   </div>

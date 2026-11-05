@@ -1,5 +1,22 @@
 # Activity log
 
+## 2026-11-06 — Source credits on *Despre*; owner decisions on ROePAS and ANI (Opus)
+
+**Done**
+- `explorer/despre.html` names six sources, plus MF, ONRC and the maps, with their licences where known and the OGL-ROU-1.0 sentence. The footers of the three pages list the same sources.
+- Corrected a wrong line on *Despre*: the CSV value is `listat`, not `activ`.
+- Recorded the origin of the ANI access in `README.md`, without the access details.
+
+**Hard**
+- data.gov.ro gives six older SEAP datasets the licence id `uk-ogl`. Its licence page says that datasets of that time stay under OGL-ROU-1.0. The page uses the OGL-ROU-1.0 sentence on that basis.
+- `manifest.json` shows that the build read files from only 4 of those 6 datasets (2007–2015, 2018, 2019, 2020). The files of 2016 and 2017 have the status `no_size`. The credit names only the 4 datasets.
+- The maps credit says that the footer of the source site indicates CC BY-SA 4.0. The licence of the layer stays unproved.
+
+**Decided**
+- (Owner) ROePAS: decide later. The data stays published. The scrape does not run again until the decision.
+- (Owner) Publish the credits. The EUPL line on the site stays as it is, and it stays an open legal question.
+- (Opus) The page does not credit the county coats of arms, because their origin is unknown. The backlog keeps this item.
+
 ## 2026-11-05 — Licences and terms of the sources (Sonnet; Opus reviews)
 
 **Done**

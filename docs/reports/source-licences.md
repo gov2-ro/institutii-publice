@@ -31,6 +31,12 @@ Method:
 - The agent used a browser-like user agent. After `www.anaf.ro` refused its plain request, it read `/reinnoire/` on the same host with the fetch tool. The brief said that a blocked page stays blocked. The agent did not reopen the refused page, but this is close to the limit. Do not repeat it, and use the client name of the project.
 - `scripts/scrape_roepas.py` must not run again until the owner decides on ROePAS.
 
+## Owner decisions (2026-11-06)
+
+- ROePAS: the owner defers the decision, with no date. The item stays in `docs/BACKLOG.md`. The data stays published, and `scripts/scrape_roepas.py` does not run.
+- Attribution: approved. *Despre* now names the sources, their licences where known, and the OGL-ROU-1.0 sentence.
+- ANI: the author of monitorul.ai gave the owner access to the Kibana. This answers the origin question in section 4. It does not show who runs the Kibana, and no written terms of re-use are on record.
+
 ## Summary
 
 | # | Source | Publisher | What the terms say about re-use | Our use | Signal (interpretation) | Confidence |

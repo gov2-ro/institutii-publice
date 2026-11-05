@@ -27,3 +27,4 @@ Rule (owner, 2026-11-05): read-only, within the published limits of the service,
 | 2026-11-05 | legislatie.just.ro | Legea 179/2022 and Legea 109/2007 (printable texts) | 2 pages | Legea 179/2022 read in full | Section 7. |
 | 2026-11-05 | Web search | Queries on ANAF terms, OGL-ROU-1.0, ANI terms, Legea 179/2022, the Registrul, geo-spatial.org | 9 queries | Pointers only | Results used as leads. The report marks as secondary every claim that rests on a search summary only. |
 | 2026-11-05 | roepas.ro, legislatie.just.ro | Opus check of the ROePAS terms and of Legea 179/2022 | 2 pages | Quotes of the report confirmed | Read through a summary tool. No record data sent. |
+| 2026-11-06 | data.gov.ro, declaratii.integritate.eu, posturi.gov.ro, geo-spatial.org, monitorul.ai | Status check of the links for *Despre* | 9 page requests | All HTTP 200 | No record data sent. Client name `institutii-publice-check`. |

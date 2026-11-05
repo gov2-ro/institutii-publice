@@ -40,7 +40,13 @@ licence [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/). The snapshot 
 rows of public bodies and companies. It skips every row of a natural person. The MF files are not in this repository. The value `listat`
 means only that the files list no dissolution of the body. It does not prove that the body is active.
 
+Attribution: the page *Despre* (`explorer/despre.html`) names every source, its licence where one is known, and the sentence that
+OGL-ROU-1.0 asks for. Keep that page current when a source changes.
+
 ### ANI exports (data/declaratii-integritate/)
+Origin: the owner got access to this Kibana from the author of [monitorul.ai](https://monitorul.ai/integritate)
+([github.com/ciocan](https://github.com/ciocan)). The access details stay out of this repository. No written terms of access or re-use are on record.
+
 Kibana Lens → "Top values of `institutie_id.keyword`" + "Count of records", filtered on a group of counties,
 exported as CSV (`Lens Visualization [...].csv`). Kibana keeps at most 10,000 values per export, so:
 
