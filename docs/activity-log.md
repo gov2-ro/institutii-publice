@@ -7,6 +7,7 @@
 - Checked the ONRC rows of the new identities 371378, 3193984, 49042467 and 14257595, and the row of the conflict on 2522213. They agree with the evidence.
 - Added 11 `rename` rows: the survivors with a name cut at about 80 characters now show the full name from SEAP or ONRC. The rebuild changed only `name` and `aliases` of these 11 records.
 - 124 tests pass. `tests/determinism.sh` passes.
+- Published 4ebb8e4 (gh-pages 69ed05f). Measured live: 28,288 rows, 386 hidden, the same `build_hash` as the local build (`708edbc49061`), survivors present, absorbed ids absent. The second comment on issue #6 reports this.
 
 **Hard**
 - Three `S` records gave their name to no field of the survivor when they merged, so a search for the full name would fail. The `rename` rows fix this. The cut name stays as an alias.
