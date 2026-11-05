@@ -1,5 +1,21 @@
 # Activity log
 
+## 2026-11-05 — Licences and terms of the sources (Sonnet; Opus reviews)
+
+**Done**
+- `docs/reports/source-licences.md`: publisher, terms, use and open questions per source, and the current law (Legea 179/2022). Summary in `docs/pipeline.md`. The calls are in `docs/external-lookups.md`.
+- Opus checked the ROePAS terms and the main articles of the law on the live pages. Their quotes are correct.
+
+**Hard**
+- The terms of ROePAS forbid scraping. ROePAS gives 2,779 of 2,779 e-mail addresses, 2,734 of 2,734 phones and 2,177 websites. The earlier records of this project did not check these terms before the scrape.
+- The agent counted 481 records as ROePAS-only. By `sources`, 83 of them have other sources, so the count is 398.
+- Not readable: `www.anaf.ro` home, `oc.gov.ro` (posturi terms), `e-guvernare.ro` home. The publisher of the Registrul and the origin of the ANI exports stay unproved.
+
+**Decided**
+- (Opus) No data changes before the owner decides. The live site keeps the ROePAS data for now.
+- (Opus) `scrape_roepas.py` does not run again until the owner decides. The cost: ROePAS data stays at the copy of 2026-10-05.
+- No legal conclusion is recorded. The report separates the text of a source from an interpretation.
+
 ## 2026-11-05 — Review (Opus): checks in `publish_pages.sh` accepted with 3 corrections
 
 **Done**

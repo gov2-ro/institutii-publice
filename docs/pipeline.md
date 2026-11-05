@@ -55,19 +55,19 @@ Steps 5 and 7 read `institutii.csv`, so they use the list of the previous build.
 
 ## Sources
 
-The licence column gives only what this repository records. "Not recorded" means that nobody has checked and written down the terms.
+The licence column summarises [reports/source-licences.md](reports/source-licences.md), read on 2026-11-05. The report holds the evidence and the limits. It is not legal advice.
 
 | Source | Input | Script | Date of the copy | Licence | Gives | Records in the source |
 |---|---|---|---|---|---|---|
-| ANAF list of public entities | `docs/reference/Lista_EP_portal_01102026.xlsx` | `load_anaf` | 2026-10-01, from the file name | Not recorded | Backbone: CIF, UAT, address, parent CIFs | 13,485 (`A`) |
-| ROePAS | `data/roepas/institutii.json` | `scrape_roepas.py` | Scrape of 2026-10-05 | Not recorded | Website, e-mail, phone, coordinates, procedures | 2,872 (481 `R`) |
-| Registrul Național | `docs/reference/Registrul-…pdf.csv`, a damaged PDF extraction | `load_registrul` | File of 2025-11-12 | Not recorded | Register number, more names | 11,776 (5,935 `G`) |
-| ANI declarații de integritate | `data/declaratii-integritate/Lens Visualization*.csv` | `load_declaratii` | Exports of 2026-10-19 | Not recorded | Number of declarations; names that ANAF does not list, mostly companies | 14,547 (4,888 `D`) |
-| posturi.gov.ro employers | `data/posturi/employers.csv` | Export in the posturi repo | 2026-11-02 | Not recorded | Employers, postings, locality | 4,342 (939 `P`) |
+| ANAF list of public entities | `docs/reference/Lista_EP_portal_01102026.xlsx` | `load_anaf` | 2026-10-01, from the file name | No licence on the list. Older ANAF notice: reproduction with the source | Backbone: CIF, UAT, address, parent CIFs | 13,485 (`A`) |
+| ROePAS | `data/roepas/institutii.json` | `scrape_roepas.py` | Scrape of 2026-10-05 | **Terms forbid scraping and mass copying.** Owner decision open; do not run the scrape again | Website, e-mail, phone, coordinates, procedures | 2,872 (481 `R`) |
+| Registrul Național | `docs/reference/Registrul-…pdf.csv`, a damaged PDF extraction | `load_registrul` | PDF of 2020, downloaded 2025-11-12 | No terms found; publisher not proved | Register number, more names | 11,776 (5,935 `G`) |
+| ANI declarații de integritate | `data/declaratii-integritate/Lens Visualization*.csv` | `load_declaratii` | Exports of 2026-10-19 | ANI site: reproduction with the source. Origin of the exports not recorded | Number of declarations; names that ANAF does not list, mostly companies | 14,547 (4,888 `D`) |
+| posturi.gov.ro employers | `data/posturi/employers.csv` | Export in the posturi repo | 2026-11-02 | Terms page not readable (HTTP 500); no licence found | Employers, postings, locality | 4,342 (939 `P`) |
 | SEAP contracting authorities (ADR, data.gov.ro) | `data/seap/authorities.csv`, rebuilt from `data/seap/cache/` | `extract_seap.py` | Dump of 2026-11-03 | CC-BY-4.0 on 6 datasets, OGL-ROU-1.0 on 6 | CUI, activity years, type, locality | 16,178 (2,580 `S`) |
 | Finance Ministry (MF), "Date de identificare plătitori" | `data/lookup/status.csv`, from the files on geana | `lookup_status.py` | Snapshot of 2026-06-11 | CC-BY-4.0 | Status of a legal body; county of records with no county | No records; 3,406 CUIs checked |
 | ONRC, "Firme înregistrate la Registrul Comerțului" | Files on geana, `data.gov.ro-onrc-firme-2026-10-19` | `onrc_candidates.py` | 2026-10-19 | CC-BY-4.0 | CUI of `D` records, through `curation/` | No records; 245 identities and 36 merges |
-| Maps | `docs/reference/gis/*.geojson` | `build_uat_maps.py` | Not recorded | To confirm (see the backlog) | County and UAT maps | No records |
+| Maps | `docs/reference/gis/*.geojson` | `build_uat_maps.py` | Version 2025-03-26 | geo-spatial.org from ANCPI data; site footer CC BY-SA 4.0, coverage of the layer not stated | County and UAT maps | No records |
 
 `metadata.json` (`dataset`) records the path, size, SHA-256, date and row count of each input file that `consolidate.py` reads.
 
@@ -197,7 +197,7 @@ A rule enters only after a sample read by eye, with the result in the activity l
 - No check runs in CI. CI cannot rebuild the data, because the inputs are not in git.
 - The browser checks are by hand. No check confirms that every link of `organizare.html` opens a non-empty view.
 - The check after a push compares only `dataset.generated_at` and counts the live records. It does not compare the live files with `main`.
-- This repository records no licence for the ANAF list, ROePAS, Registrul, ANI or the maps, but the list is published under EUPL v1.2.
+- The list is published under EUPL v1.2, but the terms of several sources are unclear, and the ROePAS terms forbid scraping. The site also lacks some attributions, including the sentence that OGL-ROU-1.0 asks for. See [reports/source-licences.md](reports/source-licences.md).
 - The page CSV export has no `status` column.
 
 ## Adding a source

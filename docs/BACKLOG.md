@@ -333,7 +333,12 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Explorer: the CSV export of the page has no `status` column yet.
 - [x] Owner: accept or reject ANAF as a status source for the published data. Decided 2026-11-05: keep ANAF out for now. ANAF states no re-use terms. Until this changes, 391 deregistered `S` bodies stay visible as `not_found`.
 - [ ] Check the public-data re-use law, or ask ANAF, about re-use of the ANAF status. If the answer allows it, ask the owner to add ANAF rows to `status.csv`. A message to ANAF needs the owner's approval first.
-- [ ] Record the licence or the re-use terms of the ANAF list, ROePAS, Registrul and ANI. The repository records none, and the list is published under EUPL v1.2 (found while writing `pipeline.md`, 2026-11-05).
+- [x] Record the licence or the re-use terms of the ANAF list, ROePAS, Registrul and ANI. Done 2026-11-05: `reports/source-licences.md`, summary in `pipeline.md`.
+- [ ] Owner: decide on ROePAS. Its terms forbid scraping and mass copying, and it gives all e-mail addresses and phone numbers in the list. Options are in `reports/source-licences.md`. Do not run `scrape_roepas.py` again until then.
+- [ ] Owner: approve one attribution block for *Despre*, with the ANAF list, Registrul, ANI, posturi.gov.ro, the maps and the OGL-ROU-1.0 sentence for the SEAP datasets under that licence. The site needs a publish after this.
+- [ ] Owner: say which service gave the ANI Kibana exports, and under which access conditions. Then record it in `README.md`.
+- [ ] Check the licence of the map layer in the geo-spatial.org catalogue and its compatibility with EUPL v1.2. Check the origin of the county coats of arms: Legea 179/2022 art. 1(2)(g) excludes coats of arms.
+- [ ] Read the posturi.gov.ro terms when `oc.gov.ro` works again.
 - [x] Add a preflight to `publish_pages.sh`: run the tests, and stop if the data does not come from the committed code (`dataset.build_hash`). Add a check of the live site after a publish. Built and reviewed 2026-11-05. The live-site check has run only against the current live site, not after a real push. Read its first real output at the next publish.
 - [ ] MF `TELEFON`: 1,540 usable numbers for `S` and 7,526 for `A`. Owner, 2026-11-05: do not publish for now. 50% differ from our phones, 1,373 are mobiles, 38 numbers are shared by 3 or more CUIs, so they may be fiscal or personal contacts. Open it again only with a personal-data review.
 - [ ] MF `STARE` "MODIFICARE PUBLICI": 2,176 rows are not in our data. About 794 look public by a rough regex. A lead for missing public bodies, after a filter and a review.
