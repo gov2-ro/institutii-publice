@@ -12,6 +12,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       published (the owner reviews the screenshots first). DS fonts and sizes, DS dark scheme
       (`data-g2-scheme="auto"`), DS title sweep, footer, accessibility statement in "Despre date".
 - [ ] Review and publish the DS adoption (owner): screenshots, then `sh scripts/publish_pages.sh`.
+      Measured 2026-11-05: `gh-pages` already holds the DS, and its `gov2.css` equals `main`. Only the owner's review can still be open.
 - [ ] Rename the remaining local classes to the `org-` prefix (`.tree`, `.multi`, `.seg`, `.src`…).
       New classes already use it. Low risk, but it touches the JS that builds the views.
 - [x] Replace the local breadcrumbs, tables and record summary list with DS v0.14.0 (brief 07). Done 2026-10-27
@@ -76,6 +77,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Add a check that every link of `organizare.html` opens a non-empty view (the build has none; this run used a
       Playwright script outside the repo).
 - [ ] Review and publish landing v2 and `organizare.html` (owner): screenshots, then `sh scripts/publish_pages.sh`.
+      Measured 2026-11-05: `gh-pages` already holds this work (publish of 25592ae, 2026-11-02). Only the owner's review can still be open.
 - [ ] The "Guvernul" and "Ministere" card counts (7,907 and 7,654) include the 6,000 schools funded through the
       Ministerul Educației. Consider a note or a count of direct subordinates only.
 - [x] Landing: replace the category tabs with the "Toate tipurile" side box (spec section 2, item 5). Owner request 2026-10-27. Built 2026-10-27 (not published).
@@ -331,8 +333,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       (9 `S`, 8 `D`). Decide whether a SEAP conflict with a fuzionat body (the SEAP rows may belong to the successor, e.g. E-Distributie) should keep the status.
 - [ ] 217 `S` records got a county but no UAT: the MF locality is a village, or a spelling that ANAF does not use ("Simleu Silvaniei" / "Simleul Silvaniei").
 - [ ] Explorer: the CSV export of the page has no `status` column yet.
-- [ ] Owner: accept or reject ANAF as a status source for the published data. ANAF states no re-use terms. Without ANAF, 391 deregistered `S` bodies stay visible as `not_found`.
-- [ ] MF `TELEFON`: 1,540 usable numbers for `S` and 7,526 for `A`. Not published: 50% differ from our phones, 1,373 are mobiles, 38 numbers are shared by 3 or more CUIs, so they may be fiscal or personal contacts. Needs a decision on personal data.
+- [x] Owner: accept or reject ANAF as a status source for the published data. Decided 2026-11-05: keep ANAF out for now. ANAF states no re-use terms. Until this changes, 391 deregistered `S` bodies stay visible as `not_found`.
+- [ ] Check the public-data re-use law, or ask ANAF, about re-use of the ANAF status. If the answer allows it, ask the owner to add ANAF rows to `status.csv`. A message to ANAF needs the owner's approval first.
+- [ ] MF `TELEFON`: 1,540 usable numbers for `S` and 7,526 for `A`. Owner, 2026-11-05: do not publish for now. 50% differ from our phones, 1,373 are mobiles, 38 numbers are shared by 3 or more CUIs, so they may be fiscal or personal contacts. Open it again only with a personal-data review.
 - [ ] MF `STARE` "MODIFICARE PUBLICI": 2,176 rows are not in our data. About 794 look public by a rough regex. A lead for missing public bodies, after a filter and a review.
 - [ ] ANFP list 2025 (CC-BY-4.0, 4,325 rows; name, type, county, locality; no CUI or contacts): consider it for classification.
 - [x] ONRC files of 2026-10-19 for the ANI-only records: downloaded to `/Volumes/geana/NAS-devbox/gov2/data.gov.ro-onrc-firme-2026-10-19/`, match measured 2026-11-05.

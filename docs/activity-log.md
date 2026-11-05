@@ -1,5 +1,19 @@
 # Activity log
 
+## 2026-11-05 — Owner decisions on ANAF and `TELEFON`; state of the published site (Opus)
+
+**Done**
+- Recorded the two owner decisions in the backlog. The site was not published in this work.
+- Compared `gh-pages` with `main`. The last publish is 25592ae, of 2026-11-02, with 25,829 records.
+
+**Hard**
+- The backlog said that landing v2 and the DS adoption wait for a publish. Both are live. The publish has no entry in this log, so I repeated the stale claim to the owner. I checked `gh-pages` only when the owner asked about landing v2.
+- Measured differences, `gh-pages` against `main`: `gov2.css` is equal; `organizare.html` and `despre.html` differ by one added line each; `index.html` differs by the status filter, the status display and the SEAP source mark. The data differs by 2,479 records.
+
+**Decided**
+- Owner: ANAF stays out of the published data for now. The cost: `radiat` stays 0, and 391 deregistered `S` bodies stay visible as `not_found`. The alternative carries a licence risk, because ANAF states no re-use terms.
+- Owner: MF `TELEFON` stays unpublished for now. The cost: about 9,000 possible phone numbers stay unused. The alternative can publish personal numbers.
+
 ## 2026-11-05 — Status of a legal body and county of `S` records, MF only (Sonnet, brief `record-status.md`)
 
 **Done**
