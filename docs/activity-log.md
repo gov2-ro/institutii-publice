@@ -1,5 +1,20 @@
 # Activity log
 
+## 2026-11-05 — Publish of the status and SEAP work; `docs/pipeline.md` (Opus)
+
+**Done**
+- Published c31d111 to org.gov2.ro on the owner's approval. Measured on the live files: 28,308 rows, 386 hidden by default, 2,580 `S` records, the filter is in the page. I did not repeat the browser checks on the live site. Before the publish, 122 tests passed and the dry run passed.
+- Wrote `docs/pipeline.md`: sources, run order, build steps, checks, review queues and known gaps.
+- Corrected `README.md` and `CLAUDE.md`: the run order of `lookup_status.py`, the source list, `county_source` `mf`, and how ONRC rows enter `curation/`.
+
+**Hard**
+- `README.md` said to run `lookup_status.py` first, but the script reads `institutii.csv`. A new CUI needs a build, the lookup and a second build.
+- `README.md` said that a person reviews the ONRC matches. Most rows entered by a rule tested on a sample.
+
+**Decided**
+- `docs/pipeline.md` is the one place for the pipeline. `CLAUDE.md` keeps the details that an agent needs and links to it. The cost: two places to keep in step.
+- Logged two gaps in the backlog: the repository records no licence for four main sources, and the publish script runs no checks.
+
 ## 2026-11-05 — Owner decisions on ANAF and `TELEFON`; state of the published site (Opus)
 
 **Done**

@@ -8,12 +8,13 @@ website, contacts, etc. It also feeds [gov2-ro/stiri](https://github.com/gov2-ro
 Names, comments and UI text mix Romanian and English; the explorer UI is Romanian.
 
 ## Commands
-No linter or build step. Four scripts, a static page and standard-library tests:
+No linter or build step. A few scripts, a static page and standard-library tests. The run order and all checks are in `docs/pipeline.md`:
 
     uv run scripts/consolidate.py              # rebuild data/consolidated/ (needs openpyxl; inline uv script deps)
     uv run scripts/extract_seap.py [--dump DIR] [--trust ID]  # SEAP dump -> data/seap/ (openpyxl, xlrd; minutes)
     python3 scripts/scrape_roepas.py [--workers 4] [--limit N]   # re-scrape roepas.ro -> data/roepas/ (requests, lxml)
-    python3 scripts/lookup_status.py [--mf DIR]   # MF files -> data/lookup/status.csv (stdlib; about 20 s; run before consolidate.py)
+    python3 scripts/lookup_status.py [--mf DIR]   # MF files + institutii.csv -> data/lookup/status.csv (stdlib; about 20 s; run consolidate.py before and after it)
+    python3 scripts/onrc_candidates.py [--onrc DIR]   # ONRC files + institutii.csv -> data/consolidated/onrc-review.csv (stdlib; changes no data)
     python3 scripts/build_uat_maps.py          # rebuild explorer/assets/gis/uat/ from docs/reference/gis/*.geojson (stdlib)
     python3 -m http.server                     # then open http://localhost:8000/explorer/
     sh scripts/publish_pages.sh [--dry-run]    # publish explorer/ + data to gh-pages -> https://org.gov2.ro
@@ -66,7 +67,7 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
   (the owner has not accepted it), and ANAF list records keep an empty status. An empty status means "not checked", never `listat`.
   `consolidate.py` adds the CSV columns `status`, `status_date`, `status_source`, `county_source`. It does not apply `radiat` or
   `fuzionat` when SEAP lists the CUI in a year after the status year plus one; the case goes to `data/consolidated/status-review.csv`
-  and the status stays empty. It fills an empty `county` (and a known `uat`) from MF (`county_source` and `uat_source` `status`),
+  and the status stays empty. It fills an empty `county` (and a known `uat`) from MF (`county_source` and `uat_source` `mf`),
   never replaces a county, and lists the disagreements in `status-review.csv`. The fill runs after the families, so it moves no
   record between families. A missing `status.csv` skips the source with a warning.
 - **Curated identities** `curation/identities.csv` (tracked): `id, cif, checked_at, evidence`. A row sets the CIF of a

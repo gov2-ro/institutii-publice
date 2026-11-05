@@ -11,8 +11,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Adopt the gov2 design system (DS) v0.13.0: [brief](briefs/ds-adoption.md). Built 2026-10-27, not yet
       published (the owner reviews the screenshots first). DS fonts and sizes, DS dark scheme
       (`data-g2-scheme="auto"`), DS title sweep, footer, accessibility statement in "Despre date".
-- [ ] Review and publish the DS adoption (owner): screenshots, then `sh scripts/publish_pages.sh`.
-      Measured 2026-11-05: `gh-pages` already holds the DS, and its `gov2.css` equals `main`. Only the owner's review can still be open.
+- [x] Publish the DS adoption. Live since the publish of 2026-11-02, found on 2026-11-05.
 - [ ] Rename the remaining local classes to the `org-` prefix (`.tree`, `.multi`, `.seg`, `.src`…).
       New classes already use it. Low risk, but it touches the JS that builds the views.
 - [x] Replace the local breadcrumbs, tables and record summary list with DS v0.14.0 (brief 07). Done 2026-10-27
@@ -76,8 +75,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       administrativă" as a legal term; the Legea 544/2001 guide link.
 - [ ] Add a check that every link of `organizare.html` opens a non-empty view (the build has none; this run used a
       Playwright script outside the repo).
-- [ ] Review and publish landing v2 and `organizare.html` (owner): screenshots, then `sh scripts/publish_pages.sh`.
-      Measured 2026-11-05: `gh-pages` already holds this work (publish of 25592ae, 2026-11-02). Only the owner's review can still be open.
+- [x] Publish landing v2 and `organizare.html`. Live since the publish of 25592ae, 2026-11-02, found on 2026-11-05.
 - [ ] The "Guvernul" and "Ministere" card counts (7,907 and 7,654) include the 6,000 schools funded through the
       Ministerul Educației. Consider a note or a count of direct subordinates only.
 - [x] Landing: replace the category tabs with the "Toate tipurile" side box (spec section 2, item 5). Owner request 2026-10-27. Built 2026-10-27 (not published).
@@ -95,8 +93,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] (Section removed, 2026-10-28) Despre: the source files show local paths and raw export names ("Lens Visualization [2026-10-19…] 3.csv").
       Show a readable name per source and keep the path in a detail line.
 - [ ] Refine the county profiles (`#v=loc&k=<county>`): owner request 2026-10-28, deferred. Scope to agree first.
-- [ ] Publish the landing v2 work to org.gov2.ro for the limited preview (owner): `sh scripts/publish_pages.sh`,
-      then check the share preview of `og.png` in a share debugger.
+- [x] Publish the landing v2 work to org.gov2.ro. Done 2026-11-02; the status and SEAP work followed on 2026-11-05.
+- [ ] Check the share preview of `og.png` in a share debugger (owner).
 - [ ] Later: live counts on `organizare.html` (needs a small counts file, so that the page does not load `rows.json`).
 
 ## Explorer: landing page and maps (brief: briefs/explorer-landing-maps.md)
@@ -335,6 +333,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Explorer: the CSV export of the page has no `status` column yet.
 - [x] Owner: accept or reject ANAF as a status source for the published data. Decided 2026-11-05: keep ANAF out for now. ANAF states no re-use terms. Until this changes, 391 deregistered `S` bodies stay visible as `not_found`.
 - [ ] Check the public-data re-use law, or ask ANAF, about re-use of the ANAF status. If the answer allows it, ask the owner to add ANAF rows to `status.csv`. A message to ANAF needs the owner's approval first.
+- [ ] Record the licence or the re-use terms of the ANAF list, ROePAS, Registrul and ANI. The repository records none, and the list is published under EUPL v1.2 (found while writing `pipeline.md`, 2026-11-05).
+- [ ] Add a preflight to `publish_pages.sh`: run the tests, and stop if the data is older than the last change to `scripts/` or `curation/`. Add a check of the live site after a publish. See `pipeline.md`, *Known gaps*.
 - [ ] MF `TELEFON`: 1,540 usable numbers for `S` and 7,526 for `A`. Owner, 2026-11-05: do not publish for now. 50% differ from our phones, 1,373 are mobiles, 38 numbers are shared by 3 or more CUIs, so they may be fiscal or personal contacts. Open it again only with a personal-data review.
 - [ ] MF `STARE` "MODIFICARE PUBLICI": 2,176 rows are not in our data. About 794 look public by a rough regex. A lead for missing public bodies, after a filter and a review.
 - [ ] ANFP list 2025 (CC-BY-4.0, 4,325 rows; name, type, county, locality; no CUI or contacts): consider it for classification.
