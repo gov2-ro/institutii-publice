@@ -17,7 +17,7 @@ No linter or build step. A few scripts, a static page and standard-library tests
     python3 scripts/onrc_candidates.py [--onrc DIR]   # ONRC files + institutii.csv -> data/consolidated/onrc-review.csv (stdlib; changes no data)
     python3 scripts/build_uat_maps.py          # rebuild explorer/assets/gis/uat/ from docs/reference/gis/*.geojson (stdlib)
     python3 -m http.server                     # then open http://localhost:8000/explorer/
-    sh scripts/publish_pages.sh [--dry-run]    # publish explorer/ + data to gh-pages -> https://org.gov2.ro
+    sh scripts/publish_pages.sh [--dry-run]    # tests + checks, then publish explorer/ + data to gh-pages -> https://org.gov2.ro
     python3 -m unittest discover -s tests      # matching and category fixtures; no inputs, no openpyxl needed
     sh tests/determinism.sh                    # full data: same CSV under PYTHONHASHSEED=1 and 2
 
@@ -83,7 +83,10 @@ Outputs: `institutii.json`, `institutii.csv` (the only consolidated file tracked
 
 Publishing: GitHub Pages serves the `gh-pages` branch at https://org.gov2.ro (DNS on Cloudflare). The branch is
 one orphan commit that `publish_pages.sh` replaces; never edit it by hand. Publish after a committed change to
-`explorer/` or a data rebuild.
+`explorer/` or a data rebuild. The script (also in the dry run) runs the unit tests and stops on an uncommitted change in
+`scripts/`, `curation/`, `explorer/` or `institutii.csv`. It also stops if `dataset.build_hash` in `metadata.json` differs from
+the hash of `scripts/consolidate.py` and `curation/*.csv` at `HEAD`. The hash depends on the content, so you can build before or after the commit. The files of the build must equal the committed files.
+After a push it polls the live `metadata.json` for 3 minutes and warns, without failing, if it does not match.
 
 Git: `.gitignore` excludes `data/*` except `data/consolidated/institutii.csv`, so the source inputs
 (`data/roepas/`, `data/declaratii-integritate/`) and the full outputs are local only.

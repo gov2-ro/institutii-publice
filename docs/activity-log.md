@@ -1,5 +1,33 @@
 # Activity log
 
+## 2026-11-05 — Review (Opus): checks in `publish_pages.sh` accepted with 3 corrections
+
+**Done**
+- Corrected the docs and the stop message: the build need not come after the commit. The hash depends on the content, so the normal flow (build, test, commit) passes. This is why the brief rejected a comparison of times.
+- A failed download of the live `rows.json` no longer stops the script after a successful push.
+- The dry run now removes its two temporary items.
+
+## 2026-11-05 — Checks in `publish_pages.sh` (Sonnet; Opus reviews)
+
+**Done**
+- `scripts/consolidate.py`: added `build_hash(root)` and `dataset.build_hash` in `metadata.json`. The hash is a SHA-256 over `scripts/consolidate.py` and each `curation/*.csv` in sorted path order, with the path, the length and the bytes of each file.
+- `scripts/publish_pages.sh`: a preflight that also runs in the dry run. It stops on a failing unit test, on an uncommitted or untracked file in `scripts/`, `curation/`, `explorer/` or `data/consolidated/institutii.csv`, on a missing `dataset.build_hash`, and on a hash that differs from the hash of the same files at `HEAD`. After a real push it polls the live `metadata.json` for at most 3 minutes, compares `dataset.generated_at`, and prints the live record count. A mismatch gives a warning and exit 0.
+- `tests/test_consolidate.py`: `test_build_hash_changes_with_input`, `test_build_hash_is_stable`. The suite has 124 tests, all pass.
+- Rebuild with `uv run scripts/consolidate.py`: `institutii.csv` and `rows.json` are byte-identical to the state before the work (`cmp`). `metadata.json` changed (new `generated_at` and `build_hash`).
+- Stop cases shown in a temporary clone (see below): a failing test, an uncommitted change and an untracked file in `curation/`, a committed change in `curation/` with no rebuild, a `metadata.json` without `build_hash`. The dry run on the correct state passed.
+- Updated `docs/pipeline.md`, `CLAUDE.md` and `docs/BACKLOG.md`.
+
+**Hard**
+- The "data built before a committed change" case needs a commit. I made no commit in the checkout. I cloned the repository to a scratch folder, committed the changes there, copied the three data files, and ran every stop case in the clone. The checkout shows only the intended changes.
+- I could not run a real push. I ran the live-site loop alone against the current live site (data 2026-11-04T23:22:02+00:00, 28,308 records): the match path printed the confirmation, and a forced mismatch printed the warning with exit 0. The loop after a real push is not tested.
+- `HEAD` before the commit has no `build_hash` function. The dry run in the checkout stops on the uncommitted changes first. The script reports "HEAD cannot compute the build hash" if someone commits `curation/` or `scripts/` without the function.
+
+**Decided**
+- One calculation: the script imports `build_hash` from `scripts/consolidate.py` at `HEAD` (extracted with `git archive`) and runs it on the committed files. The alternative, a rule in shell and a rule in Python, can drift.
+- The preflight treats an untracked file in the four paths as a change (`git status --porcelain`), because the build globs `curation/*.csv` and reads an untracked file.
+- The hash covers only `scripts/consolidate.py` and `curation/*.csv`, as the brief says. A change to another script or to an input file does not change it. The input files have their own SHA-256 in `dataset.inputs`.
+- `tests/determinism.sh` stays a step for a person: it takes minutes and rebuilds the data.
+
 ## 2026-11-05 — Publish of the status and SEAP work; `docs/pipeline.md` (Opus)
 
 **Done**

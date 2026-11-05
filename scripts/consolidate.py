@@ -2124,10 +2124,26 @@ def write_csv(path, records):
 SRC_BIT = {"anaf": 1, "roepas": 2, "registrul": 4, "declaratii": 8, "posturi": 16, "seap": 32}
 
 
+def build_hash(root=ROOT):
+    """SHA-256 over what makes the data: scripts/consolidate.py and every curation/*.csv under `root`.
+    Files go in sorted path order. For each file the hash takes the relative path, the byte length and the bytes.
+    `scripts/publish_pages.sh` calls this function on the files of HEAD, so the rule exists once."""
+    root = Path(root)
+    files = [root / "scripts/consolidate.py"] + sorted(root.glob("curation/*.csv"), key=lambda p: p.as_posix())
+    h = hashlib.sha256()
+    for f in files:
+        data = f.read_bytes()
+        h.update(f"{f.relative_to(root).as_posix()}\0{len(data)}\0".encode())
+        h.update(data)
+    return h.hexdigest()
+
+
 def dataset_block():
     """`dataset` in metadata.json: when the output was built and from which input files (see record_input).
-    Only the ANI exports carry `exported_at` (from the Kibana file name); `modified_at` is the file mtime."""
+    Only the ANI exports carry `exported_at` (from the Kibana file name); `modified_at` is the file mtime.
+    `build_hash` names the code and the curated files of the build (see build_hash)."""
     return {"generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+            "build_hash": build_hash(),
             "inputs": sorted(PROVENANCE, key=lambda e: (e["source"], e["path"]))}
 
 

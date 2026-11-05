@@ -624,5 +624,48 @@ class PosturiRecords(unittest.TestCase):
                 c.load_posturi(f)
 
 
+class BuildHash(unittest.TestCase):
+    """build_hash(root): SHA-256 of scripts/consolidate.py and curation/*.csv. Uses a temporary folder."""
+
+    def make_root(self, d, files):
+        for rel, text in files.items():
+            f = Path(d) / rel
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text(text, encoding="utf-8")
+        return Path(d)
+
+    BASE = {"scripts/consolidate.py": "code\n", "curation/a.csv": "id\n1\n", "curation/b.csv": "id\n2\n"}
+
+    def test_build_hash_changes_with_input(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = self.make_root(d, self.BASE)
+            base = c.build_hash(root)
+            (root / "curation/b.csv").write_text("id\n3\n", encoding="utf-8")
+            curated = c.build_hash(root)
+            (root / "curation/b.csv").write_text("id\n2\n", encoding="utf-8")
+            self.assertEqual(c.build_hash(root), base)                  # restored content: same hash
+            (root / "scripts/consolidate.py").write_text("code2\n", encoding="utf-8")
+            script = c.build_hash(root)
+            self.make_root(d, {"curation/c.csv": "id\n"})                # a new curated file
+            added = c.build_hash(root)
+        self.assertEqual(len({base, curated, script, added}), 4)
+
+    def test_build_hash_is_stable(self):
+        import os
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as d1, tempfile.TemporaryDirectory() as d2:
+            r1 = self.make_root(d1, self.BASE)
+            r2 = self.make_root(d2, dict(reversed(list(self.BASE.items()))))     # other creation order
+            self.assertEqual(c.build_hash(r1), c.build_hash(r2))
+            code = "import sys; sys.path.insert(0, sys.argv[1]); import consolidate as c; print(c.build_hash(sys.argv[2]))"
+            scripts = str(Path(c.__file__).resolve().parent)
+            seen = {subprocess.run([sys.executable, "-c", code, scripts, str(r1)], capture_output=True, text=True,
+                                   check=True, env={**os.environ, "PYTHONHASHSEED": seed}).stdout.strip()
+                    for seed in ("1", "2")}
+            self.assertEqual(seen, {c.build_hash(r1)})
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -47,9 +47,9 @@ Run only the steps whose source changed. Steps 1 to 3 need the source files.
 | 5 | `python3 scripts/lookup_status.py` | The list has new CUIs, or the MF files changed. |
 | 6 | `uv run scripts/consolidate.py` | You ran step 5. |
 | 7 | `python3 scripts/onrc_candidates.py` | You want a new ONRC queue. It changes no data. |
-| 8 | `python3 -m unittest discover -s tests` and `sh tests/determinism.sh` | Always, before a commit. |
+| 8 | `python3 -m unittest discover -s tests` and `sh tests/determinism.sh` | Always, before a commit. The determinism check is a step for a person: it takes minutes and rebuilds the data. `publish_pages.sh` does not run it. |
 | 9 | Browser check (see *Checks*) | The explorer or the data changed. |
-| 10 | `sh scripts/publish_pages.sh --dry-run`, then without `--dry-run` | The owner approved the publish. |
+| 10 | `sh scripts/publish_pages.sh --dry-run`, then without `--dry-run` | The owner approved the publish. Commit your changes first. |
 
 Steps 5 and 7 read `institutii.csv`, so they use the list of the previous build. Thus a new CUI needs steps 4, 5 and 6.
 
@@ -129,7 +129,13 @@ The script stops with an error and writes no output after that point.
 | | A duplicate CUI or an unknown status in `status.csv`. A duplicate slug or name in the posturi file. |
 | `lookup_status.py` | A `STARE` label outside the rule, or an empty one on one of our CUIs. A date outside the format. A row with another column count. A CUI on two MF rows. |
 | `extract_seap.py` | A `--trust` prefix with no resource or more than one, or several local files for one resource. |
-| `publish_pages.sh` | Uncommitted changes in `explorer/`. A missing data file. An absolute local path in `metadata.json`. |
+| `publish_pages.sh` | Uncommitted changes in `scripts/`, `curation/`, `explorer/` or `data/consolidated/institutii.csv`, also untracked files. A missing data file. An absolute local path in `metadata.json`. |
+| | A failing unit test (the script runs `python3 -m unittest discover -s tests`). |
+| | A missing `dataset.build_hash` in `metadata.json`, or a hash that differs from the hash of the same files at `HEAD`. The data was built from other code or curated files than the committed ones. |
+
+The build hash is a SHA-256 over `scripts/consolidate.py` and each `curation/*.csv`, in sorted path order (path, length and content of each file). `consolidate.py` writes it as `dataset.build_hash`. `publish_pages.sh` calls the same function, `build_hash`, on the files of `HEAD`. The checks run in the dry run too. The hash depends on the content, so you can build before or after the commit. If the hash differs, run `uv run scripts/consolidate.py` on the committed files.
+
+After a real push, `publish_pages.sh` polls `https://org.gov2.ro/metadata.json` for at most 3 minutes. If `dataset.generated_at` matches, it prints the record count of the live `rows.json`. If not, it prints a warning and exits 0, because the push is done and Pages or Cloudflare can lag.
 
 ### The build warns and continues
 
@@ -143,18 +149,18 @@ The script stops with an error and writes no output after that point.
 
 ### Tests
 
-`python3 -m unittest discover -s tests` runs 122 tests. They need no inputs and no network.
+`python3 -m unittest discover -s tests` runs 124 tests. They need no inputs and no network.
 
 | File | Covers |
 |---|---|
-| `tests/test_consolidate.py` | Link tiers, ties, categories, sectors, merges, absorbed ids, aliases, websites, posturi rules. |
+| `tests/test_consolidate.py` | Link tiers, ties, categories, sectors, merges, absorbed ids, aliases, websites, posturi rules, the build hash. |
 | `tests/test_seap.py` | CUI format, report layouts, periods, the cache, the private-name rule, identities, pairs, SEAP links. |
 | `tests/test_onrc.py` | Name key, tiers, the identity rule and its rejects, reading raw `"`. |
 | `tests/test_status.py` | The status rule, absent CUIs, natural-person rows, SEAP conflicts, the county fill, explorer codes. |
 
 ### Checks on the full data
 
-- **Determinism.** `sh tests/determinism.sh` builds twice with different hash seeds and compares the CSV. It needs the inputs.
+- **Determinism.** `sh tests/determinism.sh` builds twice with different hash seeds and compares the CSV. It needs the inputs. It takes minutes and rebuilds the data, so a person runs it. `publish_pages.sh` does not.
 - **Regression.** Compare the summary that `consolidate.py` prints to stderr, before and after a change. Compare the diff of `institutii.csv`. The activity log keeps the numbers.
 - **Roots.** "Neclasificate" roots stay at 2.
 
@@ -186,10 +192,11 @@ A rule enters only after a sample read by eye, with the result in the activity l
 
 ## Known gaps
 
-- `publish_pages.sh` runs no tests and no determinism check. It does not check that the data comes from the committed code. A person must do these first.
+- `publish_pages.sh` runs the unit tests and checks that the data comes from the committed code, but it runs no determinism check. A person must run `sh tests/determinism.sh` first.
+- The build hash covers `scripts/consolidate.py` and `curation/*.csv` only. A change to another script or to an input file does not change it.
 - No check runs in CI. CI cannot rebuild the data, because the inputs are not in git.
 - The browser checks are by hand. No check confirms that every link of `organizare.html` opens a non-empty view.
-- No check compares the live site with `main` after a publish.
+- The check after a push compares only `dataset.generated_at` and counts the live records. It does not compare the live files with `main`.
 - This repository records no licence for the ANAF list, ROePAS, Registrul, ANI or the maps, but the list is published under EUPL v1.2.
 - The page CSV export has no `status` column.
 
