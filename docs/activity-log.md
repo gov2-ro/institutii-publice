@@ -6,6 +6,8 @@
 - `explorer/despre.html` names six sources, plus MF, ONRC and the maps, with their licences where known and the OGL-ROU-1.0 sentence. The footers of the three pages list the same sources.
 - Corrected a wrong line on *Despre*: the CSV value is `listat`, not `activ`.
 - Recorded the origin of the ANI access in `README.md`, without the access details.
+- Published 63475fe (gh-pages 0bd50ec). Measured live: the OGL sentence on *Despre*, the new footer on `index.html` and `organizare.html`, 28,308 rows, 386 hidden, and the same `build_hash` as the local build (`f4cf4437522a`).
+- The check after the push ran for the first time, and it passed. It compares only `generated_at`, so it can pass before new pages are live. The backlog has this item.
 
 **Hard**
 - data.gov.ro gives six older SEAP datasets the licence id `uk-ogl`. Its licence page says that datasets of that time stay under OGL-ROU-1.0. The page uses the OGL-ROU-1.0 sentence on that basis.

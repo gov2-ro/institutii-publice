@@ -338,6 +338,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [x] Owner: approve one attribution block for *Despre*, with the ANAF list, Registrul, ANI, posturi.gov.ro, the maps and the OGL-ROU-1.0 sentence for the SEAP datasets under that licence. Approved and added 2026-11-06, also with ONRC and the MF line.
 - [x] Owner: say which service gave the ANI Kibana exports. Answered 2026-11-06: the author of monitorul.ai gave the owner access to the Kibana. Recorded in `README.md`.
 - [ ] Owner: ask the author of monitorul.ai who runs the Kibana, and whether the project may republish the aggregate counts. No written terms are on record.
+- [ ] `publish_pages.sh`: the live check compares only `generated_at`. A publish that changes only pages has the same value, so the check can pass before the new pages are live. Compare a value that changes with each publish, such as the source commit.
 - [ ] Check the licence of the map layer in the geo-spatial.org catalogue and its compatibility with EUPL v1.2. Check the origin of the county coats of arms: Legea 179/2022 art. 1(2)(g) excludes coats of arms.
 - [ ] Read the posturi.gov.ro terms when `oc.gov.ro` works again.
 - [x] Add a preflight to `publish_pages.sh`: run the tests, and stop if the data does not come from the committed code (`dataset.build_hash`). Add a check of the live site after a publish. Built and reviewed 2026-11-05. The live-site check has run only against the current live site, not after a real push. Read its first real output at the next publish.
