@@ -23,13 +23,16 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Phone list rows are taller with the DS sizes: 121 px at 375 px wide (was 75 px). Consider a phone layout
       that shows fewer lines per row (card view, already deferred above).
 
-## Explorer: links to external profiles (owner request, 2026-11-06; decision open)
-- [ ] Decide which links the record page shows, and in which order. See the activity log, 2026-11-06.
-- [ ] tipizatul.eu: link a record to `/proceduri?q=<institution name>`. The site has no CIF and no institution page.
+## Explorer: links to external profiles (owner decision, 2026-11-06; brief: briefs/external-links.md)
+- [x] Decide which links the record page shows: tipizatul.eu and transparenta.eu, in one group with ROePAS and posturi.
+- [~] tipizatul.eu: link a record to `/proceduri?q=<institution name>`. The site has no CIF and no institution page.
       The link needs a tracked map from their institution name to our record. Measured: 461 of 688 names link to ANAF.
-- [ ] transparenta.eu: link a record to `/entities/<CUI>`. An unknown CUI gives HTTP 200 with the title `Entity <CUI>`.
-      Coverage is not measured, and the terms are not read. Measure coverage before the link goes live.
-- [ ] Group the existing links (ROePAS, posturi, OpenStreetMap) with the new links in one place on the record page.
+- [~] transparenta.eu: link a record to `/entities/<CUI>`. An unknown CUI gives HTTP 200 with the title `Entity <CUI>`.
+      Measure coverage before the link goes live. The terms say nothing about links or automated access.
+- [~] Group the existing ROePAS and posturi links with the new links in one place on the record page.
+- [ ] Contact the author of tipizatul.eu (owner: "we should definitely contact", 2026-11-06). Offer our map from their
+      institution names to CIFs, and ask for a stable institution URL or key. Send it after the map is accepted. The owner approves the text.
+- [ ] Review the 227 tipizatul.eu names that have no ANAF link. 147 have an exact name in one record, with no county check.
 
 ## Explorer: "Structura statului" (spec: specs/structura-statului.md)
 - [x] Version 1: top layer from the Constitution, local administration, focus and breadcrumb, URL hash
