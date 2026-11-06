@@ -1,5 +1,23 @@
 # Activity log
 
+## 2026-11-06 — Survey (Opus): links to tipizatul.eu and other external profiles
+
+**Done**
+- Read the public repo and the bundle `procedures.json` of tipizatul.eu (built 2026-08-18). No project code or data changed.
+- Measured the bundle: 4,136 procedures, 3,575 with documents. 725 institution names, 688 with documents. The bundle has no CIF. Source: eDirect, plus one direct scrape.
+- Ran our `Linker` (ANAF rows, no curated aliases) on the names, with the county of `institutiaResponsabila`. 461 of the 688 names link (2,631 procedures). These names give 451 CIFs that are records.
+- A folded exact name search (no county check) finds one record for 147 more names. 80 names have no hit. Many are professional colleges, such as Colegiul Farmaciștilor.
+- A search `q=<name>` shows only that institution for 684 of 688 names (approximate: my fold is not their `diacriticless`).
+- transparenta.eu: `/entities/<CUI>` gave the correct name for all 8 ANAF records of the sample (9 URLs, one record repeated). An `S` company and an invalid CUI give HTTP 200 and the title `Entity <CUI>`.
+- The explorer already links ROePAS (2,872 records), posturi.gov2.ro and OpenStreetMap. For 3 records with two ROePAS ids and 1,093 records with several posturi slugs, the page links one target.
+
+**Hard**
+- The tipizatul page has no institution route and no stable key. The owner found the form `?open=<county>*<county>>Name` in the live site.
+
+**Decided**
+- Nothing is decided. The owner chooses the links. Opus recommends `q=` over `open=`: a renamed institution then gives a visibly empty result, not a full collapsed list. Not tested in a browser.
+- Assumed, not measured: the precision of the 461 links (Opus read a sample of 30), and the coverage of transparenta.eu.
+
 ## 2026-11-06 — Review (Opus): INCD records accepted, with full names added
 
 **Done**
