@@ -37,6 +37,9 @@ a record with no UAT gets its sector from the name (`uat_source` = "name"); sect
 Curated websites (curation/websites.csv, keyed by CIF) fill or replace the ROePAS website of an ANAF record;
 `website_source` is "curation" or "roepas".
 
+Curated tipizatul.eu names (curation/tipizatul.csv: id, institution, tier, checked_at) set `tipizatul_name` on a record:
+the institution name that the explorer puts in the link `tipizatul.eu/proceduri?q=<name>`. No other field changes.
+
 Status (data/lookup/status.csv, made by scripts/lookup_status.py from the Finance Ministry files): `status`, `status_date`,
 `status_source` on records with a CIF that is not from ANAF, and the county (`county_source` = "mf") of such a record that has
 none. `radiat` and `fuzionat` rows are hidden by default in the explorer. A SEAP conflict or a county disagreement goes to
@@ -75,6 +78,7 @@ STATUS_CSV = ROOT / "data/lookup/status.csv"
 OUT_DIR = ROOT / "data/consolidated"
 CURATED_WEBSITES = ROOT / "curation/websites.csv"
 CURATED_MERGES = ROOT / "curation/merges.csv"
+CURATED_TIPIZATUL = ROOT / "curation/tipizatul.csv"
 CURATED_ALIASES = ROOT / "curation/aliases.csv"
 CURATED_SAME_BODY = ROOT / "curation/same_body.csv"
 CURATED_IDENTITIES = ROOT / "curation/identities.csv"
@@ -270,6 +274,45 @@ def apply_curated_websites(records, curated):
         stats["same" if prev == url else "replaced" if prev else "filled"] += 1
         rec.update({"website": url, "website_url": url, "website_source": "curation"})
     return stats, sorted(set(curated) - used)
+
+
+def load_curated_tipizatul(path=None):
+    """curation/tipizatul.csv (id, institution, tier, checked_at): the institution name of tipizatul.eu for a record.
+    A missing file means no links. Stops on a duplicate id or a duplicate institution."""
+    path = path or CURATED_TIPIZATUL
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = [{k: (v or "").strip() for k, v in r.items()} for r in csv.DictReader(fh) if (r.get("id") or "").strip()]
+    for key in ("id", "institution"):
+        dup = sorted(v for v, n in Counter(r[key] for r in rows).items() if n > 1)
+        if dup:
+            raise SystemExit(f"{path}: {key} listed twice: {dup}")
+    empty = sorted(r["id"] for r in rows if not r["institution"])
+    if empty:
+        raise SystemExit(f"{path}: no institution for {empty}")
+    record_input("curation", path, len(rows))
+    return rows
+
+
+def apply_curated_tipizatul(records, curated):
+    """Set `tipizatul_name` on the record of each row. An id that a merge absorbed goes to its survivor.
+    Stops on an unknown id or on two rows for one survivor. -> number of rows applied."""
+    by_id = {}
+    for r in records:
+        for m in r.get("merged_ids", []):
+            by_id[m] = r
+    by_id.update({r["id"]: r for r in records})
+    used = {}
+    for c in curated:
+        rec = by_id.get(c["id"])
+        if not rec:
+            raise SystemExit(f"{CURATED_TIPIZATUL}: {c['id']} matches no record")
+        if rec["id"] in used:
+            raise SystemExit(f"{CURATED_TIPIZATUL}: {c['id']} and {used[rec['id']]} are one record ({rec['id']})")
+        used[rec["id"]] = c["id"]
+        rec["tipizatul_name"] = c["institution"]
+    return len(used)
 
 
 def load_curated_merges(path=None):
@@ -2044,6 +2087,7 @@ def main():
     check_absorbed_ids(records, link_trail=link_trail, retired={"S" + r["cui"] for r, _ in seap_excl})
     for rec in records:
         rec.pop("_cands", None)
+    merge_stats["tipizatul"] = apply_curated_tipizatul(records, load_curated_tipizatul())
     assign_families(records)
     merge_stats["curated_aliases"] = apply_curated_aliases(records)
     merge_stats["alias_unique"] = unique_aliases(records)
@@ -2080,7 +2124,7 @@ CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
             "declaratii_count", "declaratii_group", "link_posturi", "posturi_slugs", "posturi_postings", "uat_source", "merged_ids", "website_source", "cif_source", "same_body_as", "aliases", "aliases_unique",
-            "status", "status_date", "status_source", "county_source"]
+            "status", "status_date", "status_source", "county_source", "tipizatul_name"]
 
 
 REVIEW_COLS = ["id", "name", "county", "locality", "postings", "possible_duplicate_of", "candidate_name"]
@@ -2171,6 +2215,7 @@ def write_explorer_data(out_dir, records):
             "mc": [c["cif"] for c in r.get("match_candidates", [])],
             "us": USAT_CODE.get(r.get("uat_source") or r.get("county_source")), "st": STATUS_CODE.get(r.get("status")), "sd": r.get("status_date") if r.get("status") in STATUS_CODE else None, "nc": 1 if r["cif"] and r.get("cif_source", "anaf") != "anaf" else None, "mi": r.get("merged_ids"),
             "ps": r.get("posturi_slugs"), "pp": r.get("posturi_postings"), "lp": r["link"].get("posturi"),
+            "tz": r.get("tipizatul_name"),
         }
         for k, v in optional.items():
             if v is None or v == "" or v == []:           # a known 0 (pc, po) stays: it differs from unknown
@@ -2234,6 +2279,7 @@ def report(records, anaf, links, standalone, declaratii, aggregate, merge_stats,
           file=sys.stderr)
     print(f"sectors: {sector_stats['unified']} labels unified, {sector_stats['inferred']} inferred from the name, "
           f"{sector_stats['ambiguous']} names state several sectors (left blank)", file=sys.stderr)
+    print(f"curated tipizatul.eu names: {merge_stats['tipizatul']} records", file=sys.stderr)
     cs, unknown = curation_stats
     print(f"curated websites: {cs['filled']} filled, {cs['replaced']} replaced, {cs['same']} same as ROePAS; "
           f"{len(unknown)} CIFs match no record {unknown}", file=sys.stderr)

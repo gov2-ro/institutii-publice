@@ -1721,6 +1721,18 @@
     const marked = (r, v) => v && r.us ? [v, ' ', h('span', { class: 'sub' }, usMark(r))] : v;
     const peerBtn = rr => h('button', { class: 'link acc', type: 'button', onclick: () => openRecord(rr) }, rr.n);
 
+    // Links to other sites, in one group. Each value is encoded; tipizatul.eu and transparenta.eu get no data from us.
+    const TRANSPARENTA_OK = r => !r.nc && r.f;      // only `cif_source` anaf passed the 95% sample (docs/activity-log.md, 2026-11-06)
+    const extLink = (url, text) => h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, text);
+    const externalLinks = r => {
+      const rows = [
+        pair('Proceduri și formulare', r.tz && extLink(`https://www.tipizatul.eu/proceduri?q=${encodeURIComponent(r.tz)}`, 'tipizatul.eu')),
+        pair('Buget', TRANSPARENTA_OK(r) && extLink(`https://transparenta.eu/entities/${encodeURIComponent(r.f)}`, 'transparenta.eu')),
+        pair('Proceduri', r.ru && linkTo(r.ru, 'roepas.ro')),
+        pair('Angajator', r.ps && extLink(`https://posturi.gov2.ro/angajator/${encodeURIComponent(r.ps[0])}/`, 'posturi.gov2.ro'))];
+      return rows.some(x => !Array.isArray(x)) ? [h('div', { class: 'sec' }, 'Pe alte site-uri'), h('dl', { class: 'g2-summary-list' }, rows)] : null;
+    };
+
     function renderDialog(r) {
       const parents = (r.p || []).map(c => byCif.get(c)).filter(Boolean);
       const subs = r.f ? [...(subordinates.get(r.f) || [])] : [];
@@ -1767,6 +1779,7 @@
               target: '_blank', rel: 'noopener noreferrer' }, `${r.la}, ${r.lo}`))),
           (r.w || r.e || r.ph || r.fx) ? [h('div', { class: 'sec' }, 'Contact'),
             h('dl', { class: 'g2-summary-list' }, pair('Site', r.w && linkTo(r.w)), pair('Email', r.e), pair('Telefon', r.ph), pair('Fax', r.fx))] : null,
+          externalLinks(r),
           h('div', { class: 'sec' }, 'Identificare'),
           h('dl', { class: 'g2-summary-list' }, pair('Identificator', r.id),
             pair('Tip', r.fam && h('span', null, r.fam, ' · ',
@@ -1779,8 +1792,6 @@
             pair('Legătură ROePAS', r.lr && tierText[r.lr]), pair('Legătură Registru', r.lg && tierText[r.lg]),
             pair('Declarații ANI', r.dc && `${fmt(r.dc)}${r.ld ? ` · ${tierText[r.ld]}` : ''}`),
             pair('Anunțuri posturi.gov.ro', r.pp != null && `${fmt(r.pp)}${r.lp ? ` · ${tierText[r.lp]}` : ''}`),
-            pair('Angajator posturi.gov.ro', r.ps && h('a', { href: `https://posturi.gov2.ro/angajator/${encodeURIComponent(r.ps[0])}/`,
-              target: '_blank', rel: 'noopener noreferrer' }, 'pagina angajatorului')),
             pair('Grupă în formularul ANI', r.dg),
             pair('Declarații pe județe', r.dk && r.dk.slice(0, 8).map(([c, n]) => `${c} ${fmt(n)}`).join(' · ')
               + (r.dk.length > 8 ? ` · … încă ${r.dk.length - 8}` : ''))),
@@ -1793,8 +1804,8 @@
           sibs.length ? [h('div', { class: 'sec' }, `Alte ${fmt(sibs.length)} de tip „${r.fam}”`),
             h('ul', { class: 'plain' }, sibs.slice(0, 25).map(s => h('li', null, peerBtn(s))),
               sibs.length > 25 ? h('li', { class: 'sub' }, `… și încă ${fmt(sibs.length - 25)}`) : null)] : null,
-          (r.ru || r.pc != null || r.ou) ? [h('div', { class: 'sec' }, 'ROePAS'),
-            h('dl', { class: 'g2-summary-list' }, pair('Pagină', r.ru && linkTo(r.ru, 'roepas.ro')),
+          (r.pc != null || r.ou) ? [h('div', { class: 'sec' }, 'ROePAS'),
+            h('dl', { class: 'g2-summary-list' },
               pair('Proceduri', r.pc != null ? `${fmt(r.pc)} (${fmt(r.po || 0)} online)` : null),
               pair('Organizare', r.ou && r.ou.join(' · ')))] : null));
     }

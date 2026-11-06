@@ -1,5 +1,38 @@
 # Activity log
 
+## 2026-11-06 — Review (Opus): external profile links accepted
+
+**Done**
+- Read the diff and all 64 `tokens` rows, the one canonical row that is not a town hall, and the kept names with a ` - ` part. I found no wrong link. I did not read the other exact and canonical rows one by one.
+- Measured again, independently: 28,288 records, same ids and order, 0 cell changes outside `tipizatul_name`, 448 filled. `rows.json`: 13,485 rows with a CIF and no `nc`, equal to the `anaf` count. 127 tests pass. `tests/determinism.sh` passes.
+- Ran the real search of tipizatul.eu (`diacriticless`, substring) on the 448 names: every name is in the bundle, none exceeds 200 procedures, and 3 links also show other institutions (the Border Police, the Ministry of Education, Primăria Orașului Ștefănești).
+- Opened 4 live tipizatul.eu links in Chrome (diacritics, double space, comma, a shared name) and 1 transparenta.eu page. Each showed the expected institution.
+
+**Hard**
+- The Sonnet entry below omits MEDAT in the list of ministries with no link. The report of the agent names it, and the rows confirm it. MApN, MS, MAI and MEDAT have no link.
+
+**Decided**
+- (Opus) Accept the 3 links that also show other institutions. The page labels each institution, so a visitor can choose. A stable key from the author would remove this (backlog).
+- (Opus) Accept the absorbed-id redirect in `apply_curated_tipizatul`, which the brief did not ask for. It keeps a link alive after a merge and still stops on two rows for one survivor.
+- (Opus) Keep the transparenta.eu rule on `nc`. A new row key for `cif_source` adds nothing while only `anaf` passes.
+
+## 2026-11-06 — External profile links (Sonnet, brief `external-links.md`; Opus reviews)
+
+**Done**
+- Downloaded the bundle once (19,534,934 bytes, built 2026-08-18) and added `scripts/tipizatul_candidates.py`. Measured: 688 names with documents (3,575 procedures). Linker tiers: exact 238, canonical 161, tokens 64, weak 33, none 192. 463 names link (survey: 461); 452 CIFs (survey: 451). Run with the curated aliases.
+- Wrote `curation/tipizatul.csv`: 448 rows (exact 223, canonical 161, tokens 64). Rejected 15 subunit names, all exact tier: MADR 1, MAI 1, MApN 4, MEDAT 1, MEC 4, MS 4. MApN, MS and MAI have no kept name, so those records show no link. No ties after the rule. The 64 `tokens` rows are all the same body (county check, ANAF name is a shortened or older form); 0 rejected.
+- `consolidate.py`: `load_curated_tipizatul`, `apply_curated_tipizatul`, CSV column `tipizatul_name`, row key `tz`. 3 new test cases (127 tests pass). `tests/determinism.sh` passes.
+- CSV before and after: 28,288 records, same ids in the same order, 0 changes outside `tipizatul_name`, 448 records filled. Every line differs by the new last column.
+- Coverage sample of transparenta.eu (seed 20261106, 300 requests, all HTTP 200, no 429 or 5xx): `anaf` 200 of 200 covered, 0 name mismatches; `curation` 14 of 50, `seap` 18 of 50. Only `anaf` passes the 95% rule. Name mismatches in the other two are different spellings of the same body or an older name (7 rows, not checked one by one). The `seap` sample holds many private bodies (OUAI, ADI, SRL); none was excluded from the count.
+- Record page: new section `Pe alte site-uri` after `Contact`. Link to roepas.ro and posturi.gov2.ro moved there. Checked over HTTP in Chrome: a record with 4 links, a record with none (no section), a record with diacritics in `tz` (`Br%C4%83ila`). `explorer.reachableRoots()` equals `explorer.expectedRoots()`. Live tipizatul.eu links not opened.
+- Changed `despre.html`, `docs/reports/source-licences.md` (section 8), `CLAUDE.md`, `docs/pipeline.md`, `docs/external-lookups.md`.
+
+**Hard**
+- The transparenta.eu rule needs `cif_source` in the page row. The row has `nc` (1 = not anaf), so the page shows the link when `nc` is absent.
+
+**Decided**
+- Assumed: a `tokens` row is the same body when the county agrees and the ANAF name is a cut or older form of the bundle name.
+
 ## 2026-11-06 — Survey (Opus): links to tipizatul.eu and other external profiles
 
 **Done**

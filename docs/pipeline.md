@@ -88,6 +88,7 @@ Every call to an external service and every dataset download goes in [external-l
 | `curation/same_body.csv` | 57 | Links names of one body. |
 | `curation/aliases.csv` | 200 | Adds names for search, and for the linker on `A` ids when reviewed. Other projects use this file as a master. |
 | `curation/websites.csv` | 121 | Fills or replaces the website of an ANAF record. |
+| `curation/tipizatul.csv` | 448 | Gives the tipizatul.eu institution name of a record, for the link on the record page. |
 | `curation/unmerged.csv` | None now | Allows an absorbed id to become a record again, with a reason. |
 
 The rule for a merge: a CUI is one legal body; a wrong merge costs more than a duplicate; in doubt, the row stays open.

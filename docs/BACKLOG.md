@@ -25,11 +25,13 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 
 ## Explorer: links to external profiles (owner decision, 2026-11-06; brief: briefs/external-links.md)
 - [x] Decide which links the record page shows: tipizatul.eu and transparenta.eu, in one group with ROePAS and posturi.
-- [~] tipizatul.eu: link a record to `/proceduri?q=<institution name>`. The site has no CIF and no institution page.
+- [x] tipizatul.eu: link a record to `/proceduri?q=<institution name>`. The site has no CIF and no institution page.
       The link needs a tracked map from their institution name to our record. Measured: 461 of 688 names link to ANAF.
-- [~] transparenta.eu: link a record to `/entities/<CUI>`. An unknown CUI gives HTTP 200 with the title `Entity <CUI>`.
+- [x] transparenta.eu: link a record to `/entities/<CUI>`. An unknown CUI gives HTTP 200 with the title `Entity <CUI>`.
       Measure coverage before the link goes live. The terms say nothing about links or automated access.
-- [~] Group the existing ROePAS and posturi links with the new links in one place on the record page.
+- [x] Group the existing ROePAS and posturi links with the new links in one place on the record page.
+- [ ] transparenta.eu link for `curation` and `seap` records: the sample covered 14 of 50 and 18 of 50 (below 95%), so only `anaf` records show the link.
+      Measure again if the site grows. Also review 15 tipizatul.eu subunit names (ministry directorates) that the map rejects.
 - [ ] Contact the author of tipizatul.eu (owner: "we should definitely contact", 2026-11-06). Offer our map from their
       institution names to CIFs, and ask for a stable institution URL or key. Send it after the map is accepted. The owner approves the text.
 - [ ] Review the 227 tipizatul.eu names that have no ANAF link. 147 have an exact name in one record, with no county check.

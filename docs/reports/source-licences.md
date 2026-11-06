@@ -266,6 +266,12 @@ No licence or re-use statement was found. The site cites H.G. 1.336/2022 as the 
   - The text includes the right "să extragă și/sau să reutilizeze părți substanțiale" of a database.
 - **Side finding.** The pipeline table says that SEAP has OGL-ROU-1.0 on 6 datasets. The OGL asks for the attribution sentence above. The agent found no such sentence in `README.md` or `explorer/despre.html`. The agent did not check `explorer/index.html`.
 
+## 8. Links to tipizatul.eu and transparenta.eu (Sonnet, 2026-11-06)
+
+**tipizatul.eu.** The MIT licence covers the code of the site. The agent found no licence for the data. The project keeps only institution names in `curation/tipizatul.csv`, to build the link `https://www.tipizatul.eu/proceduri?q=<name>`. It copies no procedure, form or contact detail. The bundle `procedures.json` stays in `data/tipizatul/` (ignored by git).
+
+**transparenta.eu.** The project shows only a link to `https://transparenta.eu/entities/<CUI>`. The terms say that open data follows the licence of its source. The project takes no data from the site. The coverage sample in `data/tipizatul/transparenta-sample.csv` holds the page titles only and stays out of git.
+
 ## Pages that the agent could not read
 
 | Page | Result |

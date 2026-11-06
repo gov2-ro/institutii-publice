@@ -15,6 +15,7 @@ No linter or build step. A few scripts, a static page and standard-library tests
     python3 scripts/scrape_roepas.py [--workers 4] [--limit N]   # re-scrape roepas.ro -> data/roepas/ (requests, lxml)
     python3 scripts/lookup_status.py [--mf DIR]   # MF files + institutii.csv -> data/lookup/status.csv (stdlib; about 20 s; run consolidate.py before and after it)
     python3 scripts/onrc_candidates.py [--onrc DIR]   # ONRC files + institutii.csv -> data/consolidated/onrc-review.csv (stdlib; changes no data)
+    uv run scripts/tipizatul_candidates.py     # tipizatul.eu bundle -> data/tipizatul/review.csv (openpyxl; changes no data)
     python3 scripts/build_uat_maps.py          # rebuild explorer/assets/gis/uat/ from docs/reference/gis/*.geojson (stdlib)
     python3 -m http.server                     # then open http://localhost:8000/explorer/
     sh scripts/publish_pages.sh [--dry-run]    # tests + checks, then publish explorer/ + data to gh-pages -> https://org.gov2.ro
@@ -77,6 +78,14 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
   A row fills or replaces the ROePAS website of the ANAF record with that CIF. CSV column `website_source`
   is `curation` or `roepas`. The script stops on a duplicate CIF or a value that is not a website.
 
+- **Curated tipizatul.eu names** `curation/tipizatul.csv` (tracked): `id, institution, tier, checked_at`. A row sets the CSV column
+  `tipizatul_name` (row key `tz`) of one record: the institution name as the bundle `https://www.tipizatul.eu/procedures.json`
+  spells it. The explorer links `https://www.tipizatul.eu/proceduri?q=<name>`. The site has no CIF and no institution page, so the
+  name is the key. `scripts/tipizatul_candidates.py` links the names of the bundle (only procedures with documents) to ANAF rows and
+  writes the ignored queue `data/tipizatul/review.csv`; it changes no data. A person or an agent keeps only the tiers `exact`,
+  `canonical` and `tokens`, and rejects subunits (a name with ` - <directorate>`) and ties. The script stops on an unknown id, a
+  duplicate id, a duplicate institution or two rows for one record. A missing file means no links. No other field changes.
+
 Outputs: `institutii.json`, `institutii.csv` (the only consolidated file tracked in git), and the explorer's
 `metadata.json` + `rows.json`. `explorer/metadata.json` and `explorer/rows.json` are symlinks into
 `data/consolidated/`. `data/consolidated/explorer-data.js` is a stale leftover of an older format; nothing reads it.
@@ -119,7 +128,7 @@ served over HTTP, not opened as file://. Its look is the gov2 design system (see
 holds `gov2.css` and the local Inter and Fragment Mono; `<html data-g2-scheme="auto">` turns on the DS dark scheme. Rows use the compact schema from `write_explorer_data`: short keys
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
 declaratii=8/posturi=16/seap=32, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
-candidates, `us` 1 = sector inferred from the name (`uat_source`), 2 = county from MF (`county_source`), `st` status (1 = radiat, 2 = fuzionat, 3 = in_lichidare; `listat` and `not_found` give no key), `sd` status date (ISO), `mi` ids absorbed by a same-name merge, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
+candidates, `us` 1 = sector inferred from the name (`uat_source`), 2 = county from MF (`county_source`), `st` status (1 = radiat, 2 = fuzionat, 3 = in_lichidare; `listat` and `not_found` give no key), `sd` status date (ISO), `mi` ids absorbed by a same-name merge, `tz` tipizatul.eu institution name, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
 `write_explorer_data` and the decoding in `index.html`.
 `metadata.json` also carries `dataset` (generation time; per input file the path, bytes, SHA-256, mtime, row count;
 ANI exports add `exported_at` and `capped`). Ambiguous source rows stay separate records with `match_candidates`

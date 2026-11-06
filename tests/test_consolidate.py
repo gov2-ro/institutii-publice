@@ -449,6 +449,43 @@ class CuratedWebsites(unittest.TestCase):
                 c.PROVENANCE.clear()
 
 
+class CuratedTipizatul(unittest.TestCase):
+    def test_applied_value_and_absorbed_id(self):
+        recs = [{"id": "A1", "merged_ids": ["R7"]}, {"id": "A2"}, {"id": "A3"}]
+        n = c.apply_curated_tipizatul(recs, [{"id": "A1", "institution": "Școala Ștefan"},
+                                             {"id": "A2", "institution": "Alta"}])
+        self.assertEqual(n, 2)
+        self.assertEqual([r.get("tipizatul_name") for r in recs], ["Școala Ștefan", "Alta", None])
+        c.apply_curated_tipizatul(recs, [{"id": "R7", "institution": "Prin id absorbit"}])
+        self.assertEqual(recs[0]["tipizatul_name"], "Prin id absorbit")
+
+    def test_stops_on_unknown_id_and_on_one_record_twice(self):
+        recs = [{"id": "A1", "merged_ids": ["R7"]}]
+        with self.assertRaises(SystemExit):
+            c.apply_curated_tipizatul(recs, [{"id": "A9", "institution": "x"}])
+        with self.assertRaises(SystemExit):
+            c.apply_curated_tipizatul(recs, [{"id": "A1", "institution": "x"}, {"id": "R7", "institution": "y"}])
+
+    def test_file_is_validated(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "tipizatul.csv"
+            self.assertEqual(c.load_curated_tipizatul(path), [])           # no file, no links
+            root, c.ROOT = c.ROOT, Path(d)                                  # record_input wants a path under ROOT
+            try:
+                path.write_text("id,institution,tier,checked_at\nA1,\"Ministerul X, Y\",exact,2026-11-06\n")
+                self.assertEqual(c.load_curated_tipizatul(path)[0]["institution"], "Ministerul X, Y")
+                path.write_text("id,institution\nA1,x\nA1,y\n")
+                with self.assertRaises(SystemExit):
+                    c.load_curated_tipizatul(path)
+                path.write_text("id,institution\nA1,x\nA2,x\n")
+                with self.assertRaises(SystemExit):
+                    c.load_curated_tipizatul(path)
+            finally:
+                c.ROOT = root
+                c.PROVENANCE.clear()
+
+
 class Provenance(unittest.TestCase):
     def test_kibana_export_time(self):
         name = "Lens Visualization [2026-10-19T20_26_13.348+03_00] 3.csv"
