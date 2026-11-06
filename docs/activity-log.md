@@ -1,5 +1,18 @@
 # Activity log
 
+## 2026-11-07 — Publish of the external links; draft message to the tipizatul.eu author
+
+**Done**
+- Published d47747b (gh-pages 4dc9644) with the approval of the owner. Measured live: 28,288 rows, 386 hidden, 448 rows with `tz`, the same `build_hash` as the local build (`64c92c9b04c5`). The live page has the section `Pe alte site-uri`, and the live CSV has the column `tipizatul_name`.
+- Wrote the draft `docs/drafts/tipizatul-author-contact.md`. It is not sent. The backlog item points to it.
+- The owner read `docs/external-lookups.md` and agrees with it.
+
+**Hard**
+- Nothing.
+
+**Decided**
+- The channel stays open: a public issue or a private message. The owner decides when the text is approved.
+
 ## 2026-11-06 — Review (Opus): external profile links accepted
 
 **Done**

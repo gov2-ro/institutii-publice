@@ -33,7 +33,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] transparenta.eu link for `curation` and `seap` records: the sample covered 14 of 50 and 18 of 50 (below 95%), so only `anaf` records show the link.
       Measure again if the site grows. Also review 15 tipizatul.eu subunit names (ministry directorates) that the map rejects.
 - [ ] Contact the author of tipizatul.eu (owner: "we should definitely contact", 2026-11-06). Offer our map from their
-      institution names to CIFs, and ask for a stable institution URL or key. Send it after the map is accepted. The owner approves the text.
+      institution names to CIFs, and ask for a stable institution URL or key and the licence of the data. The map is accepted.
+      Draft: [drafts/tipizatul-author-contact.md](drafts/tipizatul-author-contact.md). The owner approves the text and chooses the channel. Not sent.
 - [ ] Review the 227 tipizatul.eu names that have no ANAF link. 147 have an exact name in one record, with no county check.
 
 ## Explorer: "Structura statului" (spec: specs/structura-statului.md)
