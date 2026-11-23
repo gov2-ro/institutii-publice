@@ -46,7 +46,13 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
   - [x] Build `briefs/transparenta-source.md` (Sonnet, 2026-11-23; Opus reviews): 11 `T` records, 1,250 parents, bit 64, key `pt`.
   - [x] The name, address and county of the 11 `T` records come from Transparenta.eu (Opus fix, 2026-11-23). The ANAF `PlatitorTvaRest`
         cache only selects active bodies, as a lookup; no field of it is published. This keeps the owner decision of 2026-11-05.
-  - [ ] Review the 11 `parents_differ` rows and the 33 `missing_there` rows of `review.csv` (not done in this brief).
+  - [x] Review the 11 `parents_differ` and 33 `missing_there` rows (Opus, 2026-11-23). No change to the data:
+        - 3 ANAF records with no parent (CNCAN 10792013, ANRS 26288978, Secretariatul de Stat pentru Culte 26429279): transparenta.eu gives
+          the budget channel (SGG, MAI). Our curated tree places them by law (`STATE_ATTACH`, "specialitate"). Keep ours: a budget route is not a subordination.
+        - 8 records where transparenta.eu has a second parent (a county or municipality, for example ISJ Arad under Municipiul Arad): our ANAF
+          list of 2026-10-01 is the newer official snapshot, and the extra parent looks like a co-financing route. Keep ANAF.
+        - 33 ANAF records that transparenta.eu lacks: new bodies of 2025-2026 (CUIs 54… and 55…), mostly water services, sports clubs,
+          kindergartens and schools. Nothing to do on our side. The next comparison shows if they appear there.
 - [x] Licence compliance at the strictest reading, for every source (owner request, 2026-11-23).
       Brief: [briefs/licence-compliance.md](briefs/licence-compliance.md) (ready). The owner approves each text change.
       Audit done 2026-11-23 (Sonnet): [report](reports/source-licences.md), section "Audit at the strictest reading". Opus reviews.

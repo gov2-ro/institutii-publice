@@ -1,5 +1,16 @@
 # Activity log
 
+## 2026-11-23 — transparenta.eu: parent conflicts and bodies they lack (Opus)
+
+**Done**
+- Read the 11 `parents_differ` and 33 `missing_there` rows of `data/transparenta/review.csv`. No data change.
+
+**Decided**
+- Keep our parents in all 11 cases. transparenta.eu gives the budget route (main creditor in the budget reports). For the 3 ANAF roots
+  the curated tree gives the legal place; for the 8 second parents the ANAF list of 2026-10-01 is newer. Cost of the alternative: budget
+  routes as parents would move 3 central bodies under SGG or MAI in the state tree, against the legal structure.
+- The 33 bodies they lack are new (2025-2026). No action.
+
 ## 2026-11-23 — transparenta.eu as a source of `consolidate.py` (Sonnet, brief `briefs/transparenta-source.md`)
 
 **Opus review (2026-11-23).** Accepted with one fix. The brief (Opus's error) took the name, address and county of the `T` records
