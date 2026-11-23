@@ -16,6 +16,7 @@ No linter or build step. A few scripts, a static page and standard-library tests
     python3 scripts/lookup_status.py [--mf DIR]   # MF files + institutii.csv -> data/lookup/status.csv (stdlib; about 20 s; run consolidate.py before and after it)
     python3 scripts/onrc_candidates.py [--onrc DIR]   # ONRC files + institutii.csv -> data/consolidated/onrc-review.csv (stdlib; changes no data)
     uv run scripts/tipizatul_candidates.py     # tipizatul.eu bundle -> data/tipizatul/review.csv (openpyxl; changes no data)
+    python3 scripts/transparenta_compare.py [--cached]   # transparenta.eu entities vs institutii.csv -> data/transparenta/review.csv (stdlib; about 155 requests, 6 min; changes no data)
     python3 scripts/build_uat_maps.py          # rebuild explorer/assets/gis/uat/ from docs/reference/gis/*.geojson (stdlib)
     python3 -m http.server                     # then open http://localhost:8000/explorer/
     sh scripts/publish_pages.sh [--dry-run]    # tests + checks, then publish explorer/ + data to gh-pages -> https://org.gov2.ro

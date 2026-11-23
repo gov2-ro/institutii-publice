@@ -50,6 +50,7 @@ Run only the steps whose source changed. Steps 1 to 3 need the source files.
 | 8 | `python3 -m unittest discover -s tests` and `sh tests/determinism.sh` | Always, before a commit. The determinism check is a step for a person: it takes minutes and rebuilds the data. `publish_pages.sh` does not run it. |
 | 9 | Browser check (see *Checks*) | The explorer or the data changed. |
 | 10 | `sh scripts/publish_pages.sh --dry-run`, then without `--dry-run` | The owner approved the publish. Commit your changes first. |
+| 11 | `python3 scripts/transparenta_compare.py` | After each new ANAF list, and at least every three months. It makes about 155 requests in about 6 minutes and changes no data. Read the `missing_here` rows of `data/transparenta/review.csv` first. Log the requests in `external-lookups.md`. |
 
 Steps 5 and 7 read `institutii.csv`, so they use the list of the previous build. Thus a new CUI needs steps 4, 5 and 6.
 
@@ -76,6 +77,7 @@ Sources that the project does not use in the published data:
 - **ANAF `PlatitorTvaRest` service.** ANAF states no terms on re-use. The owner decided on 2026-11-05 to keep it out for now.
 - **MF `TELEFON`.** The column can hold personal numbers. The owner decided on 2026-11-05 not to publish it for now.
 - **MF rows with `TIP_CONTRIB` PF.** These rows are natural persons. `lookup_status.py` skips them, and they never enter the repository.
+- **transparenta.eu entities** (GraphQL API `https://api.transparenta.eu/graphql`). `scripts/transparenta_compare.py` compares them with `institutii.csv` and writes the ignored queue `data/transparenta/review.csv`. Kinds: `missing_here`, `non_anaf_here`, `parents_differ`, `missing_there`. It changes no data and writes no curation file. It never asks for `profile` (leader names and parties are personal data). The terms say that open data follows the licence of its source and that shared results name the source and Transparenta.eu. They state no API rate limit. A new record or a new parent from this source needs a separate owner decision.
 
 Every call to an external service and every dataset download goes in [external-lookups.md](external-lookups.md).
 

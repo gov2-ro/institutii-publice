@@ -1,5 +1,49 @@
 # Activity log
 
+## 2026-11-23 — comparison with the transparenta.eu entities
+
+**Done**
+- Script `scripts/transparenta_compare.py` (stdlib). It fetches all entities from `https://api.transparenta.eu/graphql`, saves the raw pages to `data/transparenta/entities-<date>.jsonl`, and writes `data/transparenta/review.csv`. Option `--cached` makes no request. It never asks for `profile`.
+- One full run. Measured: 15,307 entities there (3,228 with `is_uat`). Differences: `missing_here` 552, `non_anaf_here` 1,303, `parents_differ` 11, `missing_there` 33.
+- `missing_here` (552): none is a UAT. By `entity_type`: public_entity 150, education 115, edu_kindergarten 39, edu_primary_school 25, utilities 24, social 24, sports 24, culture 23. By name, 236 are schools, kindergartens, colleges or similar. Only 7 have no parent.
+- `non_anaf_here` (1,303): education 632, public_entity 352, public_order 74. The records are mostly `S` (SEAP) records, such as agricultural chambers and public services.
+- `parents_differ` (11): in 8 cases their list has a second parent (a local authority, next to 13729380 or 4266456) and our list has one. In 3 cases our list has no parent while theirs has one.
+- `missing_there` (33): mostly CUIs of 54xxxxxx and 55xxxxxx (new bodies of ANAF): local public services, sports clubs. Not companies. The assumption is that transparenta.eu has not yet added them.
+- Requests: 187 POSTs in all, 2 s apart, no 429 or 5xx, no key. 1 introspection query (refused), 32 requests of a faulty first run, 154 requests of the full run (338 s).
+
+**Hard**
+- The server accepts `limit` 500 without an error, but returns 100 rows per page. The first run stepped the offset by 500 and fetched only 3,100 entities. The script now steps the offset by the number of rows returned. The first file was deleted.
+- Introspection is off. The `pageInfo` fields `totalCount` and `hasNextPage` were a guess that worked.
+
+**Decided**
+- Matching key: the CUI with leading zeros removed. Parents compare as sets of CUIs. Our side of `missing_there` holds only `A` records.
+- No row enters the published data. The owner decides on new records and parents.
+
+**Opus review (both entries, 2026-11-23).**
+- Checked the 552 `missing_here` CUIs against the MF files (`lookup_status.read_mf`): 102 `listat`, 100 `fuzionat`, 350 not in MF.
+  So transparenta.eu keeps bodies of past years. Most of the 552 are not current bodies. Assumed, not measured: why 350 are absent from MF.
+- Licence report: the coats-of-arms claim (Legea 179/2022 art. 1(2)(g)) is not verified. Legea 8/1996 art. 9 excludes official symbols
+  from copyright, so the origin of the drawings is the open point. Review note added to the report.
+- The licence audit read pages through a fetch tool that does not set the client name. Next time use `curl` with the project name.
+
+## 2026-11-23 — licence audit at the strictest reading (Sonnet; Opus reviews)
+
+**Done**
+- New section in `docs/reports/source-licences.md`: obligations per source, a gap table of 36 rows, proposed texts (`sources` block, `NOTICE`, *Despre*, README, map notice), 11 owner decisions.
+- Two drafts, not sent: `docs/drafts/licence-geo-spatial-question.md`, `docs/drafts/licence-posturi-terms-question.md`.
+- Lookups logged in `docs/external-lookups.md` (5 rows, about 30 page reads). No publisher was contacted. No project file outside `docs/` changed.
+
+**Hard**
+- The pages were read through a summary tool, so the client name `institutii-publice-check` could not be set. The report says so.
+- The `oc.gov.ro` terms page answered HTTP 500 again. It was tried once and not retried.
+
+**Decided**
+- Measured: the ANAF list is OGL-ROU-1.0 on data.gov.ro (CKAN `uk-ogl`, Ministerul Finanțelor). The report of 2026-11-05 said "no licence". *Despre* lacks the OGL sentence for it.
+- Measured: the map layer has CC BY-SA 4.0 in the page footer and CC BY 4.0 in the catalogue record. Assumed: the stricter text applies.
+- Measured: *Despre* says "nu preluăm date" from tipizatul.eu, but `tipizatul_name` holds 448 of their names.
+- Measured: attribution travels with no data file. `metadata.json` has a licence field for the `mf` input only.
+- Assumed (not checked): that the EUPL cannot cover third-party data. Marked as interpretation, not legal advice.
+
 ## 2026-11-23 — full posturi export (DATA-ORG-04)
 
 **Done**

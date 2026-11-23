@@ -310,3 +310,241 @@ No licence or re-use statement was found. The site cites H.G. 1.336/2022 as the 
 7. **Attribution.** Approve one attribution block for *Despre date* with these lines: ANAF, ROePAS (if kept), Registrul Național, ANI, posturi.gov.ro, geo-spatial.org with ANCPI, and the OGL-ROU-1.0 sentence for the SEAP datasets under that licence.
 8. **Licence column.** Replace "Not recorded" in the table *Sources* of `docs/pipeline.md` with the findings of this report after the owner decides.
 9. **Legal advice.** Decide whether to pay for a short legal opinion on three points: the ROePAS clause, the share-alike of the maps, and the default regime of Legea 179/2022 for documents with no stated licence.
+
+---
+
+# Audit at the strictest reading (Sonnet, 2026-11-23)
+
+Brief: [briefs/licence-compliance.md](../briefs/licence-compliance.md). Owner request, 2026-11-23: abide by the maximal terms of the licences.
+Rule: an obligation counts when any text of the publisher states it. Where a text is unclear, the obligation applies.
+
+Limits:
+
+- The agent is not a lawyer. Each paragraph that starts with "Interpretation" is an opinion, not a legal conclusion.
+- The agent read the pages on 2026-11-23 through a summary tool. A person must read the exact text before any legal use.
+- No publisher was contacted. `www.anaf.ro` was not opened again. The posturi terms link (HTTP 500 on 2026-11-05) was tried once and answered HTTP 500 again. It was not tried a third time.
+- The calls are in `docs/external-lookups.md` (rows of 2026-11-23).
+
+## Review (Opus, 2026-11-23)
+
+- Accepted as a basis for the owner decisions. Sections A to E agree with the sources that the agent names.
+- **Coats of arms: check before acting.** Section B cites Legea 179/2022 art. 1(2)(g). Opus did not verify that letter. Legea 8/1996
+  art. 9 also excludes the official symbols of public authorities (such as a coat of arms) from copyright. A specific drawing can still
+  have an author (many PNG files come from Wikimedia Commons, often CC BY-SA). So the open question is the origin of the 42 files,
+  not the symbols. Find the origin before the owner removes them.
+- The agent could not set the client name (the fetch tool sets it). The next audit uses `curl` with `institutii-publice-check`.
+
+## A. Changes to the findings of 2026-11-05
+
+1. **The ANAF list has a licence.** The dataset "Lista entităților publice" on data.gov.ro (publisher: Ministerul Finanțelor) has the licence id `uk-ogl`, title OGL-ROU-1.0. The CKAN metadata of the dataset says so. The dataset lists a resource "01.10.2026", the date of our file. The statement "No licence on the list" in section 1 and in `docs/pipeline.md` is out of date. *Despre* already links this dataset (`explorer/despre.html:153`).
+2. **The map layer has two licence texts.** The page footer of geo-spatial.org says CC BY-SA 4.0. The GeoNetwork record of the layer says CC BY 4.0, edition 05.05.2025, originator ANCPI. Our file has the version 2025-03-26. Strictest reading: use CC BY-SA 4.0.
+3. **The SEAP 2025 dataset** has the licence id CC-BY-4.0 (publisher ADR). The MF and ONRC datasets have CC-BY-4.0 in their CKAN metadata. The dataset pages themselves do not show the licence, only the API does.
+4. **posturi.gov.ro**: the terms link still gives HTTP 500. The terms stay unread.
+5. **ROePAS**: the terms text is the same. It has no date.
+
+## B. Obligations by source
+
+| Source | Licence (as read 2026-11-23) | Obligations (strictest reading) |
+|---|---|---|
+| ANAF list | OGL-ROU-1.0 (data.gov.ro). Older ANAF notice: reproduction with the source | Name the source with the text of the licensor. If the licensor gives none, show "Conține informații publice în baza Licenței pentru Guvernare Deschisă v1.0". Do not suggest an official status or a privileged relation. Do not distort the information. Do not infringe personal data rights. Keep the licence name and link. |
+| ROePAS | Own terms (English) | No mass copying or scraping. No commercial use without consent. Databases belong to ROEPAS or third parties. Consent for any use, commercial or not. Owner decision deferred. |
+| Registrul Național | None found | Unknown. Name the source. |
+| ANI | Site notice: reproduction with the source | Name the source. A prior agreement, where required, overrides the notice. No terms for the Kibana of monitorul.ai. |
+| posturi.gov.ro | Terms unread | Browsing means acceptance of the terms. Unknown content. Name the source. |
+| SEAP (ADR) | CC-BY-4.0 (datasets 2021-2026); OGL-ROU-1.0 (older datasets) | CC BY 4.0: credit the creator, link the licence, indicate changes, keep notices, no endorsement. OGL: see ANAF list. |
+| MF "Date de identificare plătitori" | CC-BY-4.0 | The same as CC BY 4.0 above. |
+| ONRC "Firme înregistrate" | CC-BY-4.0 | The same. The dataset holds legal representatives (personal data). The project takes the CUI only. |
+| Maps (geo-spatial.org, ANCPI) | Footer CC BY-SA 4.0; catalogue CC BY 4.0 | Attribution; link the licence; indicate changes; ShareAlike: an adaptation goes under CC BY-SA 4.0 or a compatible licence. The CC list names GPLv3 only for one-way compatibility. |
+| County coats of arms | Not known | Legea 179/2022 art. 1(2)(g) excludes coats of arms from re-use. The origin is not on record. |
+| Fonts Inter, Fragment Mono (DS) | SIL OFL 1.1 | The copyright notice and the licence text travel with the fonts. |
+| tipizatul.eu | Code: MIT. Data: no licence. No terms on the home page | None found. Strictest: treat the institution names as unlicensed text of a third party. |
+| transparenta.eu | Open data follows the licence of the source | Visible attribution to the data source and to Transparenta.eu on shared visuals. Do not remove attribution notices. No endorsement. The project links only. |
+| ANAF `PlatitorTvaRest` | API terms (2022) and service rules | 100 CUIs per request, one request per second. No data of this service is published. |
+
+## C. Gap table
+
+"Complies" is yes, no or unclear. Lines are of the files at `HEAD` on 2026-11-23.
+
+| # | Source | Obligation | Complies | Where | Note |
+|---|---|---|---|---|---|
+| 1 | ANAF list (OGL) | Attribution sentence of OGL-ROU-1.0 | no | `explorer/despre.html:153`, `README.md:29`, `explorer/index.html:455` | The page names the source and links the dataset. It has the OGL sentence for SEAP only (`despre.html:158`). Not for the ANAF list. |
+| 2 | ANAF list (OGL) | Licence name and link | no | `explorer/despre.html:153` | The link goes to the dataset. The licence is not named. |
+| 3 | ANAF list (OGL) | No suggestion of official status | yes | `explorer/despre.html` (notice bar, "Acesta nu este un proiect oficial") | The bar can be closed and is on each page. |
+| 4 | ANAF list (OGL) | No distortion; say what changed | unclear | none | We merge, rename categories and link records. No text says so. |
+| 5 | ANAF list | Naming of the publisher | unclear | `explorer/despre.html:153` | The text says "ANAF, pe data.gov.ro". The CKAN publisher is Ministerul Finanțelor. |
+| 6 | ROePAS | No scraping, no mass copy, consent | no | `data/roepas/` (scrape of 2026-10-05); `institutii.csv`, `rows.json` | Open owner decision (deferred 2026-11-06). Not new. |
+| 7 | ROePAS | Source named | yes | `explorer/despre.html:154` | |
+| 8 | Registrul | Source named | yes | `explorer/despre.html:155` | No licence to name. Publisher not proved. |
+| 9 | ANI | Source named | yes | `explorer/despre.html:156` | The notice allows reproduction with the source. |
+| 10 | ANI | Access terms of the Kibana | unclear | `README.md:47-48` | No written terms on record. |
+| 11 | posturi.gov.ro | Source named | yes | `explorer/despre.html:157` | Terms unread, so the full obligation set is unknown: unclear. |
+| 12 | SEAP, CC BY 4.0 | Credit, licence link | yes | `explorer/despre.html:158` | |
+| 13 | SEAP, OGL | OGL sentence | yes | `explorer/despre.html:158` | |
+| 14 | SEAP, CC BY 4.0 | Indicate changes | no | none | `despre.html:158` lists what we take. It does not say that we changed it. |
+| 15 | MF, CC BY 4.0 | Credit, licence link | yes | `explorer/despre.html:160`, `README.md:37-39`, `explorer/index.html:1719` | |
+| 16 | MF, CC BY 4.0 | Indicate changes | unclear | `explorer/despre.html:160`, `README.md:40-41` | The text says what we take and what "listat" means. It does not say "modified". |
+| 17 | MF | Date of the copy | unclear | `explorer/metadata.json` (`inputs[].snapshot` 2026-06-11); `despre.html` has no date | The dataset page was updated 2026-07-23 (July files). The snapshot field says 2026-06-11. Check which date is right. |
+| 18 | ONRC, CC BY 4.0 | Credit, licence link | yes | `explorer/despre.html:161`, `README.md:32-36` | |
+| 19 | ONRC, CC BY 4.0 | Indicate changes | yes | `README.md:34-36` | The README says that rows are matched and may be wrong. *Despre* does not. |
+| 20 | Maps | Attribution, licence link | yes | `explorer/despre.html:162` | The text names ANCPI and geo-spatial.org and links CC BY-SA 4.0. |
+| 21 | Maps | Indicate changes | yes | `explorer/despre.html:162` | "Le-am împărțit pe județe". The files also hold labels and SIRUTA codes (`scripts/build_uat_maps.py`): not said. Unclear for that part. |
+| 22 | Maps | ShareAlike | no | `README.md:69`, `explorer/index.html:456`, `explorer/assets/gis/` | The map files have no licence notice. The project says EUPL v1.2 for the data. EUPL is not on the CC list of compatible licences. |
+| 23 | Maps | Version and date of the copy | no | `explorer/despre.html:162` | File version 2025-03-26. The catalogue record says edition 05.05.2025. The text gives none. |
+| 24 | Coats of arms | Known licence, notice | no | `explorer/assets/steme-judete/` (42 files, added 2026-10-25, `d0f5e09`); `explorer/index.html:1384` | No origin, no credit. Law art. 1(2)(g) excludes them from re-use. |
+| 25 | Fonts (OFL 1.1) | Notice and licence text with the fonts | yes | `explorer/assets/gov2/fonts/LICENSE-inter.txt`, `LICENSE-fragment-mono.txt` | `publish_pages.sh:72` copies the whole `explorer/` folder, so the files travel to gh-pages. |
+| 26 | tipizatul.eu | Correct statement of what we take | no | `explorer/despre.html:163`; `curation/tipizatul.csv`; `institutii.csv` column `tipizatul_name`; `rows.json` key `tz` | The page says "nu preluăm date de la ele". We store 448 of their institution names. |
+| 27 | tipizatul.eu | Licence of the names | unclear | none | No data licence. Institution names are facts about public bodies (interpretation). |
+| 28 | transparenta.eu | Attribution; keep notices | yes | `explorer/despre.html:163`, `explorer/index.html:1730` | We link and take no data. The text names the site. |
+| 29 | transparenta.eu | If their entity list enters our data | unclear | `scripts/transparenta_compare.py` (not tracked) | Their data follow ANAF/MF licences. Attribution "via Transparenta.eu" would apply. Not yet in the published data. |
+| 30 | ANAF web service | Rate limits | yes | `docs/external-lookups.md` rows of 2026-11-04 | 1.5 s between requests. No data of this service in the published files. |
+| 31 | All | Attribution travels with `institutii.csv` | no | `data/consolidated/institutii.csv` (no header text, no licence column); `scripts/publish_pages.sh:74` | The `sources` column names the sources. It names no licence. A person who gets only the CSV sees no credit. |
+| 32 | All | Attribution travels with `metadata.json` | no | `scripts/consolidate.py:1851-1868` (`STATUS_LICENCE`) | Only the `mf` input has `origin` and `licence`. Other inputs have path, bytes, hash, rows. |
+| 33 | All | Attribution travels with `rows.json` | no | `explorer/rows.json` (symlink) | No text. Compact keys only. |
+| 34 | All | Attribution on gh-pages root | no | `scripts/publish_pages.sh:72-77` | No `NOTICE` file. `README.md` is not published. |
+| 35 | All | The EUPL statement claims no rights on third-party data | no | `README.md:69`, `explorer/index.html:456`, `docs/pipeline.md:201` | The text says "Date reutilizabile conform EUPL v1.2" for the whole set. It does not limit the claim to our own contribution. See D. |
+| 36 | All | Exports keep notices | no | `explorer/index.html:1933-1934` | The CSV export of the page has no credit line. |
+
+## D. Interpretation of the EUPL statement
+
+Interpretation (not a legal conclusion):
+
+- The licensor can license only what the licensor owns. For this set the project owns the selection, the matching, the families and categories, and the curation files. It does not own the source facts and fields.
+- The EUPL text and its compatibility page speak of software and source code. The agent found no statement that the EUPL covers data. The brief of 2026-11-05 raised the same point.
+- A CC BY 4.0 or OGL source allows adaptation and sharing of the adaptation, with the credit. It does not give the project the right to re-licence the source part under another licence. The statement is safe only if it says that the EUPL covers our own contribution, and that each source keeps its own terms.
+- For the maps, CC BY-SA 4.0 (the strictest text) asks that an adaptation uses CC BY-SA 4.0 or a compatible licence. The CC page lists GPLv3 (one way) and no EUPL. So the EUPL line must not cover the map files.
+- ROePAS fields: no reading of the terms allows re-licensing. This stays the open owner decision.
+
+## E. Proposed texts
+
+Each text needs the approval of the owner. The agent changed none of the target files.
+
+### E1. `metadata.json`: block `sources` (target: `scripts/consolidate.py`, `write_explorer_data`)
+
+One entry for each input source. `changes` is a short plain sentence. The key `copy_date` is the date of the copy that the build read.
+
+```json
+"sources": [
+  {"id": "anaf", "name": "Lista entităților publice", "publisher": "Ministerul Finanțelor (ANAF)",
+   "licence": "OGL-ROU-1.0", "licence_url": "https://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf",
+   "url": "https://data.gov.ro/dataset/listaentitatipublice", "copy_date": "2026-10-01",
+   "notice": "Conține informații publice în baza Licenței pentru Guvernare Deschisă v1.0",
+   "changes": "Records matched, categorised and linked to other sources."},
+  {"id": "seap", "name": "Achiziții publice (autorități contractante)", "publisher": "Autoritatea pentru Digitalizarea României",
+   "licence": "CC-BY-4.0 (2021-2026); OGL-ROU-1.0 (older datasets)", "url": "https://data.gov.ro/dataset/achizitii-publice-2025",
+   "copy_date": "2026-11-03", "changes": "Only authority name, CUI, years, type and locality. Rows merged by CUI."},
+  {"id": "mf", "name": "Date de identificare plătitori", "publisher": "Ministerul Finanțelor", "licence": "CC-BY-4.0",
+   "url": "https://data.gov.ro/dataset/date_de_identificare_platitori_actualizate_iunie_2026", "copy_date": "2026-06-11",
+   "changes": "Status label mapped to our values; county filled where empty. Natural persons skipped."},
+  {"id": "onrc", "name": "Firme înregistrate la Registrul Comerțului până la data de 19.10.2026", "publisher": "Oficiul Național al Registrului Comerțului",
+   "licence": "CC-BY-4.0", "url": "https://data.gov.ro/dataset/firme-19-10-2026", "copy_date": "2026-10-19",
+   "changes": "Only the CUI of some records, set by a recorded rule or a review."},
+  {"id": "roepas", "name": "ROePAS", "publisher": "Autoritatea pentru Digitalizarea României", "licence": "own terms; consent not on record",
+   "url": "https://roepas.ro", "copy_date": "2026-10-05", "changes": "Fields copied as found; matched to records."},
+  {"id": "registrul", "name": "Registrul Național al Instituțiilor Publice din România", "publisher": "not proved", "licence": "none found",
+   "url": "https://www.e-guvernare.ro/Registrul-National-al-Institutiilor-Publice-din-Romania.pdf", "copy_date": "PDF of 2020",
+   "changes": "Text extracted from the PDF and matched."},
+  {"id": "ani", "name": "Declarații de integritate (agregate)", "publisher": "ANI, through monitorul.ai", "licence": "reproduction with the source; no written terms of access",
+   "url": "https://declaratii.integritate.eu/", "copy_date": "2026-10-19", "changes": "Institution name, county and count only."},
+  {"id": "posturi", "name": "posturi.gov.ro", "publisher": "Guvernul României", "licence": "terms unread",
+   "url": "https://posturi.gov.ro/", "copy_date": "2026-11-23", "changes": "Employer name, county, locality and number of postings only."},
+  {"id": "maps", "name": "Limite administrative UAT", "publisher": "geo-spatial.org, from ANCPI data", "licence": "CC BY-SA 4.0 (page footer); CC BY 4.0 (catalogue record)",
+   "url": "http://geo-spatial.org/descarcare/date/administrative-boundaries/", "copy_date": "version 2025-03-26",
+   "changes": "Split by county, simplified for the web, SIRUTA codes and labels added."}
+],
+"licence_note": "The list of records (selection, matching, families, curation) is offered under EUPL v1.2. Each source keeps its own licence. See NOTICE."
+```
+
+The agent did not check the `copy_date` of `roepas` (scrape of 2026-10-05, from the report) or of `posturi` (the build of 2026-11-23 reads the export of that day). The owner confirms both.
+
+### E2. `NOTICE` (English), for the repo root and for the root of `gh-pages`
+
+Target: new file `NOTICE` (repo), and `scripts/publish_pages.sh` copies it to `$site/NOTICE` (a change in `scripts/`, so it needs approval).
+
+```text
+org.gov2.ro: public institutions of Romania
+This file lists the sources of the data and their terms. It is not legal advice.
+
+Our own contribution (selection, matching, families, categories, curation files) is offered under EUPL v1.2.
+This licence does not cover the source data. Each source keeps its own terms, below.
+This project is not an official project of the Government of Romania.
+
+1. Lista entităților publice. Ministerul Finanțelor (ANAF), data.gov.ro. Copy of 2026-10-01.
+   Licence: OGL-ROU-1.0. Conține informații publice în baza Licenței pentru Guvernare Deschisă v1.0.
+   Changes: records matched, categorised and linked to other sources.
+2. Achiziții publice (SEAP). Autoritatea pentru Digitalizarea României, data.gov.ro. CC BY 4.0 (2021-2026) and OGL-ROU-1.0 (older sets).
+   Changes: authority name, CUI, years, type and locality only; rows merged by CUI.
+3. Date de identificare plătitori. Ministerul Finanțelor, data.gov.ro. Snapshot of 2026-06-11. CC BY 4.0.
+   Changes: status label mapped; county filled where empty.
+4. Firme înregistrate la Registrul Comerțului până la data de 19.10.2026. ONRC, data.gov.ro. CC BY 4.0.
+   Changes: the CUI of some records only.
+5. ROePAS (Autoritatea pentru Digitalizarea României). Terms: no mass copying, no scraping, consent needed.
+   Status: open question for the owner. See docs/reports/source-licences.md.
+6. Registrul Național al Instituțiilor Publice din România (PDF of 2020, e-guvernare.ro). No licence found.
+7. Declarații de integritate (ANI), aggregate counts through monitorul.ai. Reproduction with the source. No written terms of access.
+8. posturi.gov.ro (Guvernul României). Terms not readable.
+9. Maps: geo-spatial.org, from data of ANCPI. CC BY-SA 4.0. Changed: split by county and simplified.
+   The map files are under CC BY-SA 4.0, not under EUPL.
+10. Fonts: Inter and Fragment Mono, SIL Open Font License 1.1 (notices in assets/gov2/fonts/).
+11. County coats of arms: origin and licence not known.
+12. Links only, no data taken: tipizatul.eu (we keep their spelling of 448 institution names to build the link), transparenta.eu.
+```
+
+### E3. `explorer/despre.html` (Romanian; target lines named)
+
+- Line 153 (ANAF), replace the end of the item with: `… Conține informații publice în baza <a href="https://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf">Licenței pentru Guvernare Deschisă v1.0</a> (Ministerul Finanțelor, data.gov.ro, copie din 1 octombrie 2026).`
+- After line 160, add a new paragraph `Ce am modificat`: `Am combinat înregistrările din surse diferite, am atribuit categorii și familii și am legat înregistrările între ele. Din sursele cu licență CC-BY-4.0 sau OGL-ROU-1.0 am păstrat doar câmpurile numite mai sus; le-am modificat prin potrivire și curățare. Starea „listat” este eticheta noastră, nu a sursei. Aceste modificări sunt ale noastre, nu ale editorilor surselor. Nu sugerăm că vreun editor aprobă acest proiect.`
+- Line 162 (maps), replace with: `Limitele administrative de pe hărți: <a href="http://geo-spatial.org/descarcare/date/administrative-boundaries/">geo-spatial.org</a>, pe baza datelor Agenției Naționale de Cadastru și Publicitate Imobiliară (ANCPI), versiunea 2025-03-26, licența <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Le-am împărțit pe județe, le-am simplificat pentru web și am adăugat etichete și coduri SIRUTA. Fișierele de hartă din acest site rămân sub CC BY-SA 4.0.`
+- Line 163 (tipizatul.eu), replace with: `Pagina unei instituții trimite și la <a href="https://www.tipizatul.eu/">tipizatul.eu</a> (proceduri și formulare) și la <a href="https://transparenta.eu/">transparenta.eu</a> (buget). De la tipizatul.eu păstrăm doar grafia numelor unor instituții, ca să construim legătura (448 de nume). Nu preluăm proceduri, formulare sau alte date. De la transparenta.eu nu preluăm nicio dată.`
+- New paragraph after the maps line: `Stemele județelor din profilul județului: originea și licența nu sunt cunoscute încă.` (Use only if the owner keeps the images. See D4 below.)
+- New paragraph, near the licence line: `Contribuția proprie a acestui proiect (selecția, potrivirea, familiile, categoriile și fișierele de curare) poate fi refolosită conform EUPL v1.2. Datele surselor își păstrează licențele lor. Vezi fișierul <a href="NOTICE">NOTICE</a>.`
+- Footer line 176 and `explorer/index.html:455`: no change needed, or add "NOTICE" link.
+
+### E4. `explorer/index.html:456` (Romanian)
+
+Replace "Date reutilizabile conform EUPL v1.2" with: `Contribuția proprie: EUPL v1.2. Sursele își păstrează licențele (<a href="despre.html">Despre date</a>)`. Add `title` text to the CSV download link: `Include numele surselor în coloana „sources”; licențele sunt în NOTICE`.
+
+### E5. `README.md:69` (English)
+
+Replace the last line with: `Our own contribution (selection, matching, families, categories, curation files) is offered under [EUPL v1.2](…). It does not cover source data. Each source keeps its terms: see [NOTICE](NOTICE). The map files in explorer/assets/gis/ are under CC BY-SA 4.0.`
+Also in `docs/pipeline.md:201`, the same scope.
+
+### E6. `explorer/assets/gis/NOTICE.txt` (English)
+
+```text
+Maps: administrative boundaries (UAT, counties). Source: geo-spatial.org, processed from data of ANCPI
+(Agenția Națională de Cadastru și Publicitate Imobiliară). Layer ro_admin_lau_simplified_polygon, version 2025-03-26.
+Licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/). The page footer of geo-spatial.org states this licence.
+The catalogue record states CC BY 4.0; we apply the stricter one.
+Changes by org.gov2.ro: split by county, simplified for the web, SIRUTA codes and labels added.
+These files stay under CC BY-SA 4.0. They are not under EUPL v1.2.
+```
+
+### E7. CSV export (target: `explorer/index.html:1933`)
+
+Strict option: no change inside the CSV (a comment line breaks readers). Fix: add a second file `NOTICE` to the download area (E4), and put the text `Surse și licențe: https://org.gov2.ro/NOTICE` in the file name of the page export? No. The agent proposes only the NOTICE link next to the download, and a line in `metadata.json` (E1). Owner decides (D3).
+
+## F. What the agent could not settle
+
+- Whether the file `Lista_EP_portal_01102026.xlsx` (no metadata) is the same release as the data.gov.ro resource of 01.10.2026 (file time 2026-10-06 on the server). The name agrees.
+- Whether the licence text of data.gov.ro for the ANAF dataset, set by the publisher, binds the older ANAF notice. Both are consistent (source named).
+- Which of CC BY-SA 4.0 and CC BY 4.0 applies to the map layer, and whether our file of 2025-03-26 is the same as the record of 05.05.2025.
+- Origin of the coats of arms (no EXIF or text in the PNG files; no download trace).
+- Whether OGL-ROU-1.0 and CC BY 4.0 allow the project to place its own selection under EUPL (see D).
+
+## G. Owner decisions
+
+1. **ANAF list.** Approve the OGL sentence and the licence name in *Despre* (E3) and in `NOTICE`. Approve the change of `docs/pipeline.md` ("licence of the ANAF list: OGL-ROU-1.0").
+2. **EUPL scope.** Approve the narrower statement (E3, E4, E5): EUPL for our own contribution only. Alternative: keep the old line and accept the risk. The agent advises the narrow line.
+3. **`sources` block and `NOTICE`.** Approve E1 and E2. They change `scripts/consolidate.py` and `scripts/publish_pages.sh`, so they need a brief for Sonnet.
+4. **Coats of arms.** Find the source and the licence of the 42 images, or remove them from the county profile, or accept the risk. The strictest reading is to remove them until the licence is known.
+5. **Maps.** Apply CC BY-SA 4.0 to the map files (E6). Alternative: ask geo-spatial.org (draft in `docs/drafts/licence-geo-spatial-question.md`) and then use the CC BY 4.0 text if they confirm it.
+6. **tipizatul.eu.** Approve the corrected sentence (E3). The draft message to the author already asks for the data licence.
+7. **Indicate changes.** Approve the paragraph "Ce am modificat" (E3).
+8. **MF date.** Say which date is the copy date: 2026-06-11 (field `snapshot`) or the July update of the dataset.
+9. **ROePAS.** The decision stays deferred. Under the strictest rule, this is the only source with a known conflict. See the list of options in section "What the owner must decide" (2026-11-05).
+10. **posturi.gov.ro and ROePAS terms.** Approve sending the draft `docs/drafts/licence-posturi-terms-question.md` (terms unreadable). For the Registrul there is no draft: the publisher is unknown. ROePAS stays under item 9.
+11. **transparenta.eu comparison.** If their entity list enters our data, add the attribution "Sursa: ANAF/Ministerul Finanțelor, via Transparenta.eu" and the OGL sentence.
+
+## H. Pages read on 2026-11-23
+
+data.gov.ro (4 dataset pages, `/pages/licence`, `/termeni.html`, 4 CKAN `package_show` calls); creativecommons.org (BY 4.0, BY-SA 4.0, compatible licences); interoperable-europe.ec.europa.eu (EUPL compatibility page); transparenta.eu `/terms`; github.com `iamandiradu/tipizatul.eu`; tipizatul.eu home; roepas.ro terms; posturi.gov.ro `/despre/`; oc.gov.ro terms (HTTP 500); integritate.eu "Condiții legale"; geo-spatial.org download page; services.geo-spatial.org GeoNetwork record. Local files: `README.md`, `explorer/despre.html`, `explorer/index.html`, `explorer/metadata.json`, `explorer/assets/gov2/fonts/`, `scripts/publish_pages.sh`, `scripts/consolidate.py`, `docs/pipeline.md`.

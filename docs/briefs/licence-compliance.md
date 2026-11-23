@@ -1,6 +1,6 @@
 # Brief: licence compliance audit at the strictest reading
 
-Status: brief ready (Opus, 2026-11-23). Owner request, 2026-11-23: "we should make sure we abide by the maximal terms of
+Status: audit done by Sonnet, reviewed by Opus, 2026-11-23. Owner decisions open (report section G). Owner request, 2026-11-23: "we should make sure we abide by the maximal terms of
 licenses, for transparenta.eu and other projects we got data from."
 Owner: Sonnet audits and proposes; the owner decides; Opus reviews.
 

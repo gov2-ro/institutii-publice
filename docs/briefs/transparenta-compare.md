@@ -1,6 +1,6 @@
 # Implementation brief: compare our list with the transparenta.eu entities
 
-Status: brief ready (Opus, 2026-11-23). Owner request, 2026-11-23.
+Status: built by Sonnet and accepted by Opus, 2026-11-23. Owner request, 2026-11-23.
 Owner: Sonnet builds; Opus reviews and commits.
 
 ## Context

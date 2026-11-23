@@ -38,9 +38,18 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] transparenta.eu: compare their entity list with ours now and then (owner request, 2026-11-23). Their `Entities` table comes
       from the ANAF budget execution reports; its parents (`main_creditor_1_cui`, `main_creditor_2_cui`) are the two parent columns of
       our ANAF list. Check of 2026-11-23: Ministerul Culturii (4192812) has 91 children on the site and 91 in our data.
-      Brief: [briefs/transparenta-compare.md](briefs/transparenta-compare.md) (ready). Their `EntityProfiles` (website, email, phone) may fill websites.
-- [ ] Licence compliance at the strictest reading, for every source (owner request, 2026-11-23).
+      Brief: [briefs/transparenta-compare.md](briefs/transparenta-compare.md) (built and accepted, 2026-11-23). Their `EntityProfiles` (website, email, phone) may fill websites.
+- [x] Licence compliance at the strictest reading, for every source (owner request, 2026-11-23).
       Brief: [briefs/licence-compliance.md](briefs/licence-compliance.md) (ready). The owner approves each text change.
+      Audit done 2026-11-23 (Sonnet): [report](reports/source-licences.md), section "Audit at the strictest reading". Opus reviews.
+- [ ] Owner: decide on the licence audit of 2026-11-23 (items 1-11 in the section "Owner decisions" of the report). Short list:
+      (1) The ANAF list is OGL-ROU-1.0 on data.gov.ro: add the OGL sentence and licence name to *Despre*, and fix `pipeline.md`.
+      (2) Narrow the EUPL line to our own contribution (`README.md:69`, `index.html:456`, `pipeline.md:201`).
+      (3) Add a `sources` block to `metadata.json` and a `NOTICE` file to the repo and to gh-pages (needs a Sonnet brief; changes `scripts/`).
+      (4) County coats of arms: origin unknown; find the source or remove them. (5) Map files: CC BY-SA 4.0 text found on the footer; the catalogue says CC BY 4.0.
+      (6) *Despre* says that we take no data from tipizatul.eu, but we store 448 of their institution names: correct the sentence.
+      (7) Add a "what we changed" paragraph. (8) MF copy date: 2026-06-11 or July.
+      Drafts, not sent: `drafts/licence-geo-spatial-question.md`, `drafts/licence-posturi-terms-question.md`.
 - [ ] Review the 227 tipizatul.eu names that have no ANAF link. 147 have an exact name in one record, with no county check.
 
 ## Explorer: "Structura statului" (spec: specs/structura-statului.md)
