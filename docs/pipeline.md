@@ -53,6 +53,8 @@ Run only the steps whose source changed. Steps 1 to 3 need the source files.
 | 11 | `python3 scripts/transparenta_compare.py` | After each new ANAF list, and at least every three months. It makes about 155 requests in about 6 minutes and changes no data. Read the `missing_here` rows of `data/transparenta/review.csv` first. Log the requests in `external-lookups.md`. |
 | 12 | `python3 scripts/transparenta_compare.py --last-report`, then `--candidates` | You read the `missing_here` rows. `--last-report` makes about 23 requests to transparenta.eu (2 s apart; one per 25 CUIs) and writes `last-report-<date>.jsonl`. `--candidates` asks ANAF for the CUIs with a report in 2025 or 2026 (100 CUIs per request, 1 request per second) and reads the MF files. It writes `candidates.csv` and `parent-proposals.csv`. Both options read the cached entities and resume from a cache of the same day. They change no published data and no curation file. Log the requests in `external-lookups.md`. |
 
+Step 4 reads the cached files of steps 11 and 12. A missing file skips the source. After a new pull, run steps 11 and 12, then step 4 again.
+
 Steps 5 and 7 read `institutii.csv`, so they use the list of the previous build. Thus a new CUI needs steps 4, 5 and 6.
 
 ## Sources
@@ -69,6 +71,7 @@ The licence column summarises [reports/source-licences.md](reports/source-licenc
 | SEAP contracting authorities (ADR, data.gov.ro) | `data/seap/authorities.csv`, rebuilt from `data/seap/cache/` | `extract_seap.py` | Dump of 2026-11-03 | CC-BY-4.0 on 6 datasets, OGL-ROU-1.0 on 6 (the build reads 4 of these) | CUI, activity years, type, locality | 16,178 (2,580 `S`) |
 | Finance Ministry (MF), "Date de identificare plătitori" | `data/lookup/status.csv`, from the files on geana | `lookup_status.py` | Snapshot of 2026-06-11 (dataset updated July 2026) | CC-BY-4.0 | Status of a legal body; county of records with no county | No records; 3,406 CUIs checked |
 | ONRC, "Firme înregistrate la Registrul Comerțului" | Files on geana, `data.gov.ro-onrc-firme-2026-10-19` | `onrc_candidates.py` | 2026-10-19 | CC-BY-4.0 | CUI of `D` records, through `curation/` | No records; 245 identities and 36 merges |
+| Transparenta.eu | `data/transparenta/entities-*.jsonl`, `last-report-*.jsonl`, `anaf-*.json` | `transparenta_compare.py` (steps 11 and 12), then `load_transparenta` | 2026-11-23 | OGL-ROU-1.0 (data of the ANAF budget execution reports). Terms of Transparenta.eu: open data follows the licence of its source. Attribution "ANAF, via Transparenta.eu". Name, address and county of a new record come from Transparenta.eu. The ANAF `PlatitorTvaRest` cache only selects active bodies; no field of it is published | New records by rule, parents by rule | 15,307 entities; 11 `T`; 1,250 parents |
 | Maps | `docs/reference/gis/*.geojson` | `build_uat_maps.py` | Version 2025-03-26 | geo-spatial.org from ANCPI data. Page footer: CC BY-SA 4.0. Catalogue record: CC BY 4.0, edition 2025-05-05. The project applies the stricter text, CC BY-SA 4.0, and names both | County and UAT maps | No records |
 
 `metadata.json` (`dataset`) records the path, size, SHA-256, date and row count of each input file that `consolidate.py` reads.
@@ -78,7 +81,8 @@ Sources that the project does not use in the published data:
 - **ANAF `PlatitorTvaRest` service.** ANAF states no terms on re-use. The owner decided on 2026-11-05 to keep it out for now.
 - **MF `TELEFON`.** The column can hold personal numbers. The owner decided on 2026-11-05 not to publish it for now.
 - **MF rows with `TIP_CONTRIB` PF.** These rows are natural persons. `lookup_status.py` skips them, and they never enter the repository.
-- **transparenta.eu entities** (GraphQL API `https://api.transparenta.eu/graphql`). `scripts/transparenta_compare.py` compares them with `institutii.csv` and writes the ignored queue `data/transparenta/review.csv`. Kinds: `missing_here`, `non_anaf_here`, `parents_differ`, `missing_there`. It changes no data and writes no curation file. It never asks for `profile` (leader names and parties are personal data). The terms say that open data follows the licence of its source and that shared results name the source and Transparenta.eu. They state no API rate limit. A new record or a new parent from this source needs a separate owner decision.
+- **transparenta.eu profile data.** `consolidate.py` never reads `profile`. (Entities, parents and report dates are a source now, see the table.) Background on the API:
+- **transparenta.eu entities** (GraphQL API `https://api.transparenta.eu/graphql`). `scripts/transparenta_compare.py` compares them with `institutii.csv` and writes the ignored queue `data/transparenta/review.csv`. Kinds: `missing_here`, `non_anaf_here`, `parents_differ`, `missing_there`. It changes no data and writes no curation file. It never asks for `profile` (leader names and parties are personal data). The terms say that open data follows the licence of its source and that shared results name the source and Transparenta.eu. They state no API rate limit. The owner decided on 2026-11-23 that new records and parents enter by rule (`briefs/transparenta-source.md`).
 
 Every call to an external service and every dataset download goes in [external-lookups.md](external-lookups.md).
 
@@ -112,6 +116,7 @@ The rule for a merge: a CUI is one legal body; a wrong merge costs more than a d
 | 8 | Apply curated identities | `apply_curated_identities` | After the sector steps, because those steps treat a record with a CIF as an ANAF record. |
 | 9 | Link SEAP by CUI, never by name | `link_seap`, `seap_standalone` | `SEAP_PRIVATE` excludes private bodies. |
 | 10 | Check absorbed ids | `check_absorbed_ids` | Compares with the released tags. |
+| 10b | Add transparenta.eu records and parents | `transparenta_records`, `transparenta_parents` | After step 9, so that the CUIs of SEAP records count. Before the families, because a parent can change a category. Stops on a parent cycle. |
 | 11 | Set families and aliases | `assign_families`, `apply_curated_aliases`, `unique_aliases` | |
 | 12 | Apply status and fill counties | `apply_status` | After the families, so that a filled county moves no record between families. |
 | 13 | Write the outputs and the report | `write_csv`, `write_explorer_data`, `report` | |
@@ -153,13 +158,14 @@ After a real push, `publish_pages.sh` polls `https://org.gov2.ro/metadata.json` 
 
 ### Tests
 
-`python3 -m unittest discover -s tests` runs 134 tests. They need no inputs and no network.
+`python3 -m unittest discover -s tests` runs 144 tests. They need no inputs and no network.
 
 | File | Covers |
 |---|---|
 | `tests/test_consolidate.py` | Link tiers, ties, categories, sectors, merges, absorbed ids, aliases, websites, posturi rules, the build hash. |
 | `tests/test_seap.py` | CUI format, report layouts, periods, the cache, the private-name rule, identities, pairs, SEAP links. |
 | `tests/test_onrc.py` | Name key, tiers, the identity rule and its rejects, reading raw `"`. |
+| `tests/test_transparenta.py` | The rule for new records, the parent rule, the explorer bit and key `pt`. |
 | `tests/test_status.py` | The status rule, absent CUIs, natural-person rows, SEAP conflicts, the county fill, explorer codes. |
 
 ### Checks on the full data

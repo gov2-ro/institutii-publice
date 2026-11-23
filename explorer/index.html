@@ -203,7 +203,7 @@
          font: var(--g2-font-size-label)/1.5 var(--g2-font-mono); }
   .src.a { color: rgb(var(--g2-color-info-ink)); } .src.r { color: rgb(var(--g2-color-success-ink)); }
   .src.g { color: rgb(var(--g2-color-warning-ink)); } .src.d { color: rgb(var(--g2-color-progress-ink)); }
-  .src.p, .src.s { color: rgb(var(--g2-color-neutral-ink)); }
+  .src.p, .src.s, .src.t { color: rgb(var(--g2-color-neutral-ink)); }
   td > .g2-tag { margin-left: 6px; vertical-align: 2px; }
   /* a warning paragraph: the DS inset with the warning tone */
   .flag { display: block; margin: var(--g2-space-2) 0; padding: var(--g2-space-2) var(--g2-space-3); border-left: 5px solid rgb(var(--g2-color-warning-line));
@@ -452,7 +452,7 @@
 </main>
 <footer class="g2-footer">
   <div class="g2-footer-in g2-container org-foot">
-    <p>Surse: ANAF, ROePAS, Registrul Național, ANI, posturi.gov.ro, SEAP, Ministerul Finanțelor, ONRC.</p>
+    <p>Surse: ANAF, ROePAS, Registrul Național, ANI, posturi.gov.ro, SEAP, transparenta.eu, Ministerul Finanțelor, ONRC.</p>
     <p id="org-data"><a href="institutii.csv" download title="Include numele surselor în coloana „sources”; licențele sunt în NOTICE">Descarcă tot setul (CSV)</a><span id="org-data-when"></span> (<a href="NOTICE.txt">surse și licențe: NOTICE</a>) · Contribuția proprie: <a href="https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12" target="_blank" rel="noopener noreferrer">EUPL v1.2</a>. Sursele își păstrează licențele (<a href="despre.html">Despre date</a>). Hărțile: CC BY-SA 4.0</p>
     <ul aria-label="Pagini"><li><a href="#v=stat" data-view="stat">Structura statului</a></li><li><a href="#v=fam" data-view="fam">Domenii</a></li><li><a href="#v=list" data-view="list">Lista completă</a></li><li><a href="organizare.html">Cum e organizat statul</a></li><li><a href="despre.html">Despre</a></li></ul>
     <p class="org-credit">un proiect <a href="https://gov2.ro">gov2.ro</a> <a class="org-gh" href="https://github.com/gov2-ro/institutii-publice" aria-label="Cod sursă pe GitHub"><svg class="org-icon-fill" width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a></p>
@@ -633,9 +633,9 @@
       return set;
     }
 
-    const SOURCES = [['anaf', 'ANAF'], ['roepas', 'ROePAS'], ['reg', 'Registru'], ['decl', 'Declarații ANI'], ['posturi', 'posturi.gov.ro'], ['seap', 'SEAP'], ['nocif', 'Fără corespondent ANAF']];
+    const SOURCES = [['anaf', 'ANAF'], ['roepas', 'ROePAS'], ['reg', 'Registru'], ['decl', 'Declarații ANI'], ['posturi', 'posturi.gov.ro'], ['seap', 'SEAP'], ['transp', 'transparenta.eu'], ['nocif', 'Fără corespondent ANAF']];
     const srcTest = {
-      anaf: r => r.s & 1, roepas: r => r.s & 2, reg: r => r.s & 4, decl: r => r.s & 8, posturi: r => r.s & 16, seap: r => r.s & 32, nocif: r => !r.f,
+      anaf: r => r.s & 1, roepas: r => r.s & 2, reg: r => r.s & 4, decl: r => r.s & 8, posturi: r => r.s & 16, seap: r => r.s & 32, transp: r => r.s & 64, nocif: r => !r.f,
     };
     const needsReview = r => !!(r.d || (r.mc && r.mc.length));
 
@@ -698,6 +698,7 @@
       (r.s & 8) > 0 && h('span', { class: 'src d', title: `Declarații de avere și interese (ANI): ${fmt(r.dc || 0)} declarații` }, 'ANI'),
       (r.s & 16) > 0 && h('span', { class: 'src p', title: `Angajator în anunțuri pe posturi.gov.ro: ${fmt(r.pp || 0)} anunțuri` }, 'posturi'),
       (r.s & 32) > 0 && h('span', { class: 'src s', title: 'Autoritate contractantă în SEAP (achiziții publice)' }, 'SEAP'),
+      (r.s & 64) > 0 && h('span', { class: 'src t', title: 'Entitate pe transparenta.eu (părinte sau înregistrare luate de acolo)' }, 'transparenta.eu'),
     ];
     const where = r => [r.u, r.county].filter(Boolean).join(', ');
     const domain = u => u.replace(/^https?:\/\//i, '').replace(/\/$/, '');
@@ -1724,7 +1725,7 @@
       unit: 'același număr de unitate militară', national: 'nume identic, instituție centrală (depusă din alt județ)',
       elsewhere: 'nume identic, unic în țară (depusă din alt județ)',
       prefix: 'nume trunchiat, început al unui nume ANAF', same_name: 'același nume și județ, combinat din surse fără ANAF' };
-    const srcOfId = { R: 'ROePAS', G: 'Registru', D: 'ANI', P: 'posturi.gov.ro', S: 'SEAP' };
+    const srcOfId = { R: 'ROePAS', G: 'Registru', D: 'ANI', P: 'posturi.gov.ro', S: 'SEAP', T: 'transparenta.eu' };
     const MF = ((D.dataset && D.dataset.inputs) || []).find(i => i.source === 'mf');       // the status source (name, licence, snapshot)
     const dmy = d => d ? d.split('-').reverse().join('.') : '';
     const STATUS_NOTE = { 2: 'Entitatea s-a dizolvat prin fuziune sau divizare. Activitatea ei continuă în altă entitate.',
@@ -1811,7 +1812,8 @@
               + (r.dk.length > 8 ? ` · … încă ${r.dk.length - 8}` : ''))),
           r.dc ? h('p', { class: 'sub' }, 'Numărul din ANI numără declarații depuse, nu angajați și nu instituții distincte.') : null,
           parents.length ? [h('div', { class: 'sec' }, 'Ordonator principal de credite'),
-            h('ul', { class: 'plain' }, parents.map(p => h('li', null, peerBtn(p))))] : null,
+            h('ul', { class: 'plain' }, parents.map(p => h('li', null, peerBtn(p)))),
+            r.pt ? h('p', { class: 'sub' }, 'părinte după transparenta.eu') : null] : null,
           subs.length ? [h('div', { class: 'sec' }, `Subordonate directe (${fmt(subs.length)})`),
             h('ul', { class: 'plain' }, subs.slice(0, 25).map(s => h('li', null, peerBtn(s))),
               subs.length > 25 ? h('li', { class: 'sub' }, `… și încă ${fmt(subs.length - 25)}`) : null)] : null,
@@ -1913,7 +1915,7 @@
     /* ---------- CSV export of the current selection ---------- */
     const CSV_COLS = ['id', 'name', 'category', 'family', 'county', 'uat', 'cif', 'parent_cifs', 'website_url', 'email', 'phone',
       'sources', 'possible_duplicate_of', 'match_candidate_cifs', 'declaratii_count', 'procedures_count', 'online_procedures_count'];
-    const SRC_NAMES = [[1, 'anaf'], [2, 'roepas'], [4, 'registrul'], [8, 'declaratii'], [16, 'posturi'], [32, 'seap']];
+    const SRC_NAMES = [[1, 'anaf'], [2, 'roepas'], [4, 'registrul'], [8, 'declaratii'], [16, 'posturi'], [32, 'seap'], [64, 'transparenta']];
     /* matching records only; in a focused state view only those inside the focused subtree; each id once */
     function selection() {
       let list = items;

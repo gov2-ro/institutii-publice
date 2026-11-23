@@ -43,7 +43,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Queues in `data/transparenta/` (ignored): `candidates.csv` (552 rows: 11 `add`, 0 `check`, 541 `skip`) and `parent-proposals.csv` (1,303 rows).
   - [x] Owner: decide on the 11 `add` candidates. Owner, 2026-11-23: yes, by rule. Brief: [briefs/transparenta-source.md](briefs/transparenta-source.md).
   - [x] Owner: decide on a rule for the 1,250 parent proposals. Owner, 2026-11-23: yes, marked as from transparenta.eu. Same brief.
-  - [ ] Build `briefs/transparenta-source.md` (ready).
+  - [x] Build `briefs/transparenta-source.md` (Sonnet, 2026-11-23; Opus reviews): 11 `T` records, 1,250 parents, bit 64, key `pt`.
+  - [x] The name, address and county of the 11 `T` records come from Transparenta.eu (Opus fix, 2026-11-23). The ANAF `PlatitorTvaRest`
+        cache only selects active bodies, as a lookup; no field of it is published. This keeps the owner decision of 2026-11-05.
   - [ ] Review the 11 `parents_differ` rows and the 33 `missing_there` rows of `review.csv` (not done in this brief).
 - [x] Licence compliance at the strictest reading, for every source (owner request, 2026-11-23).
       Brief: [briefs/licence-compliance.md](briefs/licence-compliance.md) (ready). The owner approves each text change.

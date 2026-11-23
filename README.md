@@ -27,7 +27,7 @@ python3 -m http.server                 # then open http://localhost:8000/explore
 ```
 
 Sources: the ANAF list (backbone), ROePAS, the Registrul PDF extraction, the ANI exports, the posturi.gov.ro employers,
-the SEAP contracting authorities, the Finance Ministry files (status) and the ONRC files (CUIs, through `curation/`).
+the SEAP contracting authorities, transparenta.eu (new records and parents, by rule; ANAF data, via Transparenta.eu), the Finance Ministry files (status) and the ONRC files (CUIs, through `curation/`).
 
 Attribution: the tax IDs (CUI) that `curation/identities.csv` and `curation/merges.csv` give to ANI-only records come from the
 open dataset "Firme înregistrate la Registrul Comerțului până la data de 19.10.2026" of the Oficiul Național al Registrului

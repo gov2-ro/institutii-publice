@@ -75,6 +75,7 @@ POSTURI_CSV = ROOT / "data/posturi/employers.csv"
 SEAP_CSV = ROOT / "data/seap/authorities.csv"
 SEAP_MANIFEST = ROOT / "data/seap/manifest.json"
 STATUS_CSV = ROOT / "data/lookup/status.csv"
+TRANSPARENTA_DIR = ROOT / "data/transparenta"
 OUT_DIR = ROOT / "data/consolidated"
 CURATED_WEBSITES = ROOT / "curation/websites.csv"
 CURATED_MERGES = ROOT / "curation/merges.csv"
@@ -1400,7 +1401,7 @@ def declaratii_standalone(rows, aggregate):
 # The other DECL_LOCAL_KIND kinds (hospitals, colleges, street administrations...) are unique per locality, so
 # a name with a proper noun combines (the brief's own example is "Administratia domeniului public sector 1").
 SAME_NAME_NEVER = re.compile(r"^(scoala|gradinita|grup scolar|biblioteca|caminul|parohia|casa de cultura)\b")
-SRC_ORDER = ["anaf", "roepas", "registrul", "declaratii", "posturi", "seap"]
+SRC_ORDER = ["anaf", "roepas", "registrul", "declaratii", "posturi", "seap", "transparenta"]
 SRC_PRIORITY = {"roepas": 0, "registrul": 1, "declaratii": 2, "posturi": 3}       # the surviving id of a same-name group
 
 
@@ -1934,6 +1935,140 @@ def report_status(stats, review, rows):
           f"review rows {len(review)} {dict(Counter(x['kind'] for x in review))}", file=sys.stderr)
 
 
+# ---------------------------------------------------------------- transparenta.eu
+
+def load_transparenta(directory=None):
+    """The cached files of scripts/transparenta_compare.py in data/transparenta/: the newest `entities-*.jsonl`,
+    `last-report-*.jsonl` and `anaf-*.json`. -> {"entities": {cui: node}, "last": {cui: row}, "anaf": {cui: dict or None}},
+    or None when a file is missing (the input is not in git; the source is skipped with a warning).
+    Makes no network call. Each file goes to the `dataset` block."""
+    import transparenta_compare as tc
+    directory = directory or TRANSPARENTA_DIR
+    paths = {k: sorted(directory.glob(g)) for k, g in (("entities", "entities-*.jsonl"),
+             ("last", "last-report-*.jsonl"), ("anaf", "anaf-*.json"))}
+    if not all(paths.values()):
+        print(f"warning: {directory} lacks {[k for k, v in paths.items() if not v]}, transparenta source skipped",
+              file=sys.stderr)
+        return None
+    entities, last = tc.read_entities(paths["entities"][-1]), tc.read_last_reports(paths["last"][-1])
+    anaf = json.loads(paths["anaf"][-1].read_text(encoding="utf-8"))
+    for key, rows in (("entities", len(entities)), ("last", len(last)), ("anaf", len(anaf))):
+        path = paths[key][-1]
+        record_input("transparenta", path, rows, file_date=path.stem[-10:])
+    return {"entities": entities, "last": last, "anaf": anaf}
+
+
+def transparenta_uat(address, county, uat_known):
+    """The UAT of an address text: ANAF ('JUD. GORJ, MUN. MOTRU, STR. ...'; 'SAT X COM. Y' gives Y) or
+    transparenta.eu ('Gorj, Municipiul Motru, STRADA ...').
+    `uat_known(county, place)` -> a known UAT label or None. -> the label or None."""
+    m = re.search(r"\bsector(?:ul)? ?([1-6])\b", fold(address))
+    if m:
+        return SECTOR_LABEL.format(m.group(1))
+    for part in address.split(","):
+        m = re.search(r"\b(?:mun|municipiul|ors|oras|orasul|com|comuna) (.+)$", fold(part))
+        if m:
+            return uat_known(county, m.group(1))
+    return None
+
+
+def transparenta_records(tp, records, mf_rows, year, county_of, uat_known):
+    """The rule for new records: a transparenta.eu entity becomes the record `T<cui>` when no record has its CUI
+    (`cif` or `cif_tva`), its latest report is in `year` or the year before, ANAF says active, MF (`mf_rows`) does not say
+    radiat, fuzionat or in_lichidare, the name and county agree with ANAF, and at least one parent is a record of ours.
+    The rule is `build_candidates` of scripts/transparenta_compare.py (proposal `add`). -> the new records."""
+    import transparenta_compare as tc
+    have = {tc.norm(r[k]) for r in records for k in ("cif", "cif_tva") if r.get(k)}
+    by_cui = {}
+    for r in records:
+        if r["cif"]:
+            by_cui.setdefault(tc.norm(r["cif"]), r)
+    rows = [{"kind": "missing_here", "cui": cui, "their_name": n["name"], "entity_type": n.get("entity_type") or "",
+             "their_parents": " | ".join(p["cui"] for p in n.get("parents") or []),
+             "county": ((n.get("uat") or {}).get("county_code")) or ""}
+            for cui, n in sorted(tp["entities"].items()) if cui not in have]
+    mf = {r["cui"]: r["status"] for r in mf_rows}
+    years = (str(year - 1), str(year))
+    recs = []
+    for c in tc.build_candidates(rows, tp["entities"], tp["last"], tp["anaf"], mf, by_cui, years):
+        if c["proposal"] != "add":
+            continue
+        node = tp["entities"][c["cui"]]   # the ANAF web service only selects (active or not); no field of it is published
+        address = squash(node.get("address") or "")
+        county = county_of(address.split(",")[0]) if address else None
+        parents = [{"cif": tc.norm(p["cui"]), "name": by_cui[tc.norm(p["cui"])]["name"]}
+                   for p in node.get("parents") or [] if tc.norm(p["cui"]) in by_cui]
+        if not county:   # no address on transparenta.eu: the county of a parent that is a commune, town or municipality
+            local = {by_cui[p["cif"]]["county"] for p in parents
+                     if re.match(r"(comuna|oras|orasul|municipiul) ", fold(p["name"])) and by_cui[p["cif"]]["county"]}
+            county = local.pop() if len(local) == 1 else None
+        name = squash(node["name"])
+        recs.append({
+            "id": "T" + c["cui"], "name": name, "county": county,
+            "uat": transparenta_uat(address, county, uat_known) if county else None,
+            "address": address or None, "cif": c["cui"], "cif_tva": None, "cif_source": "transparenta",
+            "parents": parents, "parent_source": "transparenta", "category": categorize(name, [p["name"] for p in parents]),
+            "sources": ["transparenta"], "link": {}, "possible_duplicate_of": None})
+    return recs
+
+
+def transparenta_parents(tp, records):
+    """The parent rule: a record that has a CIF, a `cif_source` other than anaf and no parent takes the parents of the
+    transparenta.eu entity with that CIF, where the parent is a record of ours. The record gets the source `transparenta`
+    and `parent_source` `transparenta`. A record with a parent from ANAF or from curation/merges.csv stays as it is.
+    A record of ANAF is a root of the state tree and stays as it is. A record of the category `Altele` takes its
+    category from its new parents (the rule `categorize` uses for ancestors). Stops on a parent cycle. -> the records changed."""
+    import transparenta_compare as tc
+    by_cui = {}
+    for r in records:
+        if r["cif"]:
+            by_cui.setdefault(tc.norm(r["cif"]), r)
+    changed = []
+    for r in records:
+        if not r["cif"] or r.get("cif_source", "anaf") == "anaf" or r["parents"]:
+            continue
+        parents = []
+        for p in (tp["entities"].get(tc.norm(r["cif"])) or {}).get("parents") or []:
+            c = tc.norm(p["cui"])
+            if c in by_cui and c != tc.norm(r["cif"]) and c not in {x["cif"] for x in parents}:
+                parents.append({"cif": by_cui[c]["cif"], "name": by_cui[c]["name"]})
+        if not parents:
+            continue
+        r["parents"], r["parent_source"] = parents, "transparenta"
+        r["sources"] = sorted({*r["sources"], "transparenta"}, key=SRC_ORDER.index)
+        r["link"]["transparenta"] = "parent"
+        if r["category"] == OTHER:
+            r["category"] = categorize(r["name"], [p["name"] for p in parents])
+        changed.append(r)
+    check_parent_cycles(records)
+    return changed
+
+
+def check_parent_cycles(records):
+    """Stop when the parent links of the records form a cycle."""
+    parents = defaultdict(set)
+    for r in records:
+        if r["cif"]:
+            parents[r["cif"]] |= {p["cif"] for p in r["parents"]}
+    state = {}
+    for start in list(parents):
+        if start in state:
+            continue
+        state[start] = 1
+        stack = [(start, iter(sorted(parents[start])))]
+        while stack:
+            node, it = stack[-1]
+            nxt = next(it, None)
+            if nxt is None:
+                state[node] = 2
+                stack.pop()
+            elif state.get(nxt) == 1:
+                raise SystemExit(f"parent cycle through the CIF {nxt}")
+            elif nxt not in state:
+                state[nxt] = 1
+                stack.append((nxt, iter(sorted(parents.get(nxt, ())))))
+
+
 TIER_RANK = {"exact": 0, "canonical": 1, "unit": 1, "tokens": 2, "prefix": 2, "national": 3, "elsewhere": 3}
 
 
@@ -2125,12 +2260,21 @@ def main():
                        posturi_slugs={row["slug"] for row in posturi})
     for rec in records:
         rec.pop("_cands", None)
+    status_rows = load_status()
+    tp = load_transparenta()
+    if tp:
+        def tp_uat(county, place):
+            return uat_label.get((fold(county), UAT_RE.sub("", place, count=1)))
+        tp_recs = transparenta_records(tp, records, status_rows, datetime.date.today().year, county_of, tp_uat)
+        records.extend(tp_recs)
+        tp_changed = transparenta_parents(tp, records)
+        print(f"transparenta.eu: {len(tp['entities'])} entities; {len(tp_recs)} new records, "
+              f"{len(tp_changed)} records with a new parent (new records not counted)", file=sys.stderr)
     merge_stats["tipizatul"] = apply_curated_tipizatul(records, load_curated_tipizatul())
     assign_families(records)
     merge_stats["curated_aliases"] = apply_curated_aliases(records)
     merge_stats["alias_unique"] = unique_aliases(records)
     # Status comes after the families: a county filled from it must not move a record into or out of a family.
-    status_rows = load_status()
 
     def status_county(text):
         f = fold(text)
@@ -2162,7 +2306,7 @@ CSV_COLS = ["id", "name", "category", "family", "county", "uat", "address", "cif
             "link_roepas", "link_registrul", "possible_duplicate_of", "match_candidate_cifs", "roepas_ids", "roepas_url",
             "registrul_nums", "procedures_count", "online_procedures_count", "org_units", "link_declaratii",
             "declaratii_count", "declaratii_group", "link_posturi", "posturi_slugs", "posturi_postings", "uat_source", "merged_ids", "website_source", "cif_source", "same_body_as", "aliases", "aliases_unique",
-            "status", "status_date", "status_source", "county_source", "tipizatul_name"]
+            "status", "status_date", "status_source", "county_source", "tipizatul_name", "parent_source"]
 
 
 REVIEW_COLS = ["id", "name", "county", "locality", "postings", "possible_duplicate_of", "candidate_name"]
@@ -2203,7 +2347,7 @@ def write_csv(path, records):
             w.writerow(row)
 
 
-SRC_BIT = {"anaf": 1, "roepas": 2, "registrul": 4, "declaratii": 8, "posturi": 16, "seap": 32}
+SRC_BIT = {"anaf": 1, "roepas": 2, "registrul": 4, "declaratii": 8, "posturi": 16, "seap": 32, "transparenta": 64}
 
 
 def build_hash(root=ROOT):
@@ -2242,6 +2386,12 @@ SOURCES = [
     {"id": "seap", "name": "Achiziții publice (autorități contractante)", "publisher": "Autoritatea pentru Digitalizarea României",
      "licence": "CC-BY-4.0 (2021-2026); OGL-ROU-1.0 (older datasets)", "url": "https://data.gov.ro/dataset/achizitii-publice-2025",
      "copy_date": "2026-11-03", "changes": "Only authority name, CUI, years, type and locality. Rows merged by CUI."},
+    {"id": "transparenta", "name": "Transparenta.eu (entități publice și rapoarte de execuție bugetară)",
+     "publisher": "Transparenta.eu; the data comes from the ANAF budget execution reports",
+     "licence": "OGL-ROU-1.0 (the licence of the source data, ANAF); the terms of Transparenta.eu: open data follows the licence of its source",
+     "licence_url": "https://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf", "url": "https://transparenta.eu/",
+     "copy_date": "2026-11-23", "notice": "ANAF, via Transparenta.eu",
+     "changes": "Entity list, parent CUIs and the date of the latest report only (no profile data). Name, address and county of a new record come from transparenta.eu. The ANAF PlatitorTvaRest service only confirms that a new record is active; none of its fields is published. New records and parents by rule."},
     {"id": "mf", "name": "Date de identificare plătitori", "publisher": "Ministerul Finanțelor", "licence": "CC-BY-4.0",
      "url": "https://data.gov.ro/dataset/date_de_identificare_platitori_actualizate_iunie_2026", "copy_date": "2026-06-11",
      "version": "actualizat iulie 2026",
@@ -2274,7 +2424,7 @@ SOURCES = [
 LICENCE_NOTE = ("The list of records (selection, matching, families, curation) is offered under EUPL v1.2. "
                 "Each source keeps its own licence. See NOTICE.")
 # copy_date taken from the input metadata of the build (PROVENANCE): source -> (key of the provenance entry, how to read it)
-COPY_DATE_FROM = {"mf": "snapshot", "posturi": "modified_at", "roepas": "modified_at", "ani": "exported_at"}
+COPY_DATE_FROM = {"transparenta": "file_date", "mf": "snapshot", "posturi": "modified_at", "roepas": "modified_at", "ani": "exported_at"}
 
 
 def sources_block():
@@ -2312,7 +2462,7 @@ def write_explorer_data(out_dir, records):
             "mc": [c["cif"] for c in r.get("match_candidates", [])],
             "us": USAT_CODE.get(r.get("uat_source") or r.get("county_source")), "st": STATUS_CODE.get(r.get("status")), "sd": r.get("status_date") if r.get("status") in STATUS_CODE else None, "nc": 1 if r["cif"] and r.get("cif_source", "anaf") != "anaf" else None, "mi": r.get("merged_ids"),
             "ps": r.get("posturi_slugs"), "pp": r.get("posturi_postings"), "lp": r["link"].get("posturi"),
-            "tz": r.get("tipizatul_name"),
+            "tz": r.get("tipizatul_name"), "pt": 1 if r.get("parent_source") == "transparenta" else None,
         }
         for k, v in optional.items():
             if v is None or v == "" or v == []:           # a known 0 (pc, po) stays: it differs from unknown

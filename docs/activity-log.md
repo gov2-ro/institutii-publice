@@ -1,5 +1,28 @@
 # Activity log
 
+## 2026-11-23 — transparenta.eu as a source of `consolidate.py` (Sonnet, brief `briefs/transparenta-source.md`)
+
+**Opus review (2026-11-23).** Accepted with one fix. The brief (Opus's error) took the name, address and county of the `T` records
+from the ANAF `PlatitorTvaRest` cache, against the owner decision of 2026-11-05. Opus changed `transparenta_records`: these fields now come
+from the transparenta.eu entity; the ANAF cache only selects active bodies. Two entities have no address there (Bolboși, Drăgănești de Vede);
+they take the county of their parent commune (new test). Their `uat` stays empty. The parent rule touches only non-ANAF records, as Sonnet
+assumed: Opus confirms it. Measured after the fix: 28,266 records, 11 `T`, 1,250 new parents, 145 tests OK, determinism OK.
+Doubtful category (not changed): S7867450 Centrul Regional de Formare Continuă pentru Administrația Publică → Transport și infrastructură, from its parent ministry.
+
+**Done**
+- `load_transparenta`, `transparenta_records`, `transparenta_parents`, `check_parent_cycles` in `scripts/consolidate.py`. The new-record rule is `build_candidates` of `transparenta_compare.py` (new parameter `years`; same result). Bit 64, key `pt`, CSV column `parent_source`, `SOURCES` entry, `NOTICE`, README, *Despre*, footer, source filter, badge and the note "părinte după transparenta.eu" in `explorer/`. Docs: `CLAUDE.md`, `docs/pipeline.md`, `docs/BACKLOG.md`.
+- `tests/test_transparenta.py`: 10 tests. 144 tests pass. `sh tests/determinism.sh`: identical CSV under two hash seeds.
+
+**Measured** (full data, before and after the change)
+- Records 28,255 to 28,266: 11 new `T` records. 1,250 records with a new parent (S 1,040, D 112, G 88, R 8, P 2). 1,261 records have `parent_source` `transparenta`.
+- Categories: 14 records left `Altele` (7 Educație, 2 Justiție, 1 each Finanțe publice, Cultură sport și tineret, Sănătate, Ordine publică, Transport). Family changes of existing records: 0. "Neclasificate" roots: 2 before and after. `reachableRoots` = `expectedRoots` = 3,296 in the browser; `descendantVisibility().failures` empty; no console error.
+- No parent cycle. MF status does not filter the 541 skipped CUIs: ANAF `radiat` or `fuzionat` already excludes them (27 of 38 recent ones).
+
+**Decided / assumed**
+- The parent rule skips records of ANAF (`cif_source` `anaf`). A parent for an ANAF root would change a root of the state tree. The brief says "a record with a CIF and no parent"; I read it as non-ANAF records, which matches the 1,250 proposals. Assumed, not asked.
+- `years` is the current calendar year and the year before, from the build date. A build in 2027 gives other `T` records.
+- Open for the owner: the ANAF `PlatitorTvaRest` fields (name, address, active state) of the 11 `T` records.
+
 ## 2026-11-23 — transparenta.eu candidates and parents (Sonnet, brief `briefs/transparenta-candidates.md`)
 
 **Opus review (2026-11-23).** Accepted. Opus read 12 more parent proposals (seed 20261123): 12 of 12 plausible. Opus searched

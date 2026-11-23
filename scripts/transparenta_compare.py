@@ -278,7 +278,9 @@ def ours_by_cui(ours):
     return by
 
 
-def build_candidates(rows, ents, last, anaf, mf, by_cui):
+def build_candidates(rows, ents, last, anaf, mf, by_cui, years=("2025", "2026")):
+    """One row per `missing_here` row. `years`: the years of a recent latest report (consolidate.py passes the
+    current year and the year before). Proposal `add` is the rule that consolidate.py applies."""
     out = []
     for r in rows:
         if r["kind"] != "missing_here":
@@ -291,7 +293,7 @@ def build_candidates(rows, ents, last, anaf, mf, by_cui):
         found = [by_cui[p]["id"] for p in parents if p in by_cui]
         astate = "not_called" if a == "not_called" else anaf_state(a)
         mst = mf.get(cui, "not_found")
-        recent = lr[:4] in ("2025", "2026")
+        recent = lr[:4] in years
         if not recent or astate == "radiat" or mst in ("radiat", "fuzionat"):
             prop = "skip"
         else:

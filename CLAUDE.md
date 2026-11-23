@@ -72,6 +72,17 @@ Inputs -> `scripts/consolidate.py` -> `data/consolidated/`:
   and the status stays empty. It fills an empty `county` (and a known `uat`) from MF (`county_source` and `uat_source` `mf`),
   never replaces a county, and lists the disagreements in `status-review.csv`. The fill runs after the families, so it moves no
   record between families. A missing `status.csv` skips the source with a warning.
+- **transparenta.eu** `data/transparenta/entities-*.jsonl` (newest), `last-report-*.jsonl`, `anaf-*.json`: the cached files of
+  `scripts/transparenta_compare.py` (`--last-report`, `--candidates`; ignored, local). `consolidate.py` makes no network call and
+  never asks for `profile`. A missing file skips the source with a warning. Two rules, no curation rows. **New records:** an entity
+  becomes `T<cui>` (`cif_source` `transparenta`) when no record has its CUI (`cif` or `cif_tva`), its latest report is in the current
+  year or the year before, ANAF says active, MF does not say `radiat`, `fuzionat` or `in_lichidare`, name and county agree with ANAF,
+  and a parent is a record of ours (the `add` rule of `build_candidates`). Name, address and county come from the ANAF cache.
+  **Parents:** a record with a CIF, `cif_source` other than `anaf` and no parent takes the parents of the entity with its CIF, where
+  the parent is a record of ours. CSV column `parent_source` `transparenta`; row key `pt` = 1; the record gets the source
+  `transparenta` (bit 64). A parent from ANAF or `curation/merges.csv` stays. An ANAF record never changes, so the roots of the state tree stay.
+  A record of the category `Altele` takes the category from the new parents. The build stops on a parent cycle.
+  Licence: OGL-ROU-1.0; attribution "ANAF, via Transparenta.eu".
 - **Curated identities** `curation/identities.csv` (tracked): `id, cif, checked_at, evidence`. A row sets the CIF of a
   record that has none (CSV column `cif_source`: `anaf`, `curation` or `seap`). The script stops on an unknown id, a
   duplicate id or CIF, a CIF that is not digits, a record that has a CIF, or a CIF of an ANAF record (use `merges.csv`).
@@ -128,7 +139,7 @@ Single self-contained vanilla-JS page (no build, no deps) that fetches `metadata
 served over HTTP, not opened as file://. Its look is the gov2 design system (see the next section): `assets/gov2/`
 holds `gov2.css` and the local Inter and Fragment Mono; `<html data-g2-scheme="auto">` turns on the DS dark scheme. Rows use the compact schema from `write_explorer_data`: short keys
 (`n` name, `c` category idx, `k` county idx, `m` family idx, `s` source bitmask anaf=1/roepas=2/registrul=4/
-declaratii=8/posturi=16/seap=32, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
+declaratii=8/posturi=16/seap=32/transparenta=64, `pt` 1 = parents from transparenta.eu, `f` cif, `p` parent cifs, `i` full record id such as `A4400956`, `mc` CIFs of unresolved match
 candidates, `us` 1 = sector inferred from the name (`uat_source`), 2 = county from MF (`county_source`), `st` status (1 = radiat, 2 = fuzionat, 3 = in_lichidare; `listat` and `not_found` give no key), `sd` status date (ISO), `mi` ids absorbed by a same-name merge, `tz` tipizatul.eu institution name, ...), empty values omitted. A known 0 stays: `pc`/`po` (procedure counts) are present when 0, absent when unknown. Adding a field means changing both
 `write_explorer_data` and the decoding in `index.html`.
 `metadata.json` also carries `dataset` (generation time; per input file the path, bytes, SHA-256, mtime, row count;

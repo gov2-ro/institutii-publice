@@ -1,6 +1,6 @@
 # Implementation brief: transparenta.eu as a source (new records and parents)
 
-Status: brief ready (Opus, 2026-11-23). Owner decisions of 2026-11-23: yes to new records, yes to parents, both by rule.
+Status: built by Sonnet and accepted by Opus with a fix (fields of `T` records from transparenta.eu, not the ANAF service), 2026-11-23. Owner decisions of 2026-11-23: yes to new records, yes to parents, both by rule.
 Owner: Sonnet builds; Opus reviews and commits. Publishing needs the owner's approval.
 Background: `briefs/transparenta-candidates.md`, `data/transparenta/candidates.csv`, `data/transparenta/parent-proposals.csv`.
 

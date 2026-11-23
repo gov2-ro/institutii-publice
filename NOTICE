@@ -40,4 +40,9 @@ The same data is in metadata.json (keys "sources" and "licence_note").
     The Commons files of these counties are marked "Public domain" or CC0. This does not prove the licence of our files.
     The coat of arms of a public authority is an official symbol (Legea 8/1996, art. 9; not verified by the project).
     A specific drawing can still have an author.
-12. Links only, no data taken: tipizatul.eu (we keep their spelling of 448 institution names to build the link), transparenta.eu.
+12. Link only, no other data taken: tipizatul.eu (we keep their spelling of 448 institution names to build the link).
+13. Transparenta.eu (entity list, parent CUIs, date of the latest report; no profile data). Copy of 2026-11-23.
+    The data comes from the ANAF budget execution reports, so OGL-ROU-1.0 applies (https://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf).
+    The terms of Transparenta.eu say that open data follows the licence of its source. Source: ANAF, via Transparenta.eu.
+    Changes: some records and parents added by a rule. The name, address and county of a new record come from Transparenta.eu.
+    A lookup in the ANAF PlatitorTvaRest service only confirms that a new record is active; no field of that service is published.
