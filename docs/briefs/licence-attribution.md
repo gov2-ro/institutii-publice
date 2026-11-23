@@ -1,6 +1,6 @@
 # Implementation brief: attribution and licence notices
 
-Status: brief ready (Opus, 2026-11-23).
+Status: built by Sonnet and accepted by Opus, 2026-11-23. Browser check open.
 Owner: Sonnet builds; Opus reviews and commits. Publishing to org.gov2.ro needs the owner's approval.
 Input: `docs/reports/source-licences.md`, sections E (proposed texts) and G (owner decisions).
 

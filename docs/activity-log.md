@@ -1,5 +1,34 @@
 # Activity log
 
+## 2026-11-23 — attribution and licence notices (Sonnet, brief `briefs/licence-attribution.md`)
+
+**Opus review (2026-11-23).** Accepted. Change: the site serves the notice as `NOTICE.txt` (GitHub Pages serves a file with no
+extension as a download). The links in *Despre* and the footer point to `NOTICE.txt`; the repo keeps `NOTICE`. The browser check is open:
+the classifier refused a local `http.server` for Opus too.
+
+**Done**
+- `scripts/consolidate.py`: constant `SOURCES` (10 entries), `LICENCE_NOTE` and function `sources_block()`. `write_explorer_data` writes the new keys `sources` and `licence_note` to `metadata.json`. `copy_date` comes from the build inputs for `mf` (snapshot), `ani` (latest export), `posturi` and `roepas` (file date); the other sources keep a fixed date. MF has `version` "actualizat iulie 2026". `rows.json` and `institutii.csv` did not change. The build hash covers `consolidate.py`, so a new build is needed after the commit only if the committed file differs.
+- `NOTICE` at the repo root. `publish_pages.sh` copies it from `HEAD` to the site root and stops on an uncommitted `NOTICE`.
+- *Despre*: OGL sentence for ANAF, posturi note, MF dates, both map texts, tipizatul.eu sentence, the paragraphs "Ce am modificat" and "Contribuția proprie", the coats-of-arms credit, links to `NOTICE`. Footer of `index.html`: EUPL line narrowed, link to `NOTICE`, title on the CSV link.
+- `README.md`, `docs/pipeline.md` and `docs/reports/source-licences.md` corrected. New `explorer/assets/gis/NOTICE.txt`. The two drafts are marked "not sent".
+- Coats of arms: `explorer/assets/steme-judete/SOURCES.csv` (42 rows). The county profile shows a `title` with author and licence (12 files) or "origin not proved" (30 files). No image removed.
+- New test `SourcesBlock`: 134 tests pass. `sh tests/determinism.sh`: identical CSV.
+
+**Measured**
+- Coats of arms: 12 of 42 files match a Commons file by picture (correlation of 64x64 grey crops 0.94 to 1.0, then checked by eye): AG, B, BH, BZ, HD, MH, MS, NT, OT, SB, SJ, VN. All are "Public domain" on Commons. 30 files have no certain match: the correlation is 0.56 to 0.93 and the drawings differ (Brașov, Iași, Dolj, Harghita and others show another design). CV and GL were not compared (thumbnail requests refused with HTTP 429). No Commons file has the same SHA-1 as one of our files, so every file of ours is a derivative.
+- Licence of the candidate files: Public domain 38, CC0 4. No licence forbids our use, and none needs attribution.
+
+**Hard**
+- upload.wikimedia.org answered HTTP 429 often. A first script reused the previous picture after four failed requests. The GL value of that run was stale and was dropped.
+- The infobox of AB, CV, VN and GL has no coat of arms. For AB, CV, VN and GL the candidate came from the Commons name pattern "Actual <county> county CoA".
+
+**Decided**
+- Only "same drawing" files get a licence. A candidate file for another drawing proves nothing about our file, so the licence stays "unknown". The cost of the opposite choice: a false claim of public domain.
+
+**Assumed, not measured**
+- That the correlation threshold 0.94 with a check by eye finds the same drawing. The Commons "Public domain" mark is taken as stated. Legea 8/1996 art. 9 is not verified.
+- Browser check not done: the Chrome extension was not connected, and a local `http.server` was refused by the permission classifier. Opus or the owner runs it.
+
 ## 2026-11-23 — comparison with the transparenta.eu entities
 
 **Done**

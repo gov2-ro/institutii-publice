@@ -56,19 +56,19 @@ Steps 5 and 7 read `institutii.csv`, so they use the list of the previous build.
 
 ## Sources
 
-The licence column summarises [reports/source-licences.md](reports/source-licences.md), read on 2026-11-05. The report holds the evidence and the limits. It is not legal advice.
+The licence column summarises [reports/source-licences.md](reports/source-licences.md), read on 2026-11-05 and 2026-11-23 (the audit of 2026-11-23 corrects the first reading). The report holds the evidence and the limits. It is not legal advice. Rule of the owner (2026-11-23): where two texts of one source disagree, apply the strictest text and name both. The build writes the same data to `metadata.json` (`sources`, `licence_note`) from the constant `SOURCES` in `consolidate.py`. The file `NOTICE` at the repository root lists the sources in text, and `publish_pages.sh` copies it to the root of the site. The county coats of arms have their own table: `explorer/assets/steme-judete/SOURCES.csv`.
 
 | Source | Input | Script | Date of the copy | Licence | Gives | Records in the source |
 |---|---|---|---|---|---|---|
-| ANAF list of public entities | `docs/reference/Lista_EP_portal_01102026.xlsx` | `load_anaf` | 2026-10-01, from the file name | No licence on the list. Older ANAF notice: reproduction with the source | Backbone: CIF, UAT, address, parent CIFs | 13,485 (`A`) |
+| ANAF list of public entities | `docs/reference/Lista_EP_portal_01102026.xlsx` | `load_anaf` | 2026-10-01, from the file name | OGL-ROU-1.0 (data.gov.ro, dataset "Lista entităților publice"). Older ANAF notice: reproduction with the source | Backbone: CIF, UAT, address, parent CIFs | 13,485 (`A`) |
 | ROePAS | `data/roepas/institutii.json` | `scrape_roepas.py` | Scrape of 2026-10-05 | **Terms forbid scraping and mass copying.** Owner decision open; do not run the scrape again | Website, e-mail, phone, coordinates, procedures | 2,872 (481 `R`) |
 | Registrul Național | `docs/reference/Registrul-…pdf.csv`, a damaged PDF extraction | `load_registrul` | PDF of 2020, downloaded 2025-11-12 | No terms found; publisher not proved | Register number, more names | 11,776 (5,935 `G`) |
 | ANI declarații de integritate | `data/declaratii-integritate/Lens Visualization*.csv` | `load_declaratii` | Exports of 2026-10-19 | ANI site: reproduction with the source. Kibana access came from the author of monitorul.ai; no written terms | Number of declarations; names that ANAF does not list, mostly companies | 14,547 (4,888 `D`) |
-| posturi.gov.ro employers | `data/posturi/employers.csv` | Export in the posturi repo | 2026-11-02 | Terms page not readable (HTTP 500); no licence found | Employers, postings, locality | 4,342 (939 `P`) |
+| posturi.gov.ro employers | `data/posturi/employers.csv` | Export in the posturi repo | 2026-11-02 | Terms not readable on 2026-11-05 and 2026-11-23 (HTTP 500); no licence found. *Despre* and `NOTICE` name the source and say so | Employers, postings, locality | 4,342 (939 `P`) |
 | SEAP contracting authorities (ADR, data.gov.ro) | `data/seap/authorities.csv`, rebuilt from `data/seap/cache/` | `extract_seap.py` | Dump of 2026-11-03 | CC-BY-4.0 on 6 datasets, OGL-ROU-1.0 on 6 (the build reads 4 of these) | CUI, activity years, type, locality | 16,178 (2,580 `S`) |
-| Finance Ministry (MF), "Date de identificare plătitori" | `data/lookup/status.csv`, from the files on geana | `lookup_status.py` | Snapshot of 2026-06-11 | CC-BY-4.0 | Status of a legal body; county of records with no county | No records; 3,406 CUIs checked |
+| Finance Ministry (MF), "Date de identificare plătitori" | `data/lookup/status.csv`, from the files on geana | `lookup_status.py` | Snapshot of 2026-06-11 (dataset updated July 2026) | CC-BY-4.0 | Status of a legal body; county of records with no county | No records; 3,406 CUIs checked |
 | ONRC, "Firme înregistrate la Registrul Comerțului" | Files on geana, `data.gov.ro-onrc-firme-2026-10-19` | `onrc_candidates.py` | 2026-10-19 | CC-BY-4.0 | CUI of `D` records, through `curation/` | No records; 245 identities and 36 merges |
-| Maps | `docs/reference/gis/*.geojson` | `build_uat_maps.py` | Version 2025-03-26 | geo-spatial.org from ANCPI data; site footer CC BY-SA 4.0, coverage of the layer not stated | County and UAT maps | No records |
+| Maps | `docs/reference/gis/*.geojson` | `build_uat_maps.py` | Version 2025-03-26 | geo-spatial.org from ANCPI data. Page footer: CC BY-SA 4.0. Catalogue record: CC BY 4.0, edition 2025-05-05. The project applies the stricter text, CC BY-SA 4.0, and names both | County and UAT maps | No records |
 
 `metadata.json` (`dataset`) records the path, size, SHA-256, date and row count of each input file that `consolidate.py` reads.
 
@@ -152,7 +152,7 @@ After a real push, `publish_pages.sh` polls `https://org.gov2.ro/metadata.json` 
 
 ### Tests
 
-`python3 -m unittest discover -s tests` runs 124 tests. They need no inputs and no network.
+`python3 -m unittest discover -s tests` runs 134 tests. They need no inputs and no network.
 
 | File | Covers |
 |---|---|
@@ -200,7 +200,7 @@ A rule enters only after a sample read by eye, with the result in the activity l
 - No check runs in CI. CI cannot rebuild the data, because the inputs are not in git.
 - The browser checks are by hand. No check confirms that every link of `organizare.html` opens a non-empty view.
 - The check after a push compares only `dataset.generated_at` and counts the live records. It does not compare the live files with `main`.
-- The list is published under EUPL v1.2, but the terms of several sources are unclear, and the ROePAS terms forbid scraping. See [reports/source-licences.md](reports/source-licences.md).
+- Only our own contribution (selection, matching, families, categories, curation files) is offered under EUPL v1.2. The terms of several sources are unclear, and the ROePAS terms forbid scraping. See [reports/source-licences.md](reports/source-licences.md) and `NOTICE`. The map files stay under CC BY-SA 4.0.
 - The page CSV export has no `status` column.
 
 ## Adding a source

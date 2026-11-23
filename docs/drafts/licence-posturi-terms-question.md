@@ -1,6 +1,6 @@
 # Draft: question to posturi.gov.ro about its terms
 
-Status: draft, not sent. The owner approves the text and sends it.
+Status: not sent: the owner applied the strictest text instead (2026-11-23). Keep the draft only for a later change of this decision.
 Channel: e-mail to posturi@gov.ro (the address in the footer of the site).
 Facts: on 2026-11-05 and 2026-11-23 the terms link `http://oc.gov.ro/termeni-si-conditii-2/` answered HTTP 500. The site has no other terms text.
 

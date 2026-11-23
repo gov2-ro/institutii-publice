@@ -749,5 +749,28 @@ class BuildHash(unittest.TestCase):
             self.assertEqual(seen, {c.build_hash(r1)})
 
 
+class SourcesBlock(unittest.TestCase):
+    """metadata.json `sources`: one entry per source; copy_date comes from the build inputs where they carry a date."""
+
+    def test_copy_date_from_inputs(self):
+        saved = list(c.PROVENANCE)
+        try:
+            c.PROVENANCE[:] = [{"source": "mf", "snapshot": "2026-06-11"},
+                               {"source": "declaratii", "exported_at": "2026-10-19T20:26:13.348+03:00"},
+                               {"source": "declaratii", "exported_at": "2026-10-18T10:00:00.000+03:00"},
+                               {"source": "posturi", "modified_at": "2026-11-23T09:53:55+00:00"}]
+            got = {s["id"]: s for s in c.sources_block()}
+        finally:
+            c.PROVENANCE[:] = saved
+        self.assertEqual(got["mf"]["copy_date"], "2026-06-11")
+        self.assertEqual(got["mf"]["version"], "actualizat iulie 2026")
+        self.assertEqual(got["ani"]["copy_date"], "2026-10-19")
+        self.assertEqual(got["posturi"]["copy_date"], "2026-11-23")
+        self.assertEqual(got["anaf"]["copy_date"], "2026-10-01")       # no date in the input: the fixed value stays
+        self.assertEqual(len(got), len(c.SOURCES))
+        self.assertIn("CC BY 4.0", got["maps"]["licence"])               # both map texts named
+        self.assertIn("CC BY-SA 4.0", got["maps"]["licence"])
+
+
 if __name__ == "__main__":
     unittest.main()

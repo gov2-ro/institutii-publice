@@ -1,6 +1,6 @@
 # Draft: question to geo-spatial.org about the licence of the UAT layer
 
-Status: draft, not sent. The owner approves the text and sends it.
+Status: not sent: the owner applied the strictest text instead (2026-11-23). Keep the draft only for a later change of this decision.
 Channel: e-mail to the contact in the catalogue record (vasile@geo-spatial.org), or the contact page of the site.
 Facts: read on 2026-11-23. See `docs/reports/source-licences.md`, audit of 2026-11-23.
 

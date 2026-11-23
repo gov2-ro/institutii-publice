@@ -66,4 +66,4 @@ exported as CSV (`Lens Visualization [...].csv`). Kibana keeps at most 10,000 va
 ---
 
 Copyright (c) 2026 [gov2.ro](https://gov2.ro)
-Date reutilizabile conform [EUPL v1.2](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12) (the "Licence")
+Our own contribution (selection, matching, families, categories, curation files) is offered under [EUPL v1.2](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12) (the "Licence"). The Licence does not cover source data. Each source keeps its terms: see [NOTICE](NOTICE). The map files in `explorer/assets/gis/` are under CC BY-SA 4.0.

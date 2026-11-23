@@ -5,7 +5,7 @@
 # In the repo those two are symlinks into the ignored data/consolidated/; this script copies the real files.
 # CI cannot rebuild the data (the inputs stay out of git), so publishing runs from the owner's machine.
 #
-# Preflight (also in the dry run): the tests pass; scripts/, curation/, explorer/ and institutii.csv have no
+# Preflight (also in the dry run): the tests pass; scripts/, curation/, explorer/, NOTICE and institutii.csv have no
 # uncommitted change; dataset.build_hash of metadata.json equals the hash of the same files at HEAD.
 # After a real push, the script polls the live metadata.json for 3 minutes and prints the record count.
 #
@@ -26,9 +26,9 @@ dry=0
 [ "${1:-}" = "--dry-run" ] && dry=1
 
 # Preflight. It runs in the dry run too. Each check names its fix.
-dirty=$(git status --porcelain -- scripts curation explorer data/consolidated/institutii.csv)
+dirty=$(git status --porcelain -- scripts curation explorer NOTICE data/consolidated/institutii.csv)
 if [ -n "$dirty" ]; then
-  echo "scripts/, curation/, explorer/ or data/consolidated/institutii.csv has uncommitted changes. Commit them first: the site must match a commit." >&2
+  echo "scripts/, curation/, explorer/, NOTICE or data/consolidated/institutii.csv has uncommitted changes. Commit them first: the site must match a commit." >&2
   echo "$dirty" >&2
   exit 1
 fi
@@ -70,6 +70,7 @@ if [ "$built" != "$committed" ]; then
 fi
 
 git archive HEAD explorer | tar -x -C "$site" --strip-components 1
+git show HEAD:NOTICE > "$site/NOTICE.txt"   # the licence notice, served as text: https://org.gov2.ro/NOTICE.txt
 rm -f "$site/metadata.json" "$site/rows.json"
 cp data/consolidated/metadata.json data/consolidated/rows.json data/consolidated/institutii.csv "$site/"
 echo "$DOMAIN" > "$site/CNAME"

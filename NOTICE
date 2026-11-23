@@ -1,0 +1,43 @@
+org.gov2.ro: public institutions of Romania
+This file lists the sources of the data and their terms. It is not legal advice.
+
+Our own contribution (selection, matching, families, categories, curation files) is offered under EUPL v1.2.
+This licence does not cover the source data. Each source keeps its own terms, below.
+Where two texts of one source disagree, we apply the strictest text and name both.
+This project is not an official project of the Government of Romania. No publisher approves it.
+The same data is in metadata.json (keys "sources" and "licence_note").
+
+1. Lista entităților publice. Ministerul Finanțelor (ANAF), data.gov.ro. Copy of 2026-10-01.
+   Licence: OGL-ROU-1.0 (https://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf).
+   An older ANAF notice allows reproduction with the source named.
+   Conține informații publice în baza Licenței pentru Guvernare Deschisă v1.0.
+   Changes: records matched, categorised and linked to other sources.
+2. Achiziții publice (SEAP). Autoritatea pentru Digitalizarea României, data.gov.ro. Copy of 2026-11-03.
+   Licence: CC BY 4.0 (2021-2026) and OGL-ROU-1.0 (older sets).
+   Changes: authority name, CUI, years, type and locality only; rows merged by CUI.
+3. Date de identificare plătitori. Ministerul Finanțelor, data.gov.ro. Snapshot of 2026-06-11 (set updated July 2026). CC BY 4.0.
+   Changes: status label mapped to our values; county filled where empty. Natural persons skipped.
+4. Firme înregistrate la Registrul Comerțului până la data de 19.10.2026. ONRC, data.gov.ro. CC BY 4.0.
+   Changes: the CUI of some records only.
+5. ROePAS (Autoritatea pentru Digitalizarea României). Copy of 2026-10-05.
+   Terms: no mass copying, no scraping, consent needed. Consent is not on record.
+   Status: open question for the owner. See docs/reports/source-licences.md.
+6. Registrul Național al Instituțiilor Publice din România (PDF of 2020, e-guvernare.ro). No licence found. Publisher not proved.
+7. Declarații de integritate (ANI), aggregate counts through monitorul.ai. Copy of 2026-10-19.
+   Reproduction with the source. No written terms of access.
+8. posturi.gov.ro (Guvernul României). Terms not readable on 2026-11-05 and 2026-11-23.
+9. Maps: geo-spatial.org, from data of ANCPI. Version 2025-03-26.
+   The page footer of geo-spatial.org states CC BY-SA 4.0. The catalogue record (edition 2025-05-05) states CC BY 4.0.
+   We apply the stricter text. The map files are under CC BY-SA 4.0, not under EUPL.
+   Changed: split by county, simplified, SIRUTA codes and labels added.
+10. Fonts: Inter and Fragment Mono, SIL Open Font License 1.1 (notices in assets/gov2/fonts/).
+11. County coats of arms (explorer/assets/steme-judete/, table SOURCES.csv, checked on 2026-11-23 on Wikimedia Commons).
+    Our PNG files are resized copies. We found the Commons file of 12 of the 42 files by comparing the pictures:
+    AG, B, BH, BZ, HD, MH, MS, NT, OT, SB, SJ, VN. All 12 are marked "Public domain" on Commons.
+    The author named on Commons is in SOURCES.csv (mostly the county councils). No attribution is required.
+    The origin of the other 30 files is not proved. For each, SOURCES.csv names the Commons file
+    that the Romanian Wikipedia shows in the county article. Our file is not shown to be that drawing.
+    The Commons files of these counties are marked "Public domain" or CC0. This does not prove the licence of our files.
+    The coat of arms of a public authority is an official symbol (Legea 8/1996, art. 9; not verified by the project).
+    A specific drawing can still have an author.
+12. Links only, no data taken: tipizatul.eu (we keep their spelling of 448 institution names to build the link), transparenta.eu.

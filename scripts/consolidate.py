@@ -2229,6 +2229,65 @@ def dataset_block():
             "inputs": sorted(PROVENANCE, key=lambda e: (e["source"], e["path"]))}
 
 
+# Attribution data for metadata.json (`sources`, `licence_note`). Texts follow docs/reports/source-licences.md, section E1,
+# with the owner decisions of 2026-11-23: where two texts of one source disagree, the strictest applies and both are named.
+# `copy_date` is a fixed date; sources_block() replaces it with the date the build read, where the build has one (COPY_DATE_FROM).
+SOURCES = [
+    {"id": "anaf", "name": "Lista entităților publice", "publisher": "Ministerul Finanțelor (ANAF)",
+     "licence": "OGL-ROU-1.0 (data.gov.ro); older ANAF notice: reproduction with the source",
+     "licence_url": "https://data.gov.ro/base/images/logoinst/OGL-ROU-1.0.pdf",
+     "url": "https://data.gov.ro/dataset/listaentitatipublice", "copy_date": "2026-10-01",
+     "notice": "Conține informații publice în baza Licenței pentru Guvernare Deschisă v1.0",
+     "changes": "Records matched, categorised and linked to other sources."},
+    {"id": "seap", "name": "Achiziții publice (autorități contractante)", "publisher": "Autoritatea pentru Digitalizarea României",
+     "licence": "CC-BY-4.0 (2021-2026); OGL-ROU-1.0 (older datasets)", "url": "https://data.gov.ro/dataset/achizitii-publice-2025",
+     "copy_date": "2026-11-03", "changes": "Only authority name, CUI, years, type and locality. Rows merged by CUI."},
+    {"id": "mf", "name": "Date de identificare plătitori", "publisher": "Ministerul Finanțelor", "licence": "CC-BY-4.0",
+     "url": "https://data.gov.ro/dataset/date_de_identificare_platitori_actualizate_iunie_2026", "copy_date": "2026-06-11",
+     "version": "actualizat iulie 2026",
+     "changes": "Status label mapped to our values; county filled where empty. Natural persons skipped."},
+    {"id": "onrc", "name": "Firme înregistrate la Registrul Comerțului până la data de 19.10.2026",
+     "publisher": "Oficiul Național al Registrului Comerțului", "licence": "CC-BY-4.0",
+     "url": "https://data.gov.ro/dataset/firme-19-10-2026", "copy_date": "2026-10-19",
+     "changes": "Only the CUI of some records, set by a recorded rule or a review."},
+    {"id": "roepas", "name": "ROePAS", "publisher": "Autoritatea pentru Digitalizarea României",
+     "licence": "own terms; consent not on record", "url": "https://roepas.ro", "copy_date": "2026-10-05",
+     "changes": "Fields copied as found; matched to records."},
+    {"id": "registrul", "name": "Registrul Național al Instituțiilor Publice din România", "publisher": "not proved",
+     "licence": "none found", "url": "https://www.e-guvernare.ro/Registrul-National-al-Institutiilor-Publice-din-Romania.pdf",
+     "copy_date": "PDF of 2020", "changes": "Text extracted from the PDF and matched."},
+    {"id": "ani", "name": "Declarații de integritate (agregate)", "publisher": "ANI, through monitorul.ai",
+     "licence": "reproduction with the source; no written terms of access", "url": "https://declaratii.integritate.eu/",
+     "copy_date": "2026-10-19", "changes": "Institution name, county and count only."},
+    {"id": "posturi", "name": "posturi.gov.ro", "publisher": "Guvernul României",
+     "licence": "terms not readable on 2026-11-05 and 2026-11-23", "url": "https://posturi.gov.ro/",
+     "copy_date": "2026-11-23", "changes": "Employer name, county, locality and number of postings only."},
+    {"id": "maps", "name": "Limite administrative UAT", "publisher": "geo-spatial.org, from ANCPI data",
+     "licence": "CC BY-SA 4.0 (page footer of geo-spatial.org; applied, the stricter text); CC BY 4.0 (catalogue record, edition 2025-05-05)",
+     "licence_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+     "url": "http://geo-spatial.org/descarcare/date/administrative-boundaries/", "copy_date": "version 2025-03-26",
+     "changes": "Split by county, simplified for the web, SIRUTA codes and labels added."},
+    {"id": "stemele", "name": "Stemele județelor (Wikimedia Commons)", "publisher": "see explorer/assets/steme-judete/SOURCES.csv",
+     "licence": "per file; see SOURCES.csv", "url": "https://commons.wikimedia.org/",
+     "copy_date": "see SOURCES.csv", "changes": "Resized PNG files."},
+]
+LICENCE_NOTE = ("The list of records (selection, matching, families, curation) is offered under EUPL v1.2. "
+                "Each source keeps its own licence. See NOTICE.")
+# copy_date taken from the input metadata of the build (PROVENANCE): source -> (key of the provenance entry, how to read it)
+COPY_DATE_FROM = {"mf": "snapshot", "posturi": "modified_at", "roepas": "modified_at", "ani": "exported_at"}
+
+
+def sources_block():
+    """`sources` in metadata.json: SOURCES with copy_date taken from the build inputs where they carry a date."""
+    ids = {"declaratii": "ani"}
+    latest = {}
+    for e in PROVENANCE:
+        sid, key = ids.get(e["source"], e["source"]), COPY_DATE_FROM.get(ids.get(e["source"], e["source"]))
+        if key and e.get(key):
+            latest[sid] = max(latest.get(sid, ""), str(e[key])[:10])
+    return [{**s, "copy_date": latest.get(s["id"], s["copy_date"])} for s in SOURCES]
+
+
 def write_explorer_data(out_dir, records):
     """Compact rows for the static explorer: short keys, empty values omitted, categories/counties by index.
     metadata.json holds the lookup lists, rows.json the rows; explorer/ links to both."""
@@ -2262,7 +2321,7 @@ def write_explorer_data(out_dir, records):
         rows.append(row)
     state, _ = state_tree(records)
     meta = {"categories": cats, "counties": counties, "families": families, "state": state,
-            "dataset": dataset_block()}
+            "dataset": dataset_block(), "sources": sources_block(), "licence_note": LICENCE_NOTE}
     (out_dir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
     (out_dir / "rows.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
