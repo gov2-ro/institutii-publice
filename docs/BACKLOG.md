@@ -37,9 +37,10 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Draft: [drafts/tipizatul-author-contact.md](drafts/tipizatul-author-contact.md). The owner approves the text and chooses the channel. Not sent.
 - [ ] transparenta.eu: compare their entity list with ours now and then (owner request, 2026-11-23). Their `Entities` table comes
       from the ANAF budget execution reports; its parents (`main_creditor_1_cui`, `main_creditor_2_cui`) are the two parent columns of
-      our ANAF list. Check of 2026-11-23: Ministerul Culturii (4192812) has 91 children on the site and 91 in our data. A full
-      comparison needs their GraphQL `entities` query (`api.transparenta.eu`, page size 20 by default). Write a brief first:
-      CUIs that they have and we do not, and parent pairs that differ. Their `EntityProfiles` (website, email, phone) may fill websites.
+      our ANAF list. Check of 2026-11-23: Ministerul Culturii (4192812) has 91 children on the site and 91 in our data.
+      Brief: [briefs/transparenta-compare.md](briefs/transparenta-compare.md) (ready). Their `EntityProfiles` (website, email, phone) may fill websites.
+- [ ] Licence compliance at the strictest reading, for every source (owner request, 2026-11-23).
+      Brief: [briefs/licence-compliance.md](briefs/licence-compliance.md) (ready). The owner approves each text change.
 - [ ] Review the 227 tipizatul.eu names that have no ANAF link. 147 have an exact name in one record, with no county check.
 
 ## Explorer: "Structura statului" (spec: specs/structura-statului.md)
