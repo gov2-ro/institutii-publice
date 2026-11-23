@@ -64,6 +64,8 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       (6) *Despre* says that we take no data from tipizatul.eu, but we store 448 of their institution names: correct the sentence.
       (7) Add a "what we changed" paragraph. (8) MF copy date: 2026-06-11 or July.
       Drafts, not sent: `drafts/licence-geo-spatial-question.md`, `drafts/licence-posturi-terms-question.md`.
+- [ ] Maybe later (owner, 2026-11-23): show the budget route of transparenta.eu on the record page as extra information, apart from the
+      parent (for example "buget prin SGG" for CNCAN). It applies where their main creditor differs from our parent (11 cases on 2026-11-23).
 - [ ] Review the 227 tipizatul.eu names that have no ANAF link. 147 have an exact name in one record, with no county check.
 
 ## Explorer: "Structura statului" (spec: specs/structura-statului.md)
