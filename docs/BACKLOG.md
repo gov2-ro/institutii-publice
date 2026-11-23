@@ -382,8 +382,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Owner: ask the author of monitorul.ai who runs the Kibana, and whether the project may republish the aggregate counts. No written terms are on record.
 - [ ] `publish_pages.sh`: the live check compares only `generated_at`. A publish that changes only pages has the same value, so the check can pass before the new pages are live. Compare a value that changes with each publish, such as the source commit.
 - [x] Map layer: both texts named, CC BY-SA 4.0 applied (2026-11-23). Coats of arms: 12 of 42 files matched on Commons (public domain); 30 stay open, see the next item.
-- [ ] Coats of arms: find the origin of the 30 files in `explorer/assets/steme-judete/SOURCES.csv` with `match` = `no certain match` (and compare CV and GL). Option: replace them with the Commons files from the Romanian Wikipedia (owner decision).
-- [ ] Browser check of *Despre*, one county profile and the footer after the licence changes (not done by Sonnet).
+- [ ] Coats of arms: find the origin of the 30 files in `explorer/assets/steme-judete/SOURCES.csv` with `match` = `no certain match` (and compare CV and GL). Option: replace them with the Commons files from the Romanian Wikipedia (owner decision). Owner, 2026-11-23: postponed.
+- [x] Browser check of *Despre*, one county profile and the footer after the licence changes. Done by Opus on the live site,
+      2026-11-23: texts present, `NOTICE.txt` and `SOURCES.csv` HTTP 200, arms titles for Sibiu and Alba, roots check true.
 - [ ] Read the posturi.gov.ro terms when `oc.gov.ro` works again.
 - [x] Add a preflight to `publish_pages.sh`: run the tests, and stop if the data does not come from the committed code (`dataset.build_hash`). Add a check of the live site after a publish. Built and reviewed 2026-11-05. The live-site check has run only against the current live site, not after a real push. Read its first real output at the next publish.
 - [ ] MF `TELEFON`: 1,540 usable numbers for `S` and 7,526 for `A`. Owner, 2026-11-05: do not publish for now. 50% differ from our phones, 1,373 are mobiles, 38 numbers are shared by 3 or more CUIs, so they may be fiscal or personal contacts. Open it again only with a personal-data review.

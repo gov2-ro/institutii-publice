@@ -1129,7 +1129,7 @@
       return new Map(lines.map(l => { const f = csvFields(l); return [f[0], Object.fromEntries(head.map((k, i) => [k, f[i]]))]; }));
     }).catch(() => new Map()));
     const stemaTitle = (county, c) => c && c.match === 'same drawing'
-      ? `Stema județului ${county}. Autor: ${c.author}. Licență: ${c.licence} (${c.commons_file}, Wikimedia Commons). Detalii în NOTICE.`
+      ? `Stema județului ${county}. Autor: ${c.author.replace(/\.+$/, "")}. Licență: ${c.licence} (${c.commons_file}, Wikimedia Commons). Detalii în NOTICE.`
       : `Stema județului ${county}. Originea fișierului nu este dovedită. Detalii în NOTICE.`;
     const stemaUrl = county => COD[county] ? `assets/steme-judete/${COD[county]}_${county.replace(/^(Bistrita|Caras) /, '$1-').replace(/ /g, '_')}.png` : '';
     /* a locality name without its kind prefix, spelling-tolerant: the ANAF data writes "î" as "i", the map as "a" */

@@ -4,7 +4,8 @@
 
 **Opus review (2026-11-23).** Accepted. Change: the site serves the notice as `NOTICE.txt` (GitHub Pages serves a file with no
 extension as a download). The links in *Despre* and the footer point to `NOTICE.txt`; the repo keeps `NOTICE`. The browser check is open:
-the classifier refused a local `http.server` for Opus too.
+the classifier refused a local `http.server` for Opus too. The owner approved the publish; Opus checked the live site in Chrome
+(texts, `NOTICE.txt`, arms titles, `explorer.reachableRoots()` = `expectedRoots()`) and fixed a double period after the author name.
 
 **Done**
 - `scripts/consolidate.py`: constant `SOURCES` (10 entries), `LICENCE_NOTE` and function `sources_block()`. `write_explorer_data` writes the new keys `sources` and `licence_note` to `metadata.json`. `copy_date` comes from the build inputs for `mf` (snapshot), `ani` (latest export), `posturi` and `roepas` (file date); the other sources keep a fixed date. MF has `version` "actualizat iulie 2026". `rows.json` and `institutii.csv` did not change. The build hash covers `consolidate.py`, so a new build is needed after the commit only if the committed file differs.
