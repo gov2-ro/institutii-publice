@@ -289,7 +289,7 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       ANI fallbacks (tiers `national`, `elsewhere`) and `Linker.anywhere()` reads the curated aliases. The ABA bodies Crișuri and
       Argeș-Vedea now link. The "Sistemul de Gospodărire a Apelor" rows are sub-units and stay open. See the activity log.
 - [-] "A.B.A." does not fold to "aba", so the ABA alias rows do not catch that spelling. Dropped (Opus, 2026-11-04): see *Verified limits*.
-- [ ] DATA-ORG-04 — re-run with a fresh full posturi export from the VPS (`--db` on a full export, not the
+- [x] DATA-ORG-04 — re-run with a fresh full posturi export from the VPS (`--db` on a full export, not the
       active-only deploy file), then rebuild.
 - [~] DATA-ORG-02 — review `data/consolidated/posturi-review.csv` after DATA-ORG-03 and -04. Decisions go to
       `curation/merges.csv` or `curation/aliases.csv`. First pass 2026-11-23: 229 alias rows and 58 merge rows on P ids; the queue

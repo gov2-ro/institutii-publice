@@ -457,10 +457,10 @@ def released_csvs(min_version=(0, 15, 0)):
             continue
 
 
-def check_absorbed_ids(records, released=None, link_trail=None, retired=()):
+def check_absorbed_ids(records, released=None, link_trail=None, retired=(), posturi_slugs=None):
     """An id that a released tag listed in `merged_ids` must not be a record now, unless curation/unmerged.csv
     (id, reason) says so. Every id of the latest release must still be a record or appear in `merged_ids` or
-    `roepas_ids`. An id that was a record and is now linked into an ANAF record (`link_trail`), or whose ANI name now
+    `roepas_ids`. A P id whose slug is not in `posturi_slugs` (posturi removed the employer) is retired. An id that was a record and is now linked into an ANAF record (`link_trail`), or whose ANI name now
     sits in one record under another county, is added to that record's `merged_ids`. The build stops on a violation."""
     released = list(released_csvs() if released is None else released)
     if not released:
@@ -485,6 +485,11 @@ def check_absorbed_ids(records, released=None, link_trail=None, retired=()):
         by_name[fold(r.get("name", ""))].append(r)
     names = {r["id"]: "name:" + fold(r.get("name", "")) for r in rows}
     lost = sorted(r["id"] for r in rows if r["id"] not in ids and r["id"] not in trail)
+    if posturi_slugs is not None:
+        gone = [i for i in lost if i.startswith("P") and i[1:] not in posturi_slugs]
+        for i in gone:
+            print(f"note: {i} retired, posturi no longer has the slug", file=sys.stderr)
+        lost = [i for i in lost if i not in gone]
     for i in list(lost):                    # a source row that now links to an ANAF record: the trail goes to that record
         lt = link_trail or {}
         keep = by_id.get(lt.get(i) or (lt.get(names[i]) if i.startswith("D") else None))
@@ -1481,6 +1486,10 @@ def posturi_standalone(rows):
         f = fold(strip_suffix(posturi_clean(r["name"])[0]))
         local = bool(LOCAL_KIND_RE.search(f) or SAME_NAME_NEVER.search(f) or generic_name(f))
         groups[(fold(r["county"]), f, fold(r["locality"]) if local else "")].append(t)
+    for (ck, f, loc) in [k for k in groups if k[2] == ""]:     # a local row with no locality joins the one group
+        named = [k for k in groups if k[:2] == (ck, f) and k[2]]  # of its name that has a locality
+        if len(named) == 1:
+            groups[named[0]].extend(groups.pop((ck, f, loc)))
     out = []
     for _, grp in sorted(groups.items()):
         grp.sort(key=lambda t: (-t[3]["postings"], t[3]["slug"]))
@@ -2112,7 +2121,8 @@ def main():
     records.extend(seap_recs)
     for cui, rec in seap_linked.items():             # an S record that a CIF now links into another record
         link_trail["S" + cui] = rec["id"]
-    check_absorbed_ids(records, link_trail=link_trail, retired={"S" + r["cui"] for r, _ in seap_excl})
+    check_absorbed_ids(records, link_trail=link_trail, retired={"S" + r["cui"] for r, _ in seap_excl},
+                       posturi_slugs={row["slug"] for row in posturi})
     for rec in records:
         rec.pop("_cands", None)
     merge_stats["tipizatul"] = apply_curated_tipizatul(records, load_curated_tipizatul())

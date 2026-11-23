@@ -1,5 +1,20 @@
 # Activity log
 
+## 2026-11-23 — full posturi export (DATA-ORG-04)
+
+**Done**
+- Input: `data/posturi/employers.csv` from the full VPS export (build_meta `built_at` 2026-11-23T09:52:55+00:00, posturi `4d9938c`, `active_only` 0; 16,875 postings, 7,631 employers). posturi-dev-2311 pulled the SQLite file over Host `gov2-1`, checked sha256 and `integrity_check`, and ran `ops/export-employers-for-org.py` on the Mac. The CSV has 7,630 rows (the placeholder `x` is left out); sha256 `8d791fb981090df480a8ac34731a1daa8c5662c0f2e3d8a07bce780544602be6`. The 2026-11-02 file stays next to it as `employers.2026-11-02.csv`.
+- Slugs: 1,730 new, 1 gone (`x`), none changed (measured by posturi-dev-2311).
+- Measured: posturi links 4,945 of 5,901 → 6,315 of 7,630 (82.8% of employers, 85.6% of postings); by tier exact 3,662, canonical 1,396, tokens 1,020, unit 201, elsewhere 20, national 16. Review queue 622 → 897 records. Records 27,980 → 28,255. ROePAS, Registrul, ANI and SEAP lines of the summary did not change. All 58 P-id merge rows still apply (`merge` 185, no row skipped).
+- Tests: 2 added; all pass. `tests/determinism.sh` passes.
+
+**Hard**
+- The new export stopped the build twice in `check_absorbed_ids`. (1) `Px` has no record and no trail. (2) `Pcaminul-pentru-persoane-varstnice-sf-spiridon-galati-2`, absorbed in v0.46.0, was a record again: its slug now has the locality `Galați`, the other slug has none, and the group key of a local kind includes the locality.
+
+**Decided** (Opus)
+- A P id whose slug is no longer in the posturi input is retired, with a note on stderr. Reason: posturi removed the employer (posturi-dev-2311: slugs never change; only `x` went). Cost of the alternative: a `curation/unmerged.csv` row for each removed employer, by hand.
+- In `posturi_standalone`, a local-kind row with no locality joins the one group of its county and name that has a locality. The docstring already said "the same locality or none"; the code did not do it. With two or more such groups, the row stays apart.
+
 ## 2026-11-23 — posturi rows with no org record: fallbacks and first review pass (DATA-ORG-07, DATA-ORG-02)
 
 **Done**

@@ -321,6 +321,13 @@ class AbsorbedIds(unittest.TestCase):
         with self.assertRaises(SystemExit):
             c.check_absorbed_ids([{"id": "A1", "merged_ids": ["B1", "B2"]}], [("v1", self.OLD)])      # B3 vanished
 
+    def test_p_id_whose_slug_is_gone_is_retired(self):
+        old = "id,merged_ids\nA1,\nPx,\nPy,\n"
+        recs = [{"id": "A1"}, {"id": "Py"}]
+        c.check_absorbed_ids(recs, [("v1", old)], posturi_slugs={"y"})
+        with self.assertRaises(SystemExit):
+            c.check_absorbed_ids(recs, [("v1", old)], posturi_slugs={"x", "y"})
+
     def test_same_ani_name_in_another_county_gets_a_trail(self):
         old = "id,name,merged_ids\nD1,Spitalul X,\nD2,Spitalul X,\n"
         recs = [{"id": "D2", "name": "Spitalul X"}]
@@ -659,6 +666,12 @@ class PosturiRecords(unittest.TestCase):
     def test_other_county_stays_apart(self):
         rows = [self.prow("a", "Spitalul Municipal", "Cluj"), self.prow("b", "Spitalul Municipal", "Dolj")]
         self.assertEqual(len(c.posturi_standalone(rows)), 2)
+
+    def test_local_kind_without_locality_joins_the_one_with_a_locality(self):
+        rows = [self.prow("caminul-x", "Caminul pentru Persoane Varstnice X", "Galati"),
+                self.prow("caminul-x-2", "Căminul pentru Persoane Vârstnice X", "Galati", "Galați", 2)]
+        (_, _, _, r, _), = c.posturi_standalone(rows)
+        self.assertEqual(r["id_slug"], "caminul-x")
 
     def test_posturi_record_merges_by_name_and_keeps_slugs(self):
         recs = [source_rec("G5", "Spitalul General CF Simeria", "Hunedoara"),
