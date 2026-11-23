@@ -41,8 +41,9 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
       Brief: [briefs/transparenta-compare.md](briefs/transparenta-compare.md) (built and accepted, 2026-11-23). Their `EntityProfiles` (website, email, phone) may fill websites.
 - [~] transparenta.eu review of 2026-11-23 (brief: [briefs/transparenta-candidates.md](briefs/transparenta-candidates.md); built by Sonnet, Opus reviews).
       Queues in `data/transparenta/` (ignored): `candidates.csv` (552 rows: 11 `add`, 0 `check`, 541 `skip`) and `parent-proposals.csv` (1,303 rows).
-  - [ ] Owner: decide on the 11 `add` candidates (new ANAF-confirmed records, each with a parent in our data). No record was added.
-  - [ ] Owner: decide on a rule for the 1,250 parent proposals (53 records have no parent on the site; 7 are flagged `conflict`). No parent was changed.
+  - [x] Owner: decide on the 11 `add` candidates. Owner, 2026-11-23: yes, by rule. Brief: [briefs/transparenta-source.md](briefs/transparenta-source.md).
+  - [x] Owner: decide on a rule for the 1,250 parent proposals. Owner, 2026-11-23: yes, marked as from transparenta.eu. Same brief.
+  - [ ] Build `briefs/transparenta-source.md` (ready).
   - [ ] Review the 11 `parents_differ` rows and the 33 `missing_there` rows of `review.csv` (not done in this brief).
 - [x] Licence compliance at the strictest reading, for every source (owner request, 2026-11-23).
       Brief: [briefs/licence-compliance.md](briefs/licence-compliance.md) (ready). The owner approves each text change.
