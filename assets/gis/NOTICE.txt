@@ -1,0 +1,6 @@
+Maps: administrative boundaries (UAT, counties). Source: geo-spatial.org, processed from data of ANCPI
+(Agenția Națională de Cadastru și Publicitate Imobiliară). Layer ro_admin_lau_simplified_polygon, version 2025-03-26.
+Licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/). The page footer of geo-spatial.org states this licence.
+The catalogue record (edition 2025-05-05) states CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). We apply the stricter text.
+Changes by org.gov2.ro: split by county, simplified for the web, SIRUTA codes and labels added.
+These files stay under CC BY-SA 4.0. They are not under EUPL v1.2.
