@@ -366,7 +366,7 @@ def absorb(keep, rec, how):
 
 
 def apply_curated_merges(records, curated, linked=None):
-    """Apply curation/merges.csv. Stops on an unknown id. A row whose id a tier or a curated alias now links into
+    """Apply curation/merges.csv. Stops on an unknown id, except a P (posturi) id: the row is skipped with a warning. A row whose id a tier or a curated alias now links into
     an ANAF record (`linked`, the link trail) has nothing left to merge: it counts as `redundant`. -> stats."""
     by_id = {r["id"]: r for r in records}
     for r in records:                       # a row may name an id that an earlier merge absorbed: use its survivor
@@ -377,6 +377,10 @@ def apply_curated_merges(records, curated, linked=None):
         rec, target = by_id.get(c["id"]), by_id.get(c["target_id"])
         if c["kind"] == "rename":
             if not rec:
+                if c["id"].startswith("P"):
+                    print(f"warning: {CURATED_MERGES}: {c['id']} matches no record, row skipped", file=sys.stderr)
+                    stats["skipped_posturi"] += 1
+                    continue
                 raise SystemExit(f"{CURATED_MERGES}: {c['id']} matches no record")
             rec["aliases"] = sorted({*rec.get("aliases", []), squash(rec["name"])})
             rec["name"] = squash(c["new_name"])
@@ -386,6 +390,11 @@ def apply_curated_merges(records, curated, linked=None):
             stats["redundant"] += 1
             continue
         if not rec or not target:
+            gone = [i for i, r in ((c["id"], rec), (c["target_id"], target)) if not r]
+            if all(i.startswith("P") for i in gone):    # posturi records change with each export: warn and skip
+                print(f"warning: {CURATED_MERGES}: {', '.join(gone)} matches no record, row skipped", file=sys.stderr)
+                stats["skipped_posturi"] += 1
+                continue
             raise SystemExit(f"{CURATED_MERGES}: {c['id']} or {c['target_id']} matches no record")
         if c["kind"] == "merge":
             if rec is target:
@@ -778,6 +787,10 @@ class Linker:
         for i, a in enumerate(anaf):
             self.nat_exact[a["_f"]].append(i)
             self.nat_canon[a["_canon"]].append(i)
+        for (ck, f), idx in self.alias.items():     # a curated alias is a nationwide exact name too (see anywhere)
+            for i in idx:
+                if i not in self.nat_exact[f]:
+                    self.nat_exact[f].append(i)
 
     def geo(self, folded):
         """The county names written in a folded name (frozenset)."""
@@ -1010,14 +1023,22 @@ def link_declaratii(linker, name, county, county_re, widespread):
             weak = (tier, idx, score, c, cands)
     if amb:
         return amb
-    if not DECL_LOCAL_KIND.search(f):
-        tier, idx, score, _ = linker.link("bucuresti", name)
-        if tier in ("exact", "canonical"):
-            return "national", idx, score, "bucuresti", []
-        i = linker.anywhere(name)
-        if i is not None:
-            return "elsewhere", [i], 1.0, linker.anaf[i]["_ck"], []
-    return weak or (None, [], 0.0, order[0], [])
+    return link_fallbacks(linker, name) or weak or (None, [], 0.0, order[0], [])
+
+
+def link_fallbacks(linker, name):
+    """The two fallbacks for a name that did not link in its own county (ANI and posturi): the Bucharest bodies (exact/
+    canonical only, tier 'national'), then the one row with that name in any county (tier 'elsewhere').
+    -> (tier, idx, score, county, []) or None. A local kind (DECL_LOCAL_KIND) gets none: it is another school or club."""
+    if DECL_LOCAL_KIND.search(fold(name)):
+        return None
+    tier, idx, score, _ = linker.link("bucuresti", name)
+    if tier in ("exact", "canonical"):
+        return "national", idx, score, "bucuresti", []
+    i = linker.anywhere(name)
+    if i is not None:
+        return "elsewhere", [i], 1.0, linker.anaf[i]["_ck"], []
+    return None
 
 
 # ---------------------------------------------------------------- categories
@@ -1942,8 +1963,15 @@ def main():
                 link_trail[("G" + row["num"]) if src == "registrul" else "R" + str(row["id"])] = "A" + anaf[idx[0]]["cif"]
             else:
                 standalone[src].append((tier, idx, score, row, cands))
-    for row in posturi:                  # no prefix tier: posturi names are not cut off
-        tier, idx, score, cands = linker.link(row["county"], posturi_link_name(row["name"]), row["locality"])
+    for row in posturi:                  # no prefix tier: posturi names are not cut off; fallbacks as for ANI
+        name = posturi_link_name(row["name"])
+        tier, idx, score, cands = linker.link(row["county"], name, row["locality"])
+        if tier not in TIER_RANK and tier != "ambiguous" and prep(name)[0] != "uat":
+            # the posting county is not always the seat. A local authority has no fallback: two communes of one name
+            # sit in two counties ("Râmnicelu" in Buzău and in Brăila), and posturi gives no way to tell them apart.
+            found = link_fallbacks(linker, name)
+            if found:
+                tier, idx, score, _, cands = found
         if tier in TIER_RANK:
             links["posturi"][idx[0]].append((tier, row))
             link_trail["P" + row["slug"]] = "A" + anaf[idx[0]]["cif"]

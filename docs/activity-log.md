@@ -1,5 +1,87 @@
 # Activity log
 
+## 2026-11-23 — posturi rows with no org record: fallbacks and first review pass (DATA-ORG-07, DATA-ORG-02)
+
+**Done**
+- Code (`scripts/consolidate.py`): `link_fallbacks()` holds the two ANI fallbacks (Bucharest bodies, tier `national`; one name in any county, tier `elsewhere`). `link_declaratii` and the posturi loop both call it. A local kind (`DECL_LOCAL_KIND`) and a county result `ambiguous` skip it. `Linker.__init__` adds the curated aliases to `nat_exact`, so `anywhere()` finds an alias.
+- Task 5: `apply_curated_merges` skips a row whose `id` or `target_id` is an unknown P id. It prints a warning to stderr and counts `skipped_posturi`. An unknown id of any other kind (A, R, G, D, S) still stops the build.
+- Tests: 4 added (alias found by `anywhere()`; fallbacks and the local-kind guard; unknown P id skipped; unknown id of another kind stops). 131 tests pass. `tests/determinism.sh` passes.
+- Measured, task 1 and 2 only (posturi export of 2026-11-02): posturi links 4,661 → 4,694 (`national` 0 → 12, `elsewhere` 0 → 21). The review queue went 929 → 907. ANI, ROePAS, Registrul and SEAP counts did not change.
+- Review (task 3): 287 rows were first written as aliases (278 from the rows with a candidate, 9 from a name search in ANAF for the 50 largest rows without a candidate). Opus review: an alias must be a name that a person would write for the body. 58 rows were not (typo, county or commune suffix, informal abbreviation, stray quote). They moved to `curation/merges.csv` as `merge` rows on the P id. Result: 229 alias rows kept (430 lines in `aliases.csv`, 229 new), 58 merge rows added (`merge` 127 → 185).
+- Measured, after all changes: posturi links 4,945 of 5,901 (83.8%; 85.8% of postings); by tier tokens 776, exact 2,888, canonical 1,078, unit 174, national 12, elsewhere 17. The 58 merged rows are P records absorbed into their ANAF record, so the records count stays 27,981 (28,288 before). The queue is 623 rows (869 postings), 92 with a candidate (121 postings) and 531 without. The first alias set also moved ANI exact links by +4 and Registrul by +1; the numbers after the move were not diffed again.
+
+**Hard**
+- The brief's guards let a commune link to the same-named commune of another county. The first run linked `Primăria comunei Râmnicelu` (Brăila) to Buzău, `Primaria Comunei Rimnicelu` (Buzău) to Brăila, `Primăria Târnova` (Arad) to Caraș-Severin and `Comuna Câlnic` (Alba) to Gorj. Decision: for posturi only, a local authority (`prep` kind `uat`) gets no fallback. That removed 7 links. The ANI path is unchanged.
+- 29 candidates stay open because the alias would fold to the name of another record (a `D`, `G`, `R` or `S` record of the same body, or a second school of the same name). A merge of that other record into the ANAF record is the fix; it is not in this brief.
+- Military hospitals and other bodies that exist only as an `R`, `G` or `D` record have no CIF. An alias on those cannot link a posturi row. They stay open.
+- 3 rows have a posturi name equal to the ANAF name but do not link (`Bagdasar - Arseni`, `Preparandia` twice). The cause is not found.
+
+**Decided**
+- Aliases first; merges on `P` ids only when no alias fits (coordinator, 2026-11-23). `aliases.csv` is a master that other projects read, so it holds only names of the body. Do not curate `Px`: the next export removes the placeholder employer `x`.
+- A merge row with an unknown P id is skipped with a warning (owner, 2026-11-23). Reason: the posturi records change with each export (a P id disappears when its row starts to link), and the other sources change rarely, so an unknown A, R, G, D or S id is still a real error. Cost of the alternative: a stale P id stops the whole build.
+- The 5 ABA bodies named in DATA-ORG-07 were mostly sub-units ("Sistemul de Gospodărire a Apelor ..."). Sub-units stay open.
+
+### P-id merge rows to check after the next export
+58 rows in `curation/merges.csv`, evidence start "Same body as A...", checked_at 2026-11-23. An unknown P id warns and is skipped. After the export, check that each P id still exists and that no warning shows. A P id that is gone because its row now links is fine.
+- `Pscoala-gimnaziala-aurel-solacolu-comuna-ogrezeni` → `A19128001`: Școala Gimnazială „Aurel Solacolu” comuna Ogrezeni
+- `Pcolegiul-tehnologic-v-harnaj` → `A4631713`: COLEGIUL TEHNOLOGIC “V. HARNAJ ”
+- `Pscoala-gimnaziala-dumitru-brezeanucomuna-teisani` → `A28978540`: SCOALA GIMNAZIALA "DUMITRU BREZEANU"COMUNA TEISANI
+- `Pscoala-gimnaziala-elena-cuza-municipiul-piatra-neamt` → `A17292104`: Școala Gimnazială „Elena Cuza” Municipiul Piatra-Neamț
+- `Pscoala-gimnaziala-gellert-sandor-micula-judetul-satu-mare` → `A17091453`: Școala Gimnazială „Gellert Sandor ”, Micula, județul Satu Mare
+- `Pscoala-gimnaziala-grigore-herinean-galatii-bistritei-judetul-bistrita-nasaud` → `A28331411`: ȘCOALA GIMNAZIALĂ ,,GRIGORE HERINEAN,, GALAȚII BISTRIȚEI, JUDEȚUL BISTRIŢA-NĂSĂUD
+- `Pscoala-gimnaziala-jako-zsigmond-rosiori` → `A19213034`: Școala Gimnazială „Jakó Zsigmond" - Roșiori
+- `Pscoala-gimnaziala-mircea-nedelciu-calarasi` → `A24018277`: Școala Gimnazială „Mircea Nedelciu”, Călărași
+- `Pscoala-gimnaziala-nr-1-com-ramnicelu` → `A28278253`: ȘCOALA GIMNAZIALĂ NR. 1 COM. RÂMNICELU
+- `Pscoala-gimnaziala-profconstantin-dinca-comuna-ulmeni-judetul-buzau` → `A28227586`: Scoala Gimnazială ”Prof.Constantin Dincă” comuna Ulmeni, judetul Buzău
+- `Pscoala-profesionala-adjudeni-comuna-tamaseni` → `A18148728`: Școala Profesională Adjudeni, comuna Tămășeni
+- `Pserviciul-public-de-paza-obiective-de-interes-judetean-oras-voluntari` → `A5466681`: Serviciul Public de Pază Obiective de Interes Judeţean, Oraș Voluntari
+- `Pspitalul-judetean-de-urgenta-miercurera-ciuc` → `A4245305`: Spitalul Județean de Urgență Miercurera Ciuc
+- `Pdirectia-de-administrare-a-domeniului-public-slobozia` → `A7326960`: Direcţia de Administrare a Domeniului Public Slobozia
+- `Puniversitatea-national-de-educatie-fizica-si-sport-din-bucuresti` → `A4267192`: UNIVERSITATEA NATIONAL DE EDUCATIE FIZICA SI SPORT DIN BUCURESTI
+- `Pagentia-nationala-de-cadastru-si-publicitate-imobiliara-bucuresti-sector-6` → `A9051601`: Agenţia Naţională de Cadastru şi Publicitate Imobiliară, București, Sector 6
+- `Pcolegiul-tehnic-mihai-viteazul-din-localitatea-oradea` → `A4348840`: COLEGIUL TEHNIC ,,MIHAI VITEAZUL” din localitatea ORADEA
+- `Pmuzeul-civilizatei-dacice-si-romane` → `A4521460`: MUZEUL CIVILIZAȚEI DACICE ȘI ROMANE
+- `Pprimaria-ucea-judet-brasov` → `A4443477`: PRIMARIA UCEA JUDET BRASOV
+- `Psp-sport-si-agrement` → `A14818230`: SP Sport și Agrement
+- `Pspitalul-municipal-campulung-jud-arges` → `A4756466`: Spitalul Municipal Câmpulung jud. Argeș
+- `Pautoritatea-nationala-de-reglementare-in-domeniul-minier-petrolier-si-al-stocarii-geologice-a-dixodului-de-carbon` → `A50306805`: Autoritatea Nationala de Reglementare in Domeniul Minier, Petrolier si al Stocarii Geologi
+- `Pcasa-de-cultura-carsium-oras-harsova-judetul-constanta` → `A8263223`: CASA DE CULTURA CARSIUM Oraș Hârșova, județul Constanța
+- `Pcolegiul-emil-negrutiu-cu-sediul-in-turda` → `A5528288`: Colegiul ”Emil Negruțiu”, cu sediul în Turda
+- `Pcolegiului-economic-viilor` → `A4695466`: Colegiului Economic “Viilor”
+- `Pcomplexul-muzeal-iulian-antonesc-bacau` → `A15412883`: Complexul Muzeal ”Iulian Antonesc” Bacău
+- `Pdirectia-sanitar-veterinara-si-pentru-siguranta-alimentelor-vrancea` → `A4297614`: Direcția Sanitar Veterinară și pentru Siguranța Alimentelor Vrancea
+- `Pgradiniia-insirte-margarite` → `A4340595`: GRĂDINIÎA ”ÎNȘIR'TE MĂRGĂRITE”
+- `Pgradinita-cu-p-p-casuta-fermecata-gherla` → `A17958211`: Grădinița cu P. P. ,,căsuța Fermecată” gherla
+- `Pgradinita-cu-pp-mamaruta` → `A17968517`: GRADINITA CU PP MAMARUTA
+- `Pgradinita-pp-martinica-nr-17-brasov` → `A29345512`: Grădinița PP Martinică Nr. 17 Brașov
+- `Pgradinita-pp-nr-38-timisoara` → `A29138584`: Grădinița PP nr. 38 Timișoara
+- `Pinstitul-clinic-de-urgente-oftalmologiceprof-dr-mircea-olteanu` → `A4505421`: INSTITUL CLINIC DE URGENTE OFTALMOLOGICE”PROF. DR. MIRCEA OLTEANU”
+- `Pinstitutul-clinic-de-urgente-oftamologice-prof-univ-dr-mircea-olteanu-bucuresti` → `A4505421`: Institutul Clinic de Urgențe Oftamologice „Prof. Univ. Dr. Mircea Olteanu” București
+- `Pliceul-tehnologic-duiliu-zamfirescu-dragalina-com-dragalina-jud-calarasi` → `A4853868`: LICEUL TEHNOLOGIC ,,DUILIU ZAMFIRESCU” DRAGALINA , com. Dragalina, jud. Călărași,
+- `Pliceul-tehnologic-sp-pentru-deficienti-de-auz` → `A4485707`: LICEUL TEHNOLOGIC SP PENTRU deficienti de auz
+- `Ppalatul-copiiloir-slobozia-judetul-ialomita` → `A4428086`: Palatul Copiiloir Slobozia, județul Ialomița
+- `Pprimaria-comunei-batani-jud-covasna` → `A4202177`: Primăria Comunei Bățani jud. Covasna
+- `Pprimaria-comunei-capu-campului-jud-suceava` → `A16031763`: Primăria Comunei Capu Câmpului jud. Suceava
+- `Pprimaria-comunei-stefanesti-jud-valcea` → `A2573918`: Primăria Comunei Ștefănești jud. Vâlcea
+- `Pprimaria-orasului-breaza-jud-prahova` → `A2845486`: Primăria Orașului Breaza jud. Prahova
+- `Pscoala-gimaziala-str-zaharia-stancu-nr-2loc-buzescu-jud-teleorman` → `A19066111`: Școala gimazială str Zaharia Stancu, nr 2,loc. Buzescu, jud Teleorman
+- `Pscoala-gimnaziala-capusu-mare-jud-cluj` → `A17996630`: Școala Gimnazială Căpușu Mare jud. Cluj
+- `Pscoala-gimnaziala-nr-3-gheorge-lazar-brasov` → `A29368893`: Școala Gimnazială Nr. 3 „Gheorge Lazar” Brașov
+- `Pscoala-gimnaziala-nr1-ip-jud-salaj` → `A22035948`: Școala Gimnazială nr.1 Ip jud. Sălaj
+- `Pscoala-gimnaziala-partestii-de-sus-jud-suceava` → `A14110550`: Școala Gimnazială Pârteștii de Sus jud. Suceava
+- `Pscoala-gimnaziala-sat-daesti-comuna-popesti-judetul-valcea` → `A29055390`: Școala Gimnazială Sat Dăești, Comuna Popești, Județul Vâlcea
+- `Pscoala-gimnnaziala-milcoiu` → `A29044960`: Școala Gimnnazială Milcoiu
+- `Pscolala-gimnaziala-birda` → `A29099183`: ȘCOLALA GIMNAZIALA BIRDA
+- `Pserviciului-public-local-de-salubrizare-vanatori-com-vanatori-judetul-galati` → `A40444959`: Serviciului Public Local de Salubrizare Vânători, Com. Vânători, Judeţul Galaţi
+- `Pspitalul-de-obstretica-ginecologie-buftea` → `A4364420`: Spitalul de Obstretică Ginecologie Buftea
+- `Pspitalul-de-recuperare-neuromotorie-dr-corneliu-barsan-dezna` → `A3861927`: Spitalul de Recuperare neuromotorie "dr. corneliu barsan" dezna
+- `Pspitalul-municipal-rm-sartat` → `A4697653`: Spitalul Municipal Rm. Sartat
+- `Pspitalul-municipal-sf-ierarg-dr-luca-onesti-judetul-bacau` → `A4278825`: Spitalul Municipal „Sf. Ierarg Dr. Luca” Onești, județul Bacău
+- `Pspitalul-orasenesc-huedin-jud-cluj` → `A4485618`: Spitalul Orășenesc Huedin jud. Cluj
+- `Pspitalul-orasenesc-pucioasa-jud-dambovita` → `A4206977`: Spitalul Orășenesc Pucioasa jud. Dâmbovița
+- `Psrviciul-salubrizare-maracineni` → `A39793610`: Srviciul Salubrizare Mărăcineni
+- `Pstatiunea-de-cercetare-dezvoltare-pentru-cartof-targu-secueisc` → `A14829298`: Stațiunea de Cercetare-Dezvoltare pentru Cartof Târgu Secueisc
+
 ## 2026-11-07 — Publish of the external links; draft message to the tipizatul.eu author
 
 **Done**

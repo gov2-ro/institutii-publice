@@ -342,6 +342,22 @@ class AbsorbedIds(unittest.TestCase):
         c.apply_curated_merges(recs, [{"id": "R1", "kind": "merge", "target_id": "G5", "new_name": ""}])
         self.assertEqual((len(recs), keep["merged_ids"]), (1, ["G5", "R1"]))
 
+    def test_unknown_posturi_id_is_skipped_with_a_warning(self):
+        import contextlib, io
+        keep = {**source_rec("R9", "X"), "id": "A1", "cif": "1", "sources": ["anaf"]}
+        recs = [keep]
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            stats = c.apply_curated_merges(recs, [{"id": "Pgone", "kind": "merge", "target_id": "A1", "new_name": ""}])
+        self.assertEqual((len(recs), stats["skipped_posturi"], "Pgone" in err.getvalue()), (1, 1, True))
+
+    def test_unknown_id_of_another_kind_stops_the_build(self):
+        keep = {**source_rec("R9", "X"), "id": "A1", "cif": "1", "sources": ["anaf"]}
+        with self.assertRaises(SystemExit):
+            c.apply_curated_merges([keep], [{"id": "R7", "kind": "merge", "target_id": "A1", "new_name": ""}])
+        with self.assertRaises(SystemExit):
+            c.apply_curated_merges([keep], [{"id": "Pgone", "kind": "merge", "target_id": "A404", "new_name": ""}])
+
 
 class CuratedAliases(unittest.TestCase):
 
@@ -600,6 +616,22 @@ class PosturiNameRules(unittest.TestCase):
         self.assertEqual((tier, L.anaf[idx[0]]["cif"]), ("exact", "7"))
         self.assertIsNone(L.link("Cluj", "ADR")[0])          # an alias holds in the county of its record
         self.assertIsNone(c.Linker(rows + linker([]).anaf).link("București", "ADR")[0])
+
+    def test_curated_alias_is_found_anywhere(self):
+        rows = [row(7, "AUTORITATEA PENTRU DIGITALIZAREA ROMANIEI", "Bucuresti", "Municipiul Bucuresti")]
+        L = c.Linker(rows + linker([]).anaf, [("7", "ADR")])
+        self.assertEqual(L.anaf[L.anywhere("ADR")]["cif"], "7")
+        self.assertIsNone(c.Linker(rows + linker([]).anaf).anywhere("ADR"))
+
+    def test_fallbacks_for_a_name_in_the_wrong_county(self):
+        rows = [row(7, "AUTORITATEA PENTRU DIGITALIZAREA ROMANIEI", "Bucuresti", "Municipiul Bucuresti"),
+                row(8, "Administratia Bazinala de Apa Buzau-Ialomita", "Buzau", "Municipiul Buzau"),
+                row(9, "Scoala Gimnaziala Ion Creanga", "Buzau", "Municipiul Buzau")]
+        L = c.Linker(rows + linker([]).anaf, [("8", "ABA Buzau-Ialomita")])
+        self.assertEqual(c.link_fallbacks(L, "Autoritatea pentru Digitalizarea Romaniei")[0], "national")
+        t = c.link_fallbacks(L, "ABA Buzau-Ialomita")
+        self.assertEqual((t[0], L.anaf[t[1][0]]["cif"]), ("elsewhere", "8"))
+        self.assertIsNone(c.link_fallbacks(L, "Scoala Gimnaziala Ion Creanga"))      # local kind: no fallback
 
     def test_equiv_is_shared_by_prep(self):
         self.assertEqual(c.prep("Primaria Orasul Tg. Frumos"), c.prep("Orasul Targu Frumos"))

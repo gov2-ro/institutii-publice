@@ -285,14 +285,18 @@ Statuses: `[ ]` open, `[~]` in progress, `[x]` done, `[-]` dropped (with the rea
 - [ ] Issue #6: `S27282590` (Protecția Mediului, 3 SEAP rows in 2014, MF `MODIFICARE PUBLICI`) may be an old record of ICIM (`G10598`, CUI 34938931). Not checked.
 - [x] Issue #6: absent bodies. Built 2026-11-03: AMR and UNCJR come in via SEAP (the name rule keeps them); Consiliul Fiscal,
       CSAT and Autoritatea de Audit have a `hosted_body` alias on the host body.
-- [ ] DATA-ORG-07 — posturi gives the posting county, not the seat, for national bodies. Five ABA bodies cannot link
-      (Jiu in Gorj/Mehedinți, Crișuri in Hunedoara, Olt in Sibiu/Harghita, Prut-Bârlad in Galați/Botoșani/Vaslui,
-      Buzău-Ialomița in Prahova). Scan the other national bodies. Decide between a national alias scope and a posturi fix.
+- [x] DATA-ORG-07 — posturi gives the posting county, not the seat, for national bodies. Done 2026-11-23: posturi rows use the
+      ANI fallbacks (tiers `national`, `elsewhere`) and `Linker.anywhere()` reads the curated aliases. The ABA bodies Crișuri and
+      Argeș-Vedea now link. The "Sistemul de Gospodărire a Apelor" rows are sub-units and stay open. See the activity log.
 - [-] "A.B.A." does not fold to "aba", so the ABA alias rows do not catch that spelling. Dropped (Opus, 2026-11-04): see *Verified limits*.
 - [ ] DATA-ORG-04 — re-run with a fresh full posturi export from the VPS (`--db` on a full export, not the
       active-only deploy file), then rebuild.
-- [ ] DATA-ORG-02 — review `data/consolidated/posturi-review.csv` after DATA-ORG-03 and -04. Decisions go to
-      `curation/merges.csv` or `curation/aliases.csv`.
+- [~] DATA-ORG-02 — review `data/consolidated/posturi-review.csv` after DATA-ORG-03 and -04. Decisions go to
+      `curation/merges.csv` or `curation/aliases.csv`. First pass 2026-11-23: 229 alias rows and 58 merge rows on P ids; the queue
+      went 907 → 623 rows (869 postings). Open: 92 rows with a candidate (121 postings) and 531 rows with none. The `Px` row is not curated:
+      the next export removes it.
+  - [ ] 29 posturi rows are open because the alias would collide with a D, G, R or S record of the same body. Merge those records into their ANAF records. Separate brief.
+  - [ ] 3 posturi rows (Bagdasar - Arseni; Preparandia, two rows) have the same name as the ANAF record but do not link. The cause is unknown.
 - [ ] DATA-ORG-05 — decide whether linked posturi names become `aliases`. Not now: they carry county suffixes and junk.
 - [ ] Check the posturi badge, filter and employer link of the explorer in a browser. The builder checked only the
       script syntax (`node --check`).
