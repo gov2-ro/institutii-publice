@@ -1,6 +1,6 @@
 # Implementation brief: review the transparenta.eu candidates and parents
 
-Status: brief ready (Opus, 2026-11-23). Owner request, 2026-11-23.
+Status: built by Sonnet and accepted by Opus, 2026-11-23. Owner decisions open. Owner request, 2026-11-23.
 Owner: Sonnet builds; Opus reviews and commits. Any new record or parent in the published data needs an owner decision.
 
 ## Context

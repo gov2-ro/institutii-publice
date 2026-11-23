@@ -51,6 +51,7 @@ Run only the steps whose source changed. Steps 1 to 3 need the source files.
 | 9 | Browser check (see *Checks*) | The explorer or the data changed. |
 | 10 | `sh scripts/publish_pages.sh --dry-run`, then without `--dry-run` | The owner approved the publish. Commit your changes first. |
 | 11 | `python3 scripts/transparenta_compare.py` | After each new ANAF list, and at least every three months. It makes about 155 requests in about 6 minutes and changes no data. Read the `missing_here` rows of `data/transparenta/review.csv` first. Log the requests in `external-lookups.md`. |
+| 12 | `python3 scripts/transparenta_compare.py --last-report`, then `--candidates` | You read the `missing_here` rows. `--last-report` makes about 23 requests to transparenta.eu (2 s apart; one per 25 CUIs) and writes `last-report-<date>.jsonl`. `--candidates` asks ANAF for the CUIs with a report in 2025 or 2026 (100 CUIs per request, 1 request per second) and reads the MF files. It writes `candidates.csv` and `parent-proposals.csv`. Both options read the cached entities and resume from a cache of the same day. They change no published data and no curation file. Log the requests in `external-lookups.md`. |
 
 Steps 5 and 7 read `institutii.csv`, so they use the list of the previous build. Thus a new CUI needs steps 4, 5 and 6.
 

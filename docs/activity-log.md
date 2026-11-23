@@ -1,5 +1,33 @@
 # Activity log
 
+## 2026-11-23 — transparenta.eu candidates and parents (Sonnet, brief `briefs/transparenta-candidates.md`)
+
+**Opus review (2026-11-23).** Accepted. Opus read 12 more parent proposals (seed 20261123): 12 of 12 plausible. Opus searched
+our names for the 11 `add` candidates: none is in our data under another CUI (Hunedoara shares its name with other counties' bodies).
+
+**Done**
+- `scripts/transparenta_compare.py`: new options `--last-report` (latest report date of each `missing_here` CUI, aliased queries, 25 per request) and `--candidates` (ANAF for the CUIs with a report in 2025 or 2026, MF status, then `candidates.csv` and `parent-proposals.csv`). Both resume from a cache of the same day. The script asks for no `profile`.
+- Outputs (ignored): `data/transparenta/last-report-2026-11-23.jsonl`, `anaf-2026-11-23.json`, `candidates.csv`, `parent-proposals.csv`. No published data and no curation file changed. 134 tests pass.
+
+**Measured**
+- Requests: transparenta.eu 25 (2 tests, 23 batches; about 47 s for the batches; no 429, no 5xx). ANAF 2 requests of 38 CUIs (one repeat, see *Hard*).
+- The server sorts reports with `sort: {by: "report_date", order: "DESC"}`. `report_date` is epoch milliseconds in a string. It accepts 25 aliased entities per request.
+- Of the 552 `missing_here` CUIs: 533 have a report, 19 have none. Latest report year: 2016 94, 2017 180, 2018 33, 2019 99, 2020 23, 2021 19, 2022 18, 2023 12, 2024 17, 2025 28, 2026 10. So only 38 have a report in 2025 or 2026.
+- ANAF for those 38: 38 found; 11 active, 24 `RADIERE`, 3 `DIZOLVARE FARA LICHIDARE(FUZIUNE)`.
+- `proposal`: `add` 11, `check` 0, `skip` 541 (514 with no report since 2024 or none; 27 with ANAF or MF `radiat` or `fuzionat`).
+- Parent proposals for the 1,303 `non_anaf_here` records: 1,250 have a parent in our data; 53 have no parent on the site; 0 have a parent that our data lacks; 7 `conflict`.
+- Precision by eye, 30 random rows with a parent (seed 7): 30 of 30 plausible (kind of body, geography and name fit). Plausible is not proven: no independent source was read.
+
+**Hard**
+- The first ANAF run dropped a good answer: the script required `cod` equal to 200, but the answer has no `cod`. The check now accepts an answer with `found` or `notFound`. One request of 38 CUIs was repeated.
+- The first `check` rule gave 8 rows for the text `MODIFICARE PUBLICI`. That text means an active, changed registration. The rule now counts it as active.
+- The first `conflict` rule gave 632 conflicts. A school has two parents on the site (ministry and UAT), as in the two parent columns of the ANAF list. The rule now flags a school only when no parent is a local authority or an ISJ.
+
+**Decided**
+- `add` needs: report in 2025 or 2026, ANAF active, MF not `in_lichidare`, a parent in our data, name overlap of 0.6 or more and equal county. The alternative (no name check) would accept a CUI that now names another body.
+- `conflict` is data-driven: the pair of categories is under 1% of the parents of that category among ANAF records, for every parent. The alternative (a list of allowed pairs by hand) needs upkeep.
+- The 7 conflicts are weak: 2 are a "Serviciul comunitar pentru Cadastru" under a UAT, 1 is a school sports club under a ministry, 4 are central bodies under a ministry or agency. Read them before any rule.
+
 ## 2026-11-23 — attribution and licence notices (Sonnet, brief `briefs/licence-attribution.md`)
 
 **Opus review (2026-11-23).** Accepted. Change: the site serves the notice as `NOTICE.txt` (GitHub Pages serves a file with no
